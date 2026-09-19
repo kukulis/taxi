@@ -1,0 +1,82 @@
+package messages
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+// Encode wraps the payload into an Envelope and marshals it.
+// The type is taken from the payload, so it can not disagree with the data.
+func Encode(id string, msg MessageInterface) ([]byte, error) {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(Envelope{
+		Id:   id,
+		Type: msg.GetMessageType(),
+		Data: data,
+	})
+}
+
+// Decode unmarshals the Envelope, then the payload into the struct matching the type.
+// The returned message is a pointer to the payload struct.
+func Decode(raw []byte) (string, MessageInterface, error) {
+	var env Envelope
+	if err := json.Unmarshal(raw, &env); err != nil {
+		return "", nil, err
+	}
+
+	var msg MessageInterface
+	switch env.Type {
+	case MessageTypeServerRequestsCoordinates:
+		msg = &ServerRequestsCoordinates{}
+	case MessageTypeClientRespondsCoordinates:
+		msg = &ClientRespondsCoordinates{}
+
+	case MessageTypeServerOffersPassenger:
+		msg = &ServerOffersPassenger{}
+	case MessageTypeServerCancelsOffer:
+		msg = &ServerCancelsOffer{}
+	case MessageTypeDriverCancelsOffer:
+		msg = &DriverCancelsOffer{}
+	case MessageTypeDriverAcceptsOffer:
+		msg = &DriverAcceptsOffer{}
+	case MessageTypeDriverRejectsOffer:
+		msg = &DriverRejectsOffer{}
+	case MessageTypeDriverChangesStatus:
+		msg = &DriverChangesStatus{}
+
+	case MessageTypePassengerInvitesDriver:
+		msg = &PassengerInvitesDriver{}
+	case MessageTypePassengerCancelsInvite:
+		msg = &PassengerCancelsInvite{}
+	case MessageTypeServerNotifiesInviteAccepted:
+		msg = &ServerNotifiesInviteAccepted{}
+	case MessageTypeServerNotifiesInviteRejected:
+		msg = &ServerNotifiesInviteRejected{}
+	case MessageTypeServerNotifiesInviteCanceled:
+		msg = &ServerNotifiesInviteCanceled{}
+	case MessageTypePassengerRequestDriverCoords:
+		msg = &PassengerRequestDriverCoords{}
+	case MessageTypeServerRespondsDriverCoords:
+		msg = &ServerRespondsDriverCoords{}
+	case MessageTypeServerNotifiesVoyageStarted:
+		msg = &ServerNotifiesVoyageStarted{}
+	case MessageTypeServerNotifiesVoyageFinished:
+		msg = &ServerNotifiesVoyageFinished{}
+
+	default:
+		return env.Id, nil, fmt.Errorf("unknown message type %q", env.Type)
+	}
+
+	// payloads without fields may come without data
+	if len(env.Data) > 0 {
+		if err := json.Unmarshal(env.Data, msg); err != nil {
+			return env.Id, nil, fmt.Errorf("decoding %q payload: %w", env.Type, err)
+		}
+	}
+
+	return env.Id, msg, nil
+}
