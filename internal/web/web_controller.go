@@ -22,3 +22,8 @@ func (controller *WebController) Driver(c *gin.Context) {
 func (controller *WebController) Passenger(c *gin.Context) {
 	c.HTML(http.StatusOK, "passenger.gohtml", gin.H{})
 }
+func (controller *WebController) Observer(c *gin.Context) {
+
+	// will see the complete drivers and passengers tables
+	c.HTML(http.StatusOK, "observer.gohtml", gin.H{})
+}
