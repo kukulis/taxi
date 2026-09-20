@@ -2,8 +2,10 @@ package di
 
 import (
 	"darbelis.eu/taxi/internal/handler"
+	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/web"
 	"darbelis.eu/taxi/internal/ws"
+	"darbelis.eu/taxi/pkg/util"
 )
 
 var webControllerInstance *web.WebController = nil
@@ -14,6 +16,10 @@ var passengersHubInstance *ws.Hub = nil
 
 var driversMessagesWsHandler handler.MessageHandler = nil
 var passengersMessagesWsHandler handler.MessageHandler = nil
+
+var mainState *state.MainState = nil
+
+var dispatcher *util.Dispatcher = nil
 
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
@@ -61,4 +67,20 @@ func GetPassengersWsHandler() handler.MessageHandler {
 	}
 
 	return passengersMessagesWsHandler
+}
+
+func GetMainState() *state.MainState {
+	if mainState == nil {
+		mainState = state.NewMainState()
+	}
+
+	return mainState
+}
+
+func GetDispatcher() *util.Dispatcher {
+	if dispatcher == nil {
+		dispatcher = util.NewDispatcher()
+	}
+
+	return dispatcher
 }

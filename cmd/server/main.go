@@ -6,6 +6,10 @@ import (
 )
 
 func main() {
+
+	dispatcher := di.GetDispatcher()
+	di.InitializeListeners(dispatcher)
+
 	router := gin.Default()
 
 	//
