@@ -38,7 +38,7 @@ type Hub struct {
 func NewHub(handler MessageHandler) *Hub {
 	return &Hub{
 		registerChannel:         make(chan *Client),
-		unregisterChannel:       make(chan string),
+		unregisterChannel:       make(chan string, 256),
 		clients:                 make(map[string]*Client),
 		incomingMessagesChannel: make(chan ClientMessage, 256),
 		outgoingMessagesChannel: make(chan ClientMessage, 256),
@@ -75,7 +75,10 @@ func (h *Hub) Run() {
 				break
 			}
 
-			client.Send(clientMessage)
+			sentOk := client.send(clientMessage)
+			if !sentOk {
+				delete(h.clients, clientMessage.ClientId)
+			}
 
 		case clientMessage := <-h.incomingMessagesChannel:
 			h.messageHandler.Handle(clientMessage)
@@ -84,7 +87,7 @@ func (h *Hub) Run() {
 }
 
 // RegisterWebSocketClient handles websocket requests from the peer.
-func (h *Hub) RegisterWebSocketClient(w http.ResponseWriter, r *http.Request, token string) {
+func (h *Hub) RegisterWebSocketClient(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)

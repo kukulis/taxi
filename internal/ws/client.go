@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"bytes"
 	"log"
 	"time"
 
@@ -22,10 +21,10 @@ var (
 )
 
 type Client struct {
-	clientId         string
-	outgoingMessages chan ClientMessage
-	conn             *websocket.Conn
-	incomingMessages chan ClientMessage
+	clientId                   string
+	outgoingThisClientMessages chan ClientMessage
+	conn                       *websocket.Conn
+	incomingMessages           chan ClientMessage
 	// will pass client id when closed
 	closedNotifier chan string
 }
@@ -36,19 +35,20 @@ func (c *Client) GetClientId() string {
 
 func NewClient(clientId string, conn *websocket.Conn, incomingMessages chan ClientMessage, closedNotifier chan string) *Client {
 	return &Client{
-		clientId:         clientId,
-		outgoingMessages: make(chan ClientMessage, 256),
-		conn:             conn,
-		incomingMessages: incomingMessages,
-		closedNotifier:   closedNotifier,
+		clientId:                   clientId,
+		outgoingThisClientMessages: make(chan ClientMessage, 256),
+		conn:                       conn,
+		incomingMessages:           incomingMessages,
+		closedNotifier:             closedNotifier,
 	}
 }
 
-func (c *Client) Send(msg ClientMessage) {
+func (c *Client) send(msg ClientMessage) bool {
 	select {
-	case c.outgoingMessages <- msg:
+	case c.outgoingThisClientMessages <- msg:
+		return true
 	default:
-		c.closedNotifier <- c.clientId
+		return false
 	}
 }
 
@@ -70,7 +70,7 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		messageBytes = bytes.TrimSpace(bytes.Replace(messageBytes, newline, space, -1))
+		//messageBytes = bytes.TrimSpace(bytes.Replace(messageBytes, newline, space, -1))
 
 		messageId, message, err := messages.Decode(messageBytes)
 		if err != nil {
@@ -97,7 +97,7 @@ func (c *Client) writePump() {
 	}()
 	for {
 		select {
-		case clientMessage, ok := <-c.outgoingMessages:
+		case clientMessage, ok := <-c.outgoingThisClientMessages:
 			if !ok {
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
@@ -107,7 +107,7 @@ func (c *Client) writePump() {
 
 			if err != nil {
 				log.Printf("message encode error: %v", err)
-				return
+				continue
 			}
 
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
