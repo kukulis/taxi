@@ -39,7 +39,7 @@ func GetWebController() *web.WebController {
 
 func GetDriversHub() *ws.Hub {
 	if driversHubInstance == nil {
-		driversHubInstance = ws.NewHub()
+		driversHubInstance = ws.NewHub(GetDispatcher())
 	}
 
 	return driversHubInstance
@@ -47,7 +47,7 @@ func GetDriversHub() *ws.Hub {
 
 func GetPassengersHub() *ws.Hub {
 	if passengersHubInstance == nil {
-		passengersHubInstance = ws.NewHub()
+		passengersHubInstance = ws.NewHub(GetDispatcher())
 	}
 
 	return passengersHubInstance

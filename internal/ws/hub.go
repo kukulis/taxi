@@ -5,9 +5,13 @@
 package ws
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 
+	"darbelis.eu/taxi/internal/events"
+	"darbelis.eu/taxi/pkg/util"
 	"github.com/gorilla/websocket"
 )
 
@@ -30,15 +34,18 @@ type Hub struct {
 
 	incomingMessagesChannel chan ClientMessage
 	outgoingMessagesChannel chan ClientMessage
+
+	dispatcher *util.Dispatcher
 }
 
-func NewHub() *Hub {
+func NewHub(dispatcher *util.Dispatcher) *Hub {
 	return &Hub{
 		registerChannel:         make(chan *Client),
 		unregisterChannel:       make(chan string, 256),
 		clients:                 make(map[string]*Client),
 		incomingMessagesChannel: make(chan ClientMessage, 256),
 		outgoingMessagesChannel: make(chan ClientMessage, 256),
+		dispatcher:              dispatcher,
 	}
 }
 
@@ -52,6 +59,11 @@ func (h *Hub) Run() {
 		select {
 		case c := <-h.registerChannel:
 			h.clients[c.GetClientId()] = c
+
+			// TODO find a solution how to decide if this is a driver or a passenger
+			fmt.Println("Hub before calling dispatcher Client registered", c.clientId)
+			h.dispatch(&events.DriverRegisteredEvent{ClientId: c.GetClientId()})
+			fmt.Println("Hub after calling dispatcher Client registered", c.clientId)
 		case clientId := <-h.unregisterChannel:
 			client, ok := h.clients[clientId]
 
@@ -63,6 +75,10 @@ func (h *Hub) Run() {
 
 			// consider whether to use a wrapper Close function
 			client.conn.Close()
+			// TODO find a solution how to decide if this is a driver or a passenger
+			fmt.Println("Hub before calling dispatcher Client unregistered", clientId)
+			h.dispatch(&events.DriverUnregisteredEvent{ClientId: client.GetClientId()})
+			fmt.Println("Hub after calling dispatcher Client unregistered", clientId)
 
 		case clientMessage := <-h.outgoingMessagesChannel:
 			client, ok := h.clients[clientMessage.ClientId]
@@ -77,6 +93,17 @@ func (h *Hub) Run() {
 			}
 		}
 	}
+}
+
+// dispatch recovers from a panic in a single listener so it can't kill the
+// Hub's Run loop; only this one event is lost, not the whole hub.
+func (h *Hub) dispatch(event util.Event) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("recovered from panic dispatching %s: %v\n%s", event.GetName(), r, debug.Stack())
+		}
+	}()
+	h.dispatcher.Dispatch(event)
 }
 
 // RegisterWebSocketClient handles websocket requests from the peer.

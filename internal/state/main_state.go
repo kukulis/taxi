@@ -20,10 +20,11 @@ type MainState struct {
 
 func NewMainState() *MainState {
 	return &MainState{
-		drivers:        make(map[string]*Driver),
-		passengers:     make(map[string]*Passenger),
-		driversLock:    sync.Mutex{},
-		passengersLock: sync.Mutex{},
+		drivers:         make(map[string]*Driver),
+		passengers:      make(map[string]*Passenger),
+		driversLock:     sync.Mutex{},
+		passengersLock:  sync.Mutex{},
+		dedicatedEvents: make(chan util.Event, 256),
 	}
 }
 
@@ -39,13 +40,22 @@ func (s *MainState) GetDriversSnapshot() []*Driver {
 	return driversList
 }
 
-func (s *MainState) AddDedicatedEvent(event util.Event) {
-	s.dedicatedEvents <- event
+func (s *MainState) AddDedicatedEvent(event util.Event) bool {
+	select {
+	case s.dedicatedEvents <- event:
+		return true
+	default:
+
+		fmt.Println("dedicatedEvents channel is full or null")
+		return false
+	}
 }
 
 func (s *MainState) CreateRegistrationRelatedListener() func(event util.Event) {
 	return func(event util.Event) {
-		s.dedicatedEvents <- event
+		if !s.AddDedicatedEvent(event) {
+			fmt.Println("dropped event, dedicatedEvents channel is full or null:", event.GetName())
+		}
 	}
 }
 

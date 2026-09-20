@@ -40,3 +40,7 @@ Assume you have node installed in to your machine. The required version is 18 or
 
     node --test test/js/**/*.test.js
 
+## Testing WS client
+
+    go run cmd/wsclient/main.go -type driver_accepts_offer -data '{"passenger_id":"p1"}'
+
