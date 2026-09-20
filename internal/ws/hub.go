@@ -30,18 +30,15 @@ type Hub struct {
 
 	incomingMessagesChannel chan ClientMessage
 	outgoingMessagesChannel chan ClientMessage
-
-	messageHandler MessageHandler
 }
 
-func NewHub(handler MessageHandler) *Hub {
+func NewHub() *Hub {
 	return &Hub{
 		registerChannel:         make(chan *Client),
 		unregisterChannel:       make(chan string, 256),
 		clients:                 make(map[string]*Client),
 		incomingMessagesChannel: make(chan ClientMessage, 256),
 		outgoingMessagesChannel: make(chan ClientMessage, 256),
-		messageHandler:          handler,
 	}
 }
 
@@ -78,9 +75,6 @@ func (h *Hub) Run() {
 			if !sentOk {
 				delete(h.clients, clientMessage.ClientId)
 			}
-
-		case clientMessage := <-h.incomingMessagesChannel:
-			h.messageHandler.Handle(clientMessage)
 		}
 	}
 }
@@ -102,4 +96,8 @@ func (h *Hub) RegisterWebSocketClient(clientId string, w http.ResponseWriter, r 
 
 func (h *Hub) SendMessage(message ClientMessage) {
 	h.outgoingMessagesChannel <- message
+}
+
+func (h *Hub) GetIncomingMessagesChannel() <-chan ClientMessage {
+	return h.incomingMessagesChannel
 }

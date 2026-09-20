@@ -20,7 +20,10 @@ func main() {
 	//
 
 	go di.GetDriversHub().Run()
+	go di.GetDriversWsHandler().Handle(di.GetDriversHub().GetIncomingMessagesChannel())
+
 	go di.GetPassengersHub().Run()
+	go di.GetPassengersWsHandler().Handle(di.GetPassengersHub().GetIncomingMessagesChannel())
 
 	di.RegisterWsRoutes(router)
 	di.RegisterWebRoutes(router)

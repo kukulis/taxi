@@ -1,6 +1,7 @@
 package di
 
 import (
+	"darbelis.eu/taxi/internal/handler"
 	"darbelis.eu/taxi/internal/web"
 	"darbelis.eu/taxi/internal/ws"
 )
@@ -11,8 +12,8 @@ var wsControllerInstance *web.WsController = nil
 var driversHubInstance *ws.Hub = nil
 var passengersHubInstance *ws.Hub = nil
 
-var driversMessagesWsHandler ws.MessageHandler = nil
-var passengersMessagesWsHandler ws.MessageHandler = nil
+var driversMessagesWsHandler handler.MessageHandler = nil
+var passengersMessagesWsHandler handler.MessageHandler = nil
 
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
@@ -32,7 +33,7 @@ func GetWebController() *web.WebController {
 
 func GetDriversHub() *ws.Hub {
 	if driversHubInstance == nil {
-		driversHubInstance = ws.NewHub(GetDriversWsHandler())
+		driversHubInstance = ws.NewHub()
 	}
 
 	return driversHubInstance
@@ -40,23 +41,23 @@ func GetDriversHub() *ws.Hub {
 
 func GetPassengersHub() *ws.Hub {
 	if passengersHubInstance == nil {
-		passengersHubInstance = ws.NewHub(GetPassengersWsHandler())
+		passengersHubInstance = ws.NewHub()
 	}
 
 	return passengersHubInstance
 }
 
-func GetDriversWsHandler() ws.MessageHandler {
+func GetDriversWsHandler() handler.MessageHandler {
 	if driversMessagesWsHandler == nil {
-		driversMessagesWsHandler = &ws.SimpleMessageHandler{}
+		driversMessagesWsHandler = &handler.SimpleMessageHandler{}
 	}
 
 	return driversMessagesWsHandler
 }
 
-func GetPassengersWsHandler() ws.MessageHandler {
+func GetPassengersWsHandler() handler.MessageHandler {
 	if passengersMessagesWsHandler == nil {
-		passengersMessagesWsHandler = &ws.SimpleMessageHandler{}
+		passengersMessagesWsHandler = &handler.SimpleMessageHandler{}
 	}
 
 	return passengersMessagesWsHandler
