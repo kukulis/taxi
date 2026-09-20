@@ -1,8 +1,10 @@
 package state
 
 import (
+	"fmt"
 	"sync"
 
+	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/pkg/util"
 )
 
@@ -44,5 +46,31 @@ func (s *MainState) AddDedicatedEvent(event util.Event) {
 func (s *MainState) CreateRegistrationRelatedListener() func(event util.Event) {
 	return func(event util.Event) {
 		s.dedicatedEvents <- event
+	}
+}
+
+func (s *MainState) HandleDedicatedEvents() {
+	for {
+		event := <-s.dedicatedEvents
+
+		switch e := event.(type) {
+		case *events.DriverRegisteredEvent:
+
+			// TODO
+			fmt.Println(e.ClientId)
+		case *events.DriverUnregisteredEvent:
+
+			// TODO
+			fmt.Println(e.ClientId)
+		case *events.PassengerRegisteredEvent:
+
+			//TODO
+			fmt.Println(e.ClientId)
+		case *events.PassengerUnregisteredEvent:
+
+			// TODO
+			fmt.Println(e.ClientId)
+		}
+
 	}
 }

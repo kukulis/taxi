@@ -8,7 +8,10 @@ import (
 func main() {
 
 	dispatcher := di.GetDispatcher()
-	di.InitializeListeners(dispatcher)
+	mainState := di.GetMainState()
+	di.InitializeListenersFromMainState(mainState, dispatcher)
+
+	go mainState.HandleDedicatedEvents()
 
 	router := gin.Default()
 
