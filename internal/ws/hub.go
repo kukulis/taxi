@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 
-	"darbelis.eu/taxi/pkg/util"
 	"github.com/gorilla/websocket"
 )
 
@@ -87,15 +86,10 @@ func (h *Hub) Run() {
 }
 
 // RegisterWebSocketClient handles websocket requests from the peer.
-func (h *Hub) RegisterWebSocketClient(w http.ResponseWriter, r *http.Request) {
+func (h *Hub) RegisterWebSocketClient(clientId string, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
-		return
-	}
-	clientId, err := util.RandomHash(8)
-	if err != nil {
-		log.Println("Failed to create a client id", err)
 		return
 	}
 

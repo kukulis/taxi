@@ -21,3 +21,8 @@ func RegisterWebRoutes(router *gin.Engine) {
 
 	router.StaticFile("/favicon.ico", "./assets/img/favicon.ico")
 }
+
+func RegisterWsRoutes(router *gin.Engine) {
+	router.GET("/ws-driver", func(c *gin.Context) { GetWsController().ServeDriversWebSocketConnection(c) })
+	router.GET("/ws-passenger", func(c *gin.Context) { GetWsController().ServePassengersWebSocketConnection(c) })
+}

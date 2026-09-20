@@ -8,7 +8,6 @@ import (
 func main() {
 	router := gin.Default()
 
-	di.RegisterWebRoutes(router)
 	//
 	//// Swagger UI
 	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -19,8 +18,12 @@ func main() {
 
 	//di.RegisterApiRoutes(apiRoute)
 	//
-	//go di.GetHubInstance().Run()
-	//di.RegisterWsRoutes(router)
-	//
+
+	go di.GetDriversHub().Run()
+	go di.GetPassengersHub().Run()
+
+	di.RegisterWsRoutes(router)
+	di.RegisterWebRoutes(router)
+
 	_ = router.Run(":8880")
 }
