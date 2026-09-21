@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"log/slog"
-	"time"
 
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
@@ -60,7 +59,7 @@ func (d DriversMessageHandler) handleClientRespondsCoordinates(clientId string, 
 	found := d.mainState.UpdateDriver(clientId, func(driver *state.Driver) {
 		driver.Lat = msg.Lat
 		driver.Lon = msg.Lon
-		driver.CoordinatesReceivedAt = time.Now()
+		driver.CoordinatesReceivedAt = d.mainState.Clock.Now()
 	})
 	if !found {
 		d.logger.Warn("ClientRespondsCoordinates from unknown driver", "client_id", clientId)
@@ -74,7 +73,7 @@ func (d DriversMessageHandler) handleClientRespondsInfo(clientId string, msg mes
 		if msg.Ip != "" {
 			driver.Ip = msg.Ip
 		}
-		driver.InfoReceivedAt = time.Now()
+		driver.InfoReceivedAt = d.mainState.Clock.Now()
 	})
 	if !found {
 		d.logger.Warn("ClientRespondsInfo from unknown driver", "client_id", clientId)
