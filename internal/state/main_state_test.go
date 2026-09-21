@@ -34,7 +34,7 @@ func findPassenger(s *MainState, id string) *Passenger {
 }
 
 func TestMainState_DriverRegistrationRoundTrip(t *testing.T) {
-	s := NewMainState(util.RealClock{})
+	s := NewMainState(util.NewFixedClock(time.Now()))
 	go s.HandleDedicatedEvents()
 
 	s.AddDedicatedEvent(events.NewClientRegisteredEvent("driver-1", events.WithRegisteredClientType(events.ClientTypeDriver)))
@@ -70,7 +70,7 @@ func TestMainState_DriverRegistrationRoundTrip(t *testing.T) {
 }
 
 func TestMainState_PassengerRegistrationRoundTrip(t *testing.T) {
-	s := NewMainState(util.RealClock{})
+	s := NewMainState(util.NewFixedClock(time.Now()))
 	go s.HandleDedicatedEvents()
 
 	s.AddDedicatedEvent(events.NewClientRegisteredEvent("passenger-1", events.WithRegisteredClientType(events.ClientTypePassenger)))
