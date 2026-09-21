@@ -9,4 +9,9 @@ type Driver struct {
 	VehicleInfo string
 	Phone       string
 	Ip          string
+	Active      bool
+}
+
+func NewDriver() *Driver {
+	return &Driver{}
 }

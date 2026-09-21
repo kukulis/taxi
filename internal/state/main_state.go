@@ -34,7 +34,8 @@ func (s *MainState) GetDriversSnapshot() []*Driver {
 
 	driversList := make([]*Driver, 0, len(s.drivers))
 	for _, driver := range s.drivers {
-		driversList = append(driversList, driver)
+		driverCopy := *driver
+		driversList = append(driversList, &driverCopy)
 	}
 
 	return driversList
@@ -65,12 +66,62 @@ func (s *MainState) HandleDedicatedEvents() {
 
 		switch e := event.(type) {
 		case *events.ClientRegisteredEvent:
-
-			fmt.Println("TODO handle ClientRegisteredEvent: ", e.ClientId, e.ClientType)
+			switch e.ClientType {
+			case events.ClientTypeDriver:
+				s.handleDriverRegistered(e)
+			case events.ClientTypePassenger:
+				s.handlePassengerRegistered(e)
+			}
 		case *events.ClientUnregisteredEvent:
-
-			fmt.Println("TODO handle ClientUnregisteredEvent: ", e.ClientId, e.ClientType)
+			switch e.ClientType {
+			case events.ClientTypeDriver:
+				s.handleDriverUnregistered(e)
+			case events.ClientTypePassenger:
+				s.handlePassengerUnregistered(e)
+			}
 		}
 
 	}
+}
+
+func (s *MainState) handleDriverRegistered(e *events.ClientRegisteredEvent) {
+
+	s.driversLock.Lock()
+	defer s.driversLock.Unlock()
+
+	driver, ok := s.drivers[e.ClientId]
+
+	if !ok {
+		driver = NewDriver()
+		s.drivers[e.ClientId] = driver
+		driver.Id = e.ClientId
+	}
+
+	driver.Active = true
+
+	fmt.Println("Driver registered:", e.ClientId)
+}
+
+func (s *MainState) handleDriverUnregistered(e *events.ClientUnregisteredEvent) {
+	s.driversLock.Lock()
+	defer s.driversLock.Unlock()
+
+	driver, ok := s.drivers[e.ClientId]
+
+	if ok {
+		driver.Active = false
+	}
+	fmt.Println("Driver unregistered/inactivated:", e.ClientId)
+}
+
+func (s *MainState) handlePassengerRegistered(e *events.ClientRegisteredEvent) {
+	s.passengersLock.Lock()
+	defer s.passengersLock.Unlock()
+	fmt.Println("TODO handle passenger registered:", e.ClientId)
+}
+
+func (s *MainState) handlePassengerUnregistered(e *events.ClientUnregisteredEvent) {
+	s.passengersLock.Lock()
+	defer s.passengersLock.Unlock()
+	fmt.Println("TODO handle passenger unregistered:", e.ClientId)
 }
