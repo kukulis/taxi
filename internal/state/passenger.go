@@ -6,4 +6,9 @@ type Passenger struct {
 	Lat, Lon float64
 	Ip       string
 	Phone    string
+	Active   bool
+}
+
+func NewPassenger() *Passenger {
+	return &Passenger{}
 }

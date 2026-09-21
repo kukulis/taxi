@@ -41,6 +41,118 @@ func (s *MainState) GetDriversSnapshot() []*Driver {
 	return driversList
 }
 
+func (s *MainState) GetDriverById(id string) *Driver {
+	s.driversLock.Lock()
+	defer s.driversLock.Unlock()
+
+	driver, ok := s.drivers[id]
+	if !ok {
+		return nil
+	}
+
+	driverCopy := *driver
+	return &driverCopy
+}
+
+// UpdateDriver locks the drivers map, looks up the driver by id and, if found,
+// calls mutate on it in place. It reports whether the driver was found.
+func (s *MainState) UpdateDriver(id string, mutate func(*Driver)) bool {
+	s.driversLock.Lock()
+	defer s.driversLock.Unlock()
+
+	driver, ok := s.drivers[id]
+	if !ok {
+		return false
+	}
+
+	mutate(driver)
+	return true
+}
+
+// CreateDriver adds a new driver with the given id, or reactivates the existing
+// record if one is already present, and returns it.
+func (s *MainState) CreateDriver(id string) *Driver {
+	s.driversLock.Lock()
+	defer s.driversLock.Unlock()
+
+	driver, ok := s.drivers[id]
+	if !ok {
+		driver = NewDriver()
+		driver.Id = id
+		s.drivers[id] = driver
+	}
+
+	driver.Active = true
+	return driver
+}
+
+// RemoveDriver marks the driver with the given id inactive. The record is kept,
+// not deleted, so it stays visible in GetDriversSnapshot/GetDriverById.
+func (s *MainState) RemoveDriver(id string) {
+	s.driversLock.Lock()
+	defer s.driversLock.Unlock()
+
+	if driver, ok := s.drivers[id]; ok {
+		driver.Active = false
+	}
+}
+
+func (s *MainState) GetPassengersSnapshot() []*Passenger {
+	s.passengersLock.Lock()
+	defer s.passengersLock.Unlock()
+
+	passengersList := make([]*Passenger, 0, len(s.passengers))
+	for _, passenger := range s.passengers {
+		passengerCopy := *passenger
+		passengersList = append(passengersList, &passengerCopy)
+	}
+
+	return passengersList
+}
+
+// UpdatePassenger locks the passengers map, looks up the passenger by id and, if found,
+// calls mutate on it in place. It reports whether the passenger was found.
+func (s *MainState) UpdatePassenger(id string, mutate func(*Passenger)) bool {
+	s.passengersLock.Lock()
+	defer s.passengersLock.Unlock()
+
+	passenger, ok := s.passengers[id]
+	if !ok {
+		return false
+	}
+
+	mutate(passenger)
+	return true
+}
+
+// CreatePassenger adds a new passenger with the given id, or reactivates the existing
+// record if one is already present, and returns it.
+func (s *MainState) CreatePassenger(id string) *Passenger {
+	s.passengersLock.Lock()
+	defer s.passengersLock.Unlock()
+
+	passenger, ok := s.passengers[id]
+	if !ok {
+		passenger = NewPassenger()
+		passenger.Id = id
+		s.passengers[id] = passenger
+	}
+
+	passenger.Active = true
+	return passenger
+}
+
+// RemovePassenger marks the passenger with the given id inactive. The record is kept,
+// not deleted, so it stays visible in GetPassengersSnapshot.
+func (s *MainState) RemovePassenger(id string) {
+	s.passengersLock.Lock()
+	defer s.passengersLock.Unlock()
+
+	if passenger, ok := s.passengers[id]; ok {
+		passenger.Active = false
+	}
+}
+
 func (s *MainState) AddDedicatedEvent(event util.Event) bool {
 	select {
 	case s.dedicatedEvents <- event:
@@ -68,60 +180,22 @@ func (s *MainState) HandleDedicatedEvents() {
 		case *events.ClientRegisteredEvent:
 			switch e.ClientType {
 			case events.ClientTypeDriver:
-				s.handleDriverRegistered(e)
+				s.CreateDriver(e.ClientId)
+				fmt.Println("Driver registered:", e.ClientId)
 			case events.ClientTypePassenger:
-				s.handlePassengerRegistered(e)
+				s.CreatePassenger(e.ClientId)
+				fmt.Println("Passenger registered:", e.ClientId)
 			}
 		case *events.ClientUnregisteredEvent:
 			switch e.ClientType {
 			case events.ClientTypeDriver:
-				s.handleDriverUnregistered(e)
+				s.RemoveDriver(e.ClientId)
+				fmt.Println("Driver unregistered/inactivated:", e.ClientId)
 			case events.ClientTypePassenger:
-				s.handlePassengerUnregistered(e)
+				s.RemovePassenger(e.ClientId)
+				fmt.Println("Passenger unregistered/inactivated:", e.ClientId)
 			}
 		}
 
 	}
-}
-
-func (s *MainState) handleDriverRegistered(e *events.ClientRegisteredEvent) {
-
-	s.driversLock.Lock()
-	defer s.driversLock.Unlock()
-
-	driver, ok := s.drivers[e.ClientId]
-
-	if !ok {
-		driver = NewDriver()
-		s.drivers[e.ClientId] = driver
-		driver.Id = e.ClientId
-	}
-
-	driver.Active = true
-
-	fmt.Println("Driver registered:", e.ClientId)
-}
-
-func (s *MainState) handleDriverUnregistered(e *events.ClientUnregisteredEvent) {
-	s.driversLock.Lock()
-	defer s.driversLock.Unlock()
-
-	driver, ok := s.drivers[e.ClientId]
-
-	if ok {
-		driver.Active = false
-	}
-	fmt.Println("Driver unregistered/inactivated:", e.ClientId)
-}
-
-func (s *MainState) handlePassengerRegistered(e *events.ClientRegisteredEvent) {
-	s.passengersLock.Lock()
-	defer s.passengersLock.Unlock()
-	fmt.Println("TODO handle passenger registered:", e.ClientId)
-}
-
-func (s *MainState) handlePassengerUnregistered(e *events.ClientUnregisteredEvent) {
-	s.passengersLock.Lock()
-	defer s.passengersLock.Unlock()
-	fmt.Println("TODO handle passenger unregistered:", e.ClientId)
 }

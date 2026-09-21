@@ -9,11 +9,17 @@ import (
 )
 
 type DriversMessageHandler struct {
-	mainState *state.MainState
+	mainState     *state.MainState
+	driversHub    ws.HubInterface
+	passengersHub ws.HubInterface
 }
 
-func NewDriversMessageHandler(mainState *state.MainState) *DriversMessageHandler {
-	return &DriversMessageHandler{mainState: mainState}
+func NewDriversMessageHandler(mainState *state.MainState, driversHub ws.HubInterface, passengersHub ws.HubInterface) *DriversMessageHandler {
+	return &DriversMessageHandler{
+		mainState:     mainState,
+		driversHub:    driversHub,
+		passengersHub: passengersHub,
+	}
 }
 
 func (d DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
@@ -38,7 +44,13 @@ func (d DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 }
 
 func (d DriversMessageHandler) handleClientRespondsCoordinates(clientId string, msg messages.ClientRespondsCoordinates) {
-	fmt.Println("DriversMessageHandler: ClientRespondsCoordinates from", clientId, msg)
+	found := d.mainState.UpdateDriver(clientId, func(driver *state.Driver) {
+		driver.Lat = msg.Lat
+		driver.Lon = msg.Lon
+	})
+	if !found {
+		fmt.Println("DriversMessageHandler: ClientRespondsCoordinates from unknown driver", clientId)
+	}
 }
 
 func (d DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg messages.DriverCancelsOffer) {

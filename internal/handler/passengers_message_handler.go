@@ -9,11 +9,17 @@ import (
 )
 
 type PassengersMessageHandler struct {
-	mainState *state.MainState
+	mainState     *state.MainState
+	driversHub    ws.HubInterface
+	passengersHub ws.HubInterface
 }
 
-func NewPassengersMessageHandler(mainState *state.MainState) *PassengersMessageHandler {
-	return &PassengersMessageHandler{mainState: mainState}
+func NewPassengersMessageHandler(mainState *state.MainState, driversHub ws.HubInterface, passengersHub ws.HubInterface) *PassengersMessageHandler {
+	return &PassengersMessageHandler{
+		mainState:     mainState,
+		driversHub:    driversHub,
+		passengersHub: passengersHub,
+	}
 }
 
 func (p PassengersMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
@@ -36,7 +42,13 @@ func (p PassengersMessageHandler) Handle(messageChannel <-chan ws.ClientMessage)
 }
 
 func (p PassengersMessageHandler) handleClientRespondsCoordinates(clientId string, msg messages.ClientRespondsCoordinates) {
-	fmt.Println("PassengersMessageHandler: ClientRespondsCoordinates from", clientId, msg)
+	found := p.mainState.UpdatePassenger(clientId, func(passenger *state.Passenger) {
+		passenger.Lat = msg.Lat
+		passenger.Lon = msg.Lon
+	})
+	if !found {
+		fmt.Println("PassengersMessageHandler: ClientRespondsCoordinates from unknown passenger", clientId)
+	}
 }
 
 func (p PassengersMessageHandler) handlePassengerInvitesDriver(clientId string, msg messages.PassengerInvitesDriver) {
