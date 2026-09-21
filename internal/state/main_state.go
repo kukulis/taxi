@@ -64,22 +64,12 @@ func (s *MainState) HandleDedicatedEvents() {
 		event := <-s.dedicatedEvents
 
 		switch e := event.(type) {
-		case *events.DriverRegisteredEvent:
+		case *events.ClientRegisteredEvent:
 
-			// TODO
-			fmt.Println(e.ClientId)
-		case *events.DriverUnregisteredEvent:
+			fmt.Println("TODO handle ClientRegisteredEvent: ", e.ClientId, e.ClientType)
+		case *events.ClientUnregisteredEvent:
 
-			// TODO
-			fmt.Println(e.ClientId)
-		case *events.PassengerRegisteredEvent:
-
-			//TODO
-			fmt.Println(e.ClientId)
-		case *events.PassengerUnregisteredEvent:
-
-			// TODO
-			fmt.Println(e.ClientId)
+			fmt.Println("TODO handle ClientUnregisteredEvent: ", e.ClientId, e.ClientType)
 		}
 
 	}

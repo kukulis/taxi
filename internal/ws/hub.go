@@ -5,7 +5,6 @@
 package ws
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"runtime/debug"
@@ -36,9 +35,10 @@ type Hub struct {
 	outgoingMessagesChannel chan ClientMessage
 
 	dispatcher *util.Dispatcher
+	clientType string
 }
 
-func NewHub(dispatcher *util.Dispatcher) *Hub {
+func NewHub(dispatcher *util.Dispatcher, clientType string) *Hub {
 	return &Hub{
 		registerChannel:         make(chan *Client),
 		unregisterChannel:       make(chan string, 256),
@@ -46,6 +46,7 @@ func NewHub(dispatcher *util.Dispatcher) *Hub {
 		incomingMessagesChannel: make(chan ClientMessage, 256),
 		outgoingMessagesChannel: make(chan ClientMessage, 256),
 		dispatcher:              dispatcher,
+		clientType:              clientType,
 	}
 }
 
@@ -60,10 +61,7 @@ func (h *Hub) Run() {
 		case c := <-h.registerChannel:
 			h.clients[c.GetClientId()] = c
 
-			// TODO find a solution how to decide if this is a driver or a passenger
-			fmt.Println("Hub before calling dispatcher Client registered", c.clientId)
-			h.dispatch(&events.DriverRegisteredEvent{ClientId: c.GetClientId()})
-			fmt.Println("Hub after calling dispatcher Client registered", c.clientId)
+			h.dispatch(events.NewClientRegisteredEvent(c.GetClientId(), events.WithRegisteredClientType(h.clientType)))
 		case clientId := <-h.unregisterChannel:
 			client, ok := h.clients[clientId]
 
@@ -75,10 +73,7 @@ func (h *Hub) Run() {
 
 			// consider whether to use a wrapper Close function
 			client.conn.Close()
-			// TODO find a solution how to decide if this is a driver or a passenger
-			fmt.Println("Hub before calling dispatcher Client unregistered", clientId)
-			h.dispatch(&events.DriverUnregisteredEvent{ClientId: client.GetClientId()})
-			fmt.Println("Hub after calling dispatcher Client unregistered", clientId)
+			h.dispatch(events.NewClientUnregisteredEvent(client.GetClientId(), events.WithUnregisteredClientType(h.clientType)))
 
 		case clientMessage := <-h.outgoingMessagesChannel:
 			client, ok := h.clients[clientMessage.ClientId]

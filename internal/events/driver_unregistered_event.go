@@ -2,6 +2,7 @@ package events
 
 const DriverUnregisteredEventName = "DriverUnregistered"
 
+// DriverUnregisteredEvent @Deprecated use ClientUnregisteredEvent instead
 type DriverUnregisteredEvent struct {
 	ClientId string
 }
