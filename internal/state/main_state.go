@@ -3,6 +3,7 @@ package state
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/pkg/util"
@@ -79,6 +80,7 @@ func (s *MainState) CreateDriver(id string) *Driver {
 	if !ok {
 		driver = NewDriver()
 		driver.Id = id
+		driver.CreatedAt = time.Now()
 		s.drivers[id] = driver
 	}
 
@@ -135,6 +137,7 @@ func (s *MainState) CreatePassenger(id string) *Passenger {
 	if !ok {
 		passenger = NewPassenger()
 		passenger.Id = id
+		passenger.CreatedAt = time.Now()
 		s.passengers[id] = passenger
 	}
 

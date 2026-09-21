@@ -29,9 +29,11 @@ func (ClientRespondsCoordinates) GetMessageType() MessageType {
 
 // ClientRespondsInfo is the client's answer to ServerRequestsClientInfo.
 // VehicleInfo is only meaningful for a driver client and is left empty by a passenger.
+// Ip is optional; when empty, the server keeps whatever Ip it already has on record.
 type ClientRespondsInfo struct {
 	Phone       string `json:"phone"`
 	VehicleInfo string `json:"vehicle_info,omitempty"`
+	Ip          string `json:"ip,omitempty"`
 }
 
 func (ClientRespondsInfo) GetMessageType() MessageType {

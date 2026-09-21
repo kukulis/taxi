@@ -1,5 +1,7 @@
 package state
 
+import "time"
+
 type Passenger struct {
 	// may be a random hash for the start
 	Id       string
@@ -7,6 +9,10 @@ type Passenger struct {
 	Ip       string
 	Phone    string
 	Active   bool
+
+	CreatedAt             time.Time
+	InfoReceivedAt        time.Time
+	CoordinatesReceivedAt time.Time
 }
 
 func NewPassenger() *Passenger {

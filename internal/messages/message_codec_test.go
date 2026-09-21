@@ -12,7 +12,7 @@ var roundTripMessages = []MessageInterface{
 	ServerRequestsCoordinates{},
 	ServerRequestsClientInfo{},
 	ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
-	ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius"},
+	ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius", Ip: "203.0.113.5"},
 	ClientResponseError{Error: "unrecognized message type"},
 	ClientError{Error: "can't retrieve coordinates from the device"},
 
