@@ -1,7 +1,7 @@
 package ws
 
 import (
-	"log"
+	"log/slog"
 	"time"
 
 	"darbelis.eu/taxi/internal/messages"
@@ -27,6 +27,7 @@ type Client struct {
 	incomingMessages           chan ClientMessage
 	// will pass client id when closed
 	closedNotifier chan string
+	logger         *slog.Logger
 }
 
 func (c *Client) GetClientId() string {
@@ -40,6 +41,7 @@ func NewClient(clientId string, conn *websocket.Conn, incomingMessages chan Clie
 		conn:                       conn,
 		incomingMessages:           incomingMessages,
 		closedNotifier:             closedNotifier,
+		logger:                     slog.Default().With("component", "Client", "client_id", clientId),
 	}
 }
 
@@ -66,7 +68,7 @@ func (c *Client) readPump() {
 		_, messageBytes, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				c.logger.Warn("websocket read error", "error", err)
 			}
 			break
 		}
@@ -75,7 +77,7 @@ func (c *Client) readPump() {
 		messageId, message, err := messages.Decode(messageBytes)
 		if err != nil {
 			// better handling later
-			log.Printf("error: %v", err)
+			c.logger.Warn("message decode error", "error", err)
 			continue
 		}
 
@@ -106,7 +108,7 @@ func (c *Client) writePump() {
 			messageBytes, err := messages.Encode(clientMessage.MessageId, clientMessage.Message)
 
 			if err != nil {
-				log.Printf("message encode error: %v", err)
+				c.logger.Error("message encode error", "error", err)
 				continue
 			}
 
@@ -114,14 +116,14 @@ func (c *Client) writePump() {
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				log.Printf("error initializing websocket writer: %v", err)
+				c.logger.Warn("websocket writer init error", "error", err)
 
 				return
 			}
 			w.Write(messageBytes)
 
 			if err := w.Close(); err != nil {
-				log.Printf("error closing websocket writer: %v", err)
+				c.logger.Warn("websocket writer close error", "error", err)
 				return
 			}
 		case <-ticker.C:

@@ -5,7 +5,7 @@
 package ws
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"runtime/debug"
 
@@ -36,6 +36,7 @@ type Hub struct {
 
 	dispatcher *util.Dispatcher
 	clientType string
+	logger     *slog.Logger
 }
 
 func NewHub(dispatcher *util.Dispatcher, clientType string) *Hub {
@@ -47,6 +48,7 @@ func NewHub(dispatcher *util.Dispatcher, clientType string) *Hub {
 		outgoingMessagesChannel: make(chan ClientMessage, 256),
 		dispatcher:              dispatcher,
 		clientType:              clientType,
+		logger:                  slog.Default().With("component", "Hub", "client_type", clientType),
 	}
 }
 
@@ -66,7 +68,7 @@ func (h *Hub) Run() {
 			client, ok := h.clients[clientId]
 
 			if !ok {
-				log.Println("Client not found to close", clientId)
+				h.logger.Warn("client not found to close", "client_id", clientId)
 				break
 			}
 			delete(h.clients, clientId)
@@ -78,7 +80,7 @@ func (h *Hub) Run() {
 		case clientMessage := <-h.outgoingMessagesChannel:
 			client, ok := h.clients[clientMessage.ClientId]
 			if !ok {
-				log.Println("Client not found to send message to", clientMessage.ClientId)
+				h.logger.Warn("client not found to send message to", "client_id", clientMessage.ClientId)
 				break
 			}
 
@@ -95,7 +97,11 @@ func (h *Hub) Run() {
 func (h *Hub) dispatch(event util.Event) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("recovered from panic dispatching %s: %v\n%s", event.GetName(), r, debug.Stack())
+			h.logger.Error("recovered from panic dispatching event",
+				"event", event.GetName(),
+				"panic", r,
+				"stack", string(debug.Stack()),
+			)
 		}
 	}()
 	h.dispatcher.Dispatch(event)
@@ -105,7 +111,7 @@ func (h *Hub) dispatch(event util.Event) {
 func (h *Hub) RegisterWebSocketClient(clientId string, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		h.logger.Error("websocket upgrade failed", "client_id", clientId, "error", err)
 		return
 	}
 
