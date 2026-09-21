@@ -24,7 +24,7 @@ func findPassenger(mainState *state.MainState, id string) *state.Passenger {
 func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testing.T) {
 	const passengerId = "passenger-1"
 
-	mainState := state.NewMainState(util.RealClock{})
+	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.CreatePassenger(passengerId)
 
 	// same hub mock initialization as in hub_mock_test.go: answering
@@ -68,7 +68,7 @@ func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testi
 func TestPassengersMessageHandler_UpdatesPassengerInfoOnResponse(t *testing.T) {
 	const passengerId = "passenger-1"
 
-	mainState := state.NewMainState(util.RealClock{})
+	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.CreatePassenger(passengerId)
 
 	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.

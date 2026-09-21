@@ -31,7 +31,7 @@ func waitFor(t *testing.T, timeout time.Duration, condition func() bool, msg fun
 func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) {
 	const driverId = "driver-1"
 
-	mainState := state.NewMainState(util.RealClock{})
+	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.CreateDriver(driverId)
 
 	// same drivers hub mock initialization as in hub_mock_test.go: answering
@@ -80,7 +80,7 @@ func driverErrorThenCoordinatesTest(t *testing.T, errorReply messages.MessageInt
 	t.Helper()
 	const driverId = "driver-1"
 
-	mainState := state.NewMainState(util.RealClock{})
+	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.CreateDriver(driverId)
 
 	requestCount := 0
@@ -132,7 +132,7 @@ func TestDriversMessageHandler_SurvivesClientErrorOnCoordinatesRequest(t *testin
 func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 	const driverId = "driver-1"
 
-	mainState := state.NewMainState(util.RealClock{})
+	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.CreateDriver(driverId)
 
 	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
