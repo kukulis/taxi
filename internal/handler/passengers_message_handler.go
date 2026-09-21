@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"log/slog"
-	"time"
 
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
@@ -58,7 +57,7 @@ func (p PassengersMessageHandler) handleClientRespondsCoordinates(clientId strin
 	found := p.mainState.UpdatePassenger(clientId, func(passenger *state.Passenger) {
 		passenger.Lat = msg.Lat
 		passenger.Lon = msg.Lon
-		passenger.CoordinatesReceivedAt = time.Now()
+		passenger.CoordinatesReceivedAt = p.mainState.Clock.Now()
 	})
 	if !found {
 		p.logger.Warn("ClientRespondsCoordinates from unknown passenger", "client_id", clientId)
@@ -71,7 +70,7 @@ func (p PassengersMessageHandler) handleClientRespondsInfo(clientId string, msg 
 		if msg.Ip != "" {
 			passenger.Ip = msg.Ip
 		}
-		passenger.InfoReceivedAt = time.Now()
+		passenger.InfoReceivedAt = p.mainState.Clock.Now()
 	})
 	if !found {
 		p.logger.Warn("ClientRespondsInfo from unknown passenger", "client_id", clientId)

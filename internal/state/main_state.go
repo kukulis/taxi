@@ -3,7 +3,6 @@ package state
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/pkg/util"
@@ -17,15 +16,20 @@ type MainState struct {
 	passengersLock sync.Mutex
 
 	dedicatedEvents chan util.Event
+
+	// Clock provides the current time for timestamps such as Driver/Passenger
+	// CreatedAt.
+	Clock util.Clock
 }
 
-func NewMainState() *MainState {
+func NewMainState(clock util.Clock) *MainState {
 	return &MainState{
 		drivers:         make(map[string]*Driver),
 		passengers:      make(map[string]*Passenger),
 		driversLock:     sync.Mutex{},
 		passengersLock:  sync.Mutex{},
 		dedicatedEvents: make(chan util.Event, 256),
+		Clock:           clock,
 	}
 }
 
@@ -80,7 +84,7 @@ func (s *MainState) CreateDriver(id string) *Driver {
 	if !ok {
 		driver = NewDriver()
 		driver.Id = id
-		driver.CreatedAt = time.Now()
+		driver.CreatedAt = s.Clock.Now()
 		s.drivers[id] = driver
 	}
 
@@ -137,7 +141,7 @@ func (s *MainState) CreatePassenger(id string) *Passenger {
 	if !ok {
 		passenger = NewPassenger()
 		passenger.Id = id
-		passenger.CreatedAt = time.Now()
+		passenger.CreatedAt = s.Clock.Now()
 		s.passengers[id] = passenger
 	}
 

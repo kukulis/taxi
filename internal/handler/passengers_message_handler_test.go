@@ -8,6 +8,7 @@ import (
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/ws"
+	"darbelis.eu/taxi/pkg/util"
 )
 
 // findPassenger returns the passenger with the given id from mainState's snapshot, or nil.
@@ -23,7 +24,7 @@ func findPassenger(mainState *state.MainState, id string) *state.Passenger {
 func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testing.T) {
 	const passengerId = "passenger-1"
 
-	mainState := state.NewMainState()
+	mainState := state.NewMainState(util.RealClock{})
 	mainState.CreatePassenger(passengerId)
 
 	// same hub mock initialization as in hub_mock_test.go: answering
@@ -67,7 +68,7 @@ func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testi
 func TestPassengersMessageHandler_UpdatesPassengerInfoOnResponse(t *testing.T) {
 	const passengerId = "passenger-1"
 
-	mainState := state.NewMainState()
+	mainState := state.NewMainState(util.RealClock{})
 	mainState.CreatePassenger(passengerId)
 
 	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.

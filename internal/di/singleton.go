@@ -72,7 +72,7 @@ func GetPassengersWsHandler() handler.MessageHandler {
 
 func GetMainState() *state.MainState {
 	if mainState == nil {
-		mainState = state.NewMainState()
+		mainState = state.NewMainState(util.RealClock{})
 	}
 
 	return mainState

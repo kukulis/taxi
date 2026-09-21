@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"darbelis.eu/taxi/internal/events"
+	"darbelis.eu/taxi/pkg/util"
 )
 
 // waitFor polls condition until it returns true. If timeout elapses first, it fails the
@@ -33,7 +34,7 @@ func findPassenger(s *MainState, id string) *Passenger {
 }
 
 func TestMainState_DriverRegistrationRoundTrip(t *testing.T) {
-	s := NewMainState()
+	s := NewMainState(util.RealClock{})
 	go s.HandleDedicatedEvents()
 
 	s.AddDedicatedEvent(events.NewClientRegisteredEvent("driver-1", events.WithRegisteredClientType(events.ClientTypeDriver)))
@@ -69,7 +70,7 @@ func TestMainState_DriverRegistrationRoundTrip(t *testing.T) {
 }
 
 func TestMainState_PassengerRegistrationRoundTrip(t *testing.T) {
-	s := NewMainState()
+	s := NewMainState(util.RealClock{})
 	go s.HandleDedicatedEvents()
 
 	s.AddDedicatedEvent(events.NewClientRegisteredEvent("passenger-1", events.WithRegisteredClientType(events.ClientTypePassenger)))
