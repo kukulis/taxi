@@ -71,6 +71,63 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 	)
 }
 
+// driverErrorThenCoordinatesTest sends two ServerRequestsCoordinates in a row to a driver
+// whose first reply is errorReply, then a valid ClientRespondsCoordinates. It asserts the
+// coordinates end up in MainState, which only happens if the handler survives the error
+// message and keeps consuming the channel instead of getting stuck on it.
+func driverErrorThenCoordinatesTest(t *testing.T, errorReply messages.MessageInterface) {
+	t.Helper()
+	const driverId = "driver-1"
+
+	mainState := state.NewMainState()
+	mainState.CreateDriver(driverId)
+
+	requestCount := 0
+	driversHub := ws.NewHubMock()
+	driversHub.SendMessageFunc = func(sent ws.ClientMessage) {
+		if _, ok := sent.Message.(messages.ServerRequestsCoordinates); !ok {
+			return
+		}
+		requestCount++
+
+		reply := ws.ClientMessage{ClientId: sent.ClientId, Message: messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28}}
+		if requestCount == 1 {
+			reply.Message = errorReply
+		}
+		driversHub.FeedIncomingMessage(reply)
+	}
+
+	passengersHub := ws.NewHubMock()
+
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub)
+	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
+
+	driversHub.SendMessage(ws.ClientMessage{ClientId: driverId, Message: messages.ServerRequestsCoordinates{}})
+	driversHub.SendMessage(ws.ClientMessage{ClientId: driverId, Message: messages.ServerRequestsCoordinates{}})
+
+	waitFor(t, 200*time.Millisecond,
+		func() bool {
+			driver := mainState.GetDriverById(driverId)
+			return driver != nil && driver.Lat == 54.68 && driver.Lon == 25.28
+		},
+		func() string {
+			driver := mainState.GetDriverById(driverId)
+			if driver == nil {
+				return fmt.Sprintf("GetDriverById(%q) = nil, want driver with Lat=54.68 Lon=25.28 after %T then a valid response", driverId, errorReply)
+			}
+			return fmt.Sprintf("driver coordinates = {%v %v}, want {54.68 25.28} after %T (handler may be stuck on the error message)", driver.Lat, driver.Lon, errorReply)
+		},
+	)
+}
+
+func TestDriversMessageHandler_SurvivesClientResponseErrorOnCoordinatesRequest(t *testing.T) {
+	driverErrorThenCoordinatesTest(t, messages.ClientResponseError{Error: "didn't understand ServerRequestsCoordinates"})
+}
+
+func TestDriversMessageHandler_SurvivesClientErrorOnCoordinatesRequest(t *testing.T) {
+	driverErrorThenCoordinatesTest(t, messages.ClientError{Error: "can't retrieve coordinates from the device"})
+}
+
 func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 	const driverId = "driver-1"
 
