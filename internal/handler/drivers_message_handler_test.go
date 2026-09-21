@@ -70,3 +70,46 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 		},
 	)
 }
+
+func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
+	const driverId = "driver-1"
+
+	mainState := state.NewMainState()
+	mainState.CreateDriver(driverId)
+
+	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
+	driversHub := ws.NewHubMock()
+	driversHub.SendMessageFunc = func(sent ws.ClientMessage) {
+		if _, ok := sent.Message.(messages.ServerRequestsClientInfo); !ok {
+			return
+		}
+		driversHub.FeedIncomingMessage(ws.ClientMessage{
+			ClientId: sent.ClientId,
+			Message:  messages.ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius"},
+		})
+	}
+
+	passengersHub := ws.NewHubMock()
+
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub)
+	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
+
+	driversHub.SendMessage(ws.ClientMessage{
+		ClientId: driverId,
+		Message:  messages.ServerRequestsClientInfo{},
+	})
+
+	waitFor(t, 200*time.Millisecond,
+		func() bool {
+			driver := mainState.GetDriverById(driverId)
+			return driver != nil && driver.Phone == "+37060012345" && driver.VehicleInfo == "Toyota Prius"
+		},
+		func() string {
+			driver := mainState.GetDriverById(driverId)
+			if driver == nil {
+				return fmt.Sprintf("GetDriverById(%q) = nil, want driver with Phone=+37060012345 VehicleInfo=Toyota Prius", driverId)
+			}
+			return fmt.Sprintf("driver info = {%q %q}, want {\"+37060012345\" \"Toyota Prius\"}", driver.Phone, driver.VehicleInfo)
+		},
+	)
+}

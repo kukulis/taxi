@@ -29,6 +29,8 @@ func (p PassengersMessageHandler) Handle(messageChannel <-chan ws.ClientMessage)
 		switch msg := message.Message.(type) {
 		case messages.ClientRespondsCoordinates:
 			p.handleClientRespondsCoordinates(message.ClientId, msg)
+		case messages.ClientRespondsInfo:
+			p.handleClientRespondsInfo(message.ClientId, msg)
 		case messages.PassengerInvitesDriver:
 			p.handlePassengerInvitesDriver(message.ClientId, msg)
 		case messages.PassengerCancelsInvite:
@@ -48,6 +50,15 @@ func (p PassengersMessageHandler) handleClientRespondsCoordinates(clientId strin
 	})
 	if !found {
 		fmt.Println("PassengersMessageHandler: ClientRespondsCoordinates from unknown passenger", clientId)
+	}
+}
+
+func (p PassengersMessageHandler) handleClientRespondsInfo(clientId string, msg messages.ClientRespondsInfo) {
+	found := p.mainState.UpdatePassenger(clientId, func(passenger *state.Passenger) {
+		passenger.Phone = msg.Phone
+	})
+	if !found {
+		fmt.Println("PassengersMessageHandler: ClientRespondsInfo from unknown passenger", clientId)
 	}
 }
 

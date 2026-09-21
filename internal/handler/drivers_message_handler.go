@@ -29,6 +29,8 @@ func (d DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 		switch msg := message.Message.(type) {
 		case messages.ClientRespondsCoordinates:
 			d.handleClientRespondsCoordinates(message.ClientId, msg)
+		case messages.ClientRespondsInfo:
+			d.handleClientRespondsInfo(message.ClientId, msg)
 		case messages.DriverCancelsOffer:
 			d.handleDriverCancelsOffer(message.ClientId, msg)
 		case messages.DriverAcceptsOffer:
@@ -50,6 +52,16 @@ func (d DriversMessageHandler) handleClientRespondsCoordinates(clientId string, 
 	})
 	if !found {
 		fmt.Println("DriversMessageHandler: ClientRespondsCoordinates from unknown driver", clientId)
+	}
+}
+
+func (d DriversMessageHandler) handleClientRespondsInfo(clientId string, msg messages.ClientRespondsInfo) {
+	found := d.mainState.UpdateDriver(clientId, func(driver *state.Driver) {
+		driver.Phone = msg.Phone
+		driver.VehicleInfo = msg.VehicleInfo
+	})
+	if !found {
+		fmt.Println("DriversMessageHandler: ClientRespondsInfo from unknown driver", clientId)
 	}
 }
 

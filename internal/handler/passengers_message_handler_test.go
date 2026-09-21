@@ -63,3 +63,46 @@ func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testi
 		},
 	)
 }
+
+func TestPassengersMessageHandler_UpdatesPassengerInfoOnResponse(t *testing.T) {
+	const passengerId = "passenger-1"
+
+	mainState := state.NewMainState()
+	mainState.CreatePassenger(passengerId)
+
+	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
+	passengersHub := ws.NewHubMock()
+	passengersHub.SendMessageFunc = func(sent ws.ClientMessage) {
+		if _, ok := sent.Message.(messages.ServerRequestsClientInfo); !ok {
+			return
+		}
+		passengersHub.FeedIncomingMessage(ws.ClientMessage{
+			ClientId: sent.ClientId,
+			Message:  messages.ClientRespondsInfo{Phone: "+37060054321"},
+		})
+	}
+
+	driversHub := ws.NewHubMock()
+
+	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub)
+	go passengersHandler.Handle(passengersHub.GetIncomingMessagesChannel())
+
+	passengersHub.SendMessage(ws.ClientMessage{
+		ClientId: passengerId,
+		Message:  messages.ServerRequestsClientInfo{},
+	})
+
+	waitFor(t, 200*time.Millisecond,
+		func() bool {
+			passenger := findPassenger(mainState, passengerId)
+			return passenger != nil && passenger.Phone == "+37060054321"
+		},
+		func() string {
+			passenger := findPassenger(mainState, passengerId)
+			if passenger == nil {
+				return fmt.Sprintf("findPassenger(%q) = nil, want passenger with Phone=+37060054321", passengerId)
+			}
+			return fmt.Sprintf("passenger Phone = %q, want %q", passenger.Phone, "+37060054321")
+		},
+	)
+}

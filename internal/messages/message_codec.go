@@ -32,8 +32,16 @@ func Decode(raw []byte) (string, MessageInterface, error) {
 	switch env.Type {
 	case MessageTypeServerRequestsCoordinates:
 		msg = &ServerRequestsCoordinates{}
+	case MessageTypeServerRequestsClientInfo:
+		msg = &ServerRequestsClientInfo{}
 	case MessageTypeClientRespondsCoordinates:
 		msg = &ClientRespondsCoordinates{}
+	case MessageTypeClientRespondsInfo:
+		msg = &ClientRespondsInfo{}
+	case MessageTypeClientResponseError:
+		msg = &ClientResponseError{}
+	case MessageTypeClientError:
+		msg = &ClientError{}
 
 	case MessageTypeServerOffersPassenger:
 		msg = &ServerOffersPassenger{}

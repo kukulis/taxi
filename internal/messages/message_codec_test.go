@@ -10,7 +10,11 @@ import (
 // one value for every message type, with non-zero fields
 var roundTripMessages = []MessageInterface{
 	ServerRequestsCoordinates{},
+	ServerRequestsClientInfo{},
 	ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
+	ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius"},
+	ClientResponseError{Error: "unrecognized message type"},
+	ClientError{Error: "can't retrieve coordinates from the device"},
 
 	ServerOffersPassenger{PassengerId: "p1", Lat: 54.68, Lon: 25.28},
 	ServerCancelsOffer{PassengerId: "p1"},
@@ -65,7 +69,11 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 func TestDecodeHandlesAllMessageTypes(t *testing.T) {
 	allTypes := []MessageType{
 		MessageTypeServerRequestsCoordinates,
+		MessageTypeServerRequestsClientInfo,
 		MessageTypeClientRespondsCoordinates,
+		MessageTypeClientRespondsInfo,
+		MessageTypeClientResponseError,
+		MessageTypeClientError,
 		MessageTypeServerOffersPassenger,
 		MessageTypeServerCancelsOffer,
 		MessageTypeDriverCancelsOffer,

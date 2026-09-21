@@ -10,6 +10,12 @@ func (ServerRequestsCoordinates) GetMessageType() MessageType {
 	return MessageTypeServerRequestsCoordinates
 }
 
+type ServerRequestsClientInfo struct{}
+
+func (ServerRequestsClientInfo) GetMessageType() MessageType {
+	return MessageTypeServerRequestsClientInfo
+}
+
 // === driver or passenger
 
 type ClientRespondsCoordinates struct {
@@ -19,6 +25,37 @@ type ClientRespondsCoordinates struct {
 
 func (ClientRespondsCoordinates) GetMessageType() MessageType {
 	return MessageTypeClientRespondsCoordinates
+}
+
+// ClientRespondsInfo is the client's answer to ServerRequestsClientInfo.
+// VehicleInfo is only meaningful for a driver client and is left empty by a passenger.
+type ClientRespondsInfo struct {
+	Phone       string `json:"phone"`
+	VehicleInfo string `json:"vehicle_info,omitempty"`
+}
+
+func (ClientRespondsInfo) GetMessageType() MessageType {
+	return MessageTypeClientRespondsInfo
+}
+
+// ClientResponseError is sent by the client when it didn't understand a
+// request the server sent it (e.g. an unrecognized message type).
+type ClientResponseError struct {
+	Error string `json:"error"`
+}
+
+func (ClientResponseError) GetMessageType() MessageType {
+	return MessageTypeClientResponseError
+}
+
+// ClientError is sent by the client when it hit its own functionality
+// error unrelated to a specific server request (e.g. it can't read device coordinates).
+type ClientError struct {
+	Error string `json:"error"`
+}
+
+func (ClientError) GetMessageType() MessageType {
+	return MessageTypeClientError
 }
 
 // --- driver-related messages

@@ -22,10 +22,14 @@ const (
 	// === to driver or to passenger
 
 	MessageTypeServerRequestsCoordinates MessageType = "server_requests_coordinates"
+	MessageTypeServerRequestsClientInfo  MessageType = "server_requests_client_info"
 
 	// === driver or passenger
 
 	MessageTypeClientRespondsCoordinates MessageType = "client_responds_coordinates"
+	MessageTypeClientRespondsInfo        MessageType = "client_responds_info"
+	MessageTypeClientResponseError       MessageType = "client_response_error"
+	MessageTypeClientError               MessageType = "client_error"
 
 	// --- driver-related messages
 
