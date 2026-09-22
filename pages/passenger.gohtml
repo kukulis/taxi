@@ -4,5 +4,20 @@
 </head>
 <body>
 <h1>Passenger</h1>
+<div id="passenger-block"></div>
+<script type="module">
+    import {PassengerComponent} from "/assets/js/passenger_component.js";
+    import {GetE} from "/assets/js/util.js";
+
+    const passengerComponent = new PassengerComponent();
+    const passengerBlock = GetE("passenger-block");
+    passengerBlock.appendChild( await passengerComponent.render());
+
+    console.log("Passenger page loaded");
+
+    let isTls = window.location.protocol === "https:";
+    passengerComponent.initWs(isTls);
+
+</script>
 </body>
 </html>

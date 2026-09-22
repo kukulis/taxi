@@ -43,7 +43,7 @@ func (t *TaxiDispatcher) TickForDriversUpdates() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		t.RequestForDriversInfos()
+		//t.RequestForDriversInfos()
 		t.RequestForDriversCoordinates()
 	}
 }
@@ -54,7 +54,7 @@ func (t *TaxiDispatcher) TickForPassengersUpdates() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		t.RequestForPassengersInfos()
+		//t.RequestForPassengersInfos()
 		t.RequestForPassengersCoordinates()
 	}
 }

@@ -99,8 +99,9 @@ export class DriverComponent {
     }
 
     handleServerRequestsClientInfo(data) {
-        console.log('server requested client info, not implemented yet', data);
-        // TODO: send back client_responds_info
+        // TODO: real phone/vehicle_info once there's an input for them; empty for now.
+        console.log('server requested client info, replying with empty values for now');
+        this.sendMessage(MessageType.CLIENT_RESPONDS_INFO, {});
     }
 
     handleServerOffersPassenger(data) {
