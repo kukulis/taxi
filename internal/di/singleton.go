@@ -11,6 +11,7 @@ import (
 
 var webControllerInstance *web.WebController = nil
 var wsControllerInstance *web.WsController = nil
+var driverApiControllerInstance *web.DriverApiController = nil
 
 var driversHubInstance *ws.Hub = nil
 var passengersHubInstance *ws.Hub = nil
@@ -38,6 +39,14 @@ func GetWebController() *web.WebController {
 	}
 
 	return webControllerInstance
+}
+
+func GetDriverApiController() *web.DriverApiController {
+	if driverApiControllerInstance == nil {
+		driverApiControllerInstance = web.NewDriverApiController(GetMainState())
+	}
+
+	return driverApiControllerInstance
 }
 
 func GetDriversHub() *ws.Hub {

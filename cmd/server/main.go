@@ -28,12 +28,9 @@ func main() {
 	//// Swagger UI
 	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//
-	//// API endpoints
-	//apiRoute := router.Group("/api")
-	//
 
-	//di.RegisterApiRoutes(apiRoute)
-	//
+	apiRoute := router.Group("/api")
+	di.RegisterApiRoutes(apiRoute)
 
 	go di.GetDriversHub().Run()
 	go di.GetDriversWsHandler().Handle(di.GetDriversHub().GetIncomingMessagesChannel())

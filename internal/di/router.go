@@ -26,3 +26,7 @@ func RegisterWsRoutes(router *gin.Engine) {
 	router.GET("/ws-driver", func(c *gin.Context) { GetWsController().ServeDriversWebSocketConnection(c) })
 	router.GET("/ws-passenger", func(c *gin.Context) { GetWsController().ServePassengersWebSocketConnection(c) })
 }
+
+func RegisterApiRoutes(apiRoute *gin.RouterGroup) {
+	apiRoute.GET("/driver", func(c *gin.Context) { GetDriverApiController().Search(c) })
+}
