@@ -15,6 +15,9 @@
 
     console.log("Driver page loaded");
 
+    let isTls = window.location.protocol === "https:";
+    driverComponent.initWs(isTls);
+
 </script>
 </body>
 </html>

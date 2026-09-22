@@ -62,3 +62,9 @@ actually connect to (your dev machine's LAN IP, e.g. `192.168.1.23`, found via `
 without it, mobile browsers reject the certificate outright instead of offering to proceed anyway:
 
     openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650 -nodes -subj "/C=LT/ST=Lietuva/L=Kaunas/O=Darbelis/OU=taxi/CN=taxi" -addext "subjectAltName=IP:192.168.1.23,IP:127.0.0.1,DNS:localhost"
+
+
+## js tests
+
+    node --test js-tests
+

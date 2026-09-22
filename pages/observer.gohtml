@@ -1,0 +1,68 @@
+<html>
+<head>
+    <title>Observer</title>
+</head>
+<body>
+<h1>Observer</h1>
+
+<h2>Drivers (up to 5)</h2>
+<table border="1" cellpadding="4">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Active</th>
+        <th>Status</th>
+        <th>Lat</th>
+        <th>Lon</th>
+        <th>Phone</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Drivers}}
+    <tr>
+        <td>{{.Id}}</td>
+        <td>{{.Active}}</td>
+        <td>{{.Status}}</td>
+        <td>{{.Lat}}</td>
+        <td>{{.Lon}}</td>
+        <td>{{.Phone}}</td>
+    </tr>
+    {{else}}
+    <tr>
+        <td colspan="6">No drivers</td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+
+<h2>Passengers (up to 5)</h2>
+<table border="1" cellpadding="4">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Active</th>
+        <th>Lat</th>
+        <th>Lon</th>
+        <th>Phone</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Passengers}}
+    <tr>
+        <td>{{.Id}}</td>
+        <td>{{.Active}}</td>
+        <td>{{.Lat}}</td>
+        <td>{{.Lon}}</td>
+        <td>{{.Phone}}</td>
+    </tr>
+    {{else}}
+    <tr>
+        <td colspan="5">No passengers</td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+
+<p><a href="/observer">Refresh</a></p>
+</body>
+</html>

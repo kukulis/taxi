@@ -22,6 +22,8 @@ var mainState *state.MainState = nil
 
 var dispatcher *util.Dispatcher = nil
 
+var taxiDispatcher *handler.TaxiDispatcher = nil
+
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
 		wsControllerInstance = web.NewWsController(GetDriversHub(), GetPassengersHub())
@@ -32,7 +34,7 @@ func GetWsController() *web.WsController {
 
 func GetWebController() *web.WebController {
 	if webControllerInstance == nil {
-		webControllerInstance = web.NewWebController()
+		webControllerInstance = web.NewWebController(GetMainState())
 	}
 
 	return webControllerInstance
@@ -84,4 +86,12 @@ func GetDispatcher() *util.Dispatcher {
 	}
 
 	return dispatcher
+}
+
+func GetTaxiDispatcher() *handler.TaxiDispatcher {
+	if taxiDispatcher == nil {
+		taxiDispatcher = handler.NewTaxiDispatcher(GetMainState(), GetDriversHub(), GetPassengersHub(), util.RealClock{})
+	}
+
+	return taxiDispatcher
 }

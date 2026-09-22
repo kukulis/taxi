@@ -30,21 +30,21 @@ func (d DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 		message := <-messageChannel
 
 		switch msg := message.Message.(type) {
-		case messages.ClientRespondsCoordinates:
+		case *messages.ClientRespondsCoordinates:
 			d.handleClientRespondsCoordinates(message.ClientId, msg)
-		case messages.ClientRespondsInfo:
+		case *messages.ClientRespondsInfo:
 			d.handleClientRespondsInfo(message.ClientId, msg)
-		case messages.ClientResponseError:
+		case *messages.ClientResponseError:
 			d.handleClientResponseError(message.ClientId, msg)
-		case messages.ClientError:
+		case *messages.ClientError:
 			d.handleClientError(message.ClientId, msg)
-		case messages.DriverCancelsOffer:
+		case *messages.DriverCancelsOffer:
 			d.handleDriverCancelsOffer(message.ClientId, msg)
-		case messages.DriverAcceptsOffer:
+		case *messages.DriverAcceptsOffer:
 			d.handleDriverAcceptsOffer(message.ClientId, msg)
-		case messages.DriverRejectsOffer:
+		case *messages.DriverRejectsOffer:
 			d.handleDriverRejectsOffer(message.ClientId, msg)
-		case messages.DriverChangesStatus:
+		case *messages.DriverChangesStatus:
 			d.handleDriverChangesStatus(message.ClientId, msg)
 		default:
 			d.logger.Warn("unexpected message type",
@@ -55,7 +55,7 @@ func (d DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 	}
 }
 
-func (d DriversMessageHandler) handleClientRespondsCoordinates(clientId string, msg messages.ClientRespondsCoordinates) {
+func (d DriversMessageHandler) handleClientRespondsCoordinates(clientId string, msg *messages.ClientRespondsCoordinates) {
 	found := d.mainState.UpdateDriver(clientId, func(driver *state.Driver) {
 		driver.Lat = msg.Lat
 		driver.Lon = msg.Lon
@@ -66,7 +66,7 @@ func (d DriversMessageHandler) handleClientRespondsCoordinates(clientId string, 
 	}
 }
 
-func (d DriversMessageHandler) handleClientRespondsInfo(clientId string, msg messages.ClientRespondsInfo) {
+func (d DriversMessageHandler) handleClientRespondsInfo(clientId string, msg *messages.ClientRespondsInfo) {
 	found := d.mainState.UpdateDriver(clientId, func(driver *state.Driver) {
 		driver.Phone = msg.Phone
 		driver.VehicleInfo = msg.VehicleInfo
@@ -83,30 +83,30 @@ func (d DriversMessageHandler) handleClientRespondsInfo(clientId string, msg mes
 // handleClientResponseError logs the driver client's report that it didn't
 // understand a request the server sent it. No MainState field maps to this,
 // so it's just logged for now.
-func (d DriversMessageHandler) handleClientResponseError(clientId string, msg messages.ClientResponseError) {
+func (d DriversMessageHandler) handleClientResponseError(clientId string, msg *messages.ClientResponseError) {
 	d.logger.Warn("client didn't understand a server request", "client_id", clientId, "error", msg.Error)
 }
 
 // handleClientError logs the driver client's own functionality error (e.g. it
 // can't read device coordinates). No MainState field maps to this, so it's
 // just logged for now.
-func (d DriversMessageHandler) handleClientError(clientId string, msg messages.ClientError) {
+func (d DriversMessageHandler) handleClientError(clientId string, msg *messages.ClientError) {
 	d.logger.Error("client reported a functionality error", "client_id", clientId, "error", msg.Error)
 }
 
-func (d DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg messages.DriverCancelsOffer) {
+func (d DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg *messages.DriverCancelsOffer) {
 	d.logger.Info("driver cancels offer", "client_id", clientId, "passenger_id", msg.PassengerId)
 }
 
-func (d DriversMessageHandler) handleDriverAcceptsOffer(clientId string, msg messages.DriverAcceptsOffer) {
+func (d DriversMessageHandler) handleDriverAcceptsOffer(clientId string, msg *messages.DriverAcceptsOffer) {
 	d.logger.Info("driver accepts offer", "client_id", clientId, "passenger_id", msg.PassengerId)
 }
 
-func (d DriversMessageHandler) handleDriverRejectsOffer(clientId string, msg messages.DriverRejectsOffer) {
+func (d DriversMessageHandler) handleDriverRejectsOffer(clientId string, msg *messages.DriverRejectsOffer) {
 	d.logger.Info("driver rejects offer", "client_id", clientId, "passenger_id", msg.PassengerId)
 }
 
-func (d DriversMessageHandler) handleDriverChangesStatus(clientId string, msg messages.DriverChangesStatus) {
+func (d DriversMessageHandler) handleDriverChangesStatus(clientId string, msg *messages.DriverChangesStatus) {
 	d.logger.Info("driver changes status", "client_id", clientId, "status", msg.Status)
 }
 
