@@ -30,19 +30,19 @@ func (p PassengersMessageHandler) Handle(messageChannel <-chan ws.ClientMessage)
 		message := <-messageChannel
 
 		switch msg := message.Message.(type) {
-		case messages.ClientRespondsCoordinates:
+		case *messages.ClientRespondsCoordinates:
 			p.handleClientRespondsCoordinates(message.ClientId, msg)
-		case messages.ClientRespondsInfo:
+		case *messages.ClientRespondsInfo:
 			p.handleClientRespondsInfo(message.ClientId, msg)
-		case messages.ClientResponseError:
+		case *messages.ClientResponseError:
 			p.handleClientResponseError(message.ClientId, msg)
-		case messages.ClientError:
+		case *messages.ClientError:
 			p.handleClientError(message.ClientId, msg)
-		case messages.PassengerInvitesDriver:
+		case *messages.PassengerInvitesDriver:
 			p.handlePassengerInvitesDriver(message.ClientId, msg)
-		case messages.PassengerCancelsInvite:
+		case *messages.PassengerCancelsInvite:
 			p.handlePassengerCancelsInvite(message.ClientId, msg)
-		case messages.PassengerRequestDriverCoords:
+		case *messages.PassengerRequestDriverCoords:
 			p.handlePassengerRequestDriverCoords(message.ClientId, msg)
 		default:
 			p.logger.Warn("unexpected message type",
@@ -53,7 +53,7 @@ func (p PassengersMessageHandler) Handle(messageChannel <-chan ws.ClientMessage)
 	}
 }
 
-func (p PassengersMessageHandler) handleClientRespondsCoordinates(clientId string, msg messages.ClientRespondsCoordinates) {
+func (p PassengersMessageHandler) handleClientRespondsCoordinates(clientId string, msg *messages.ClientRespondsCoordinates) {
 	found := p.mainState.UpdatePassenger(clientId, func(passenger *state.Passenger) {
 		passenger.Lat = msg.Lat
 		passenger.Lon = msg.Lon
@@ -64,7 +64,7 @@ func (p PassengersMessageHandler) handleClientRespondsCoordinates(clientId strin
 	}
 }
 
-func (p PassengersMessageHandler) handleClientRespondsInfo(clientId string, msg messages.ClientRespondsInfo) {
+func (p PassengersMessageHandler) handleClientRespondsInfo(clientId string, msg *messages.ClientRespondsInfo) {
 	found := p.mainState.UpdatePassenger(clientId, func(passenger *state.Passenger) {
 		passenger.Phone = msg.Phone
 		if msg.Ip != "" {
@@ -80,25 +80,25 @@ func (p PassengersMessageHandler) handleClientRespondsInfo(clientId string, msg 
 // handleClientResponseError logs the passenger client's report that it didn't
 // understand a request the server sent it. No MainState field maps to this,
 // so it's just logged for now.
-func (p PassengersMessageHandler) handleClientResponseError(clientId string, msg messages.ClientResponseError) {
+func (p PassengersMessageHandler) handleClientResponseError(clientId string, msg *messages.ClientResponseError) {
 	p.logger.Warn("client didn't understand a server request", "client_id", clientId, "error", msg.Error)
 }
 
 // handleClientError logs the passenger client's own functionality error. No
 // MainState field maps to this, so it's just logged for now.
-func (p PassengersMessageHandler) handleClientError(clientId string, msg messages.ClientError) {
+func (p PassengersMessageHandler) handleClientError(clientId string, msg *messages.ClientError) {
 	p.logger.Error("client reported a functionality error", "client_id", clientId, "error", msg.Error)
 }
 
-func (p PassengersMessageHandler) handlePassengerInvitesDriver(clientId string, msg messages.PassengerInvitesDriver) {
+func (p PassengersMessageHandler) handlePassengerInvitesDriver(clientId string, msg *messages.PassengerInvitesDriver) {
 	p.logger.Info("passenger invites driver", "client_id", clientId, "driver_id", msg.DriverId, "lat", msg.Lat, "lon", msg.Lon)
 }
 
-func (p PassengersMessageHandler) handlePassengerCancelsInvite(clientId string, msg messages.PassengerCancelsInvite) {
+func (p PassengersMessageHandler) handlePassengerCancelsInvite(clientId string, msg *messages.PassengerCancelsInvite) {
 	p.logger.Info("passenger cancels invite", "client_id", clientId, "driver_id", msg.DriverId)
 }
 
-func (p PassengersMessageHandler) handlePassengerRequestDriverCoords(clientId string, msg messages.PassengerRequestDriverCoords) {
+func (p PassengersMessageHandler) handlePassengerRequestDriverCoords(clientId string, msg *messages.PassengerRequestDriverCoords) {
 	p.logger.Info("passenger requests driver coordinates", "client_id", clientId, "driver_id", msg.DriverId)
 }
 

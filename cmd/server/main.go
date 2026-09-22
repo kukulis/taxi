@@ -41,6 +41,8 @@ func main() {
 	go di.GetPassengersHub().Run()
 	go di.GetPassengersWsHandler().Handle(di.GetPassengersHub().GetIncomingMessagesChannel())
 
+	go di.GetTaxiDispatcher().TickForDriversUpdates()
+
 	di.RegisterWsRoutes(router)
 	di.RegisterWebRoutes(router)
 

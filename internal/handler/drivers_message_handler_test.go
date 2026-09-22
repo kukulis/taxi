@@ -43,7 +43,7 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 		}
 		driversHub.FeedIncomingMessage(ws.ClientMessage{
 			ClientId: sent.ClientId,
-			Message:  messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
+			Message:  &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
 		})
 	}
 
@@ -91,7 +91,7 @@ func driverErrorThenCoordinatesTest(t *testing.T, errorReply messages.MessageInt
 		}
 		requestCount++
 
-		reply := ws.ClientMessage{ClientId: sent.ClientId, Message: messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28}}
+		reply := ws.ClientMessage{ClientId: sent.ClientId, Message: &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28}}
 		if requestCount == 1 {
 			reply.Message = errorReply
 		}
@@ -122,11 +122,58 @@ func driverErrorThenCoordinatesTest(t *testing.T, errorReply messages.MessageInt
 }
 
 func TestDriversMessageHandler_SurvivesClientResponseErrorOnCoordinatesRequest(t *testing.T) {
-	driverErrorThenCoordinatesTest(t, messages.ClientResponseError{Error: "didn't understand ServerRequestsCoordinates"})
+	driverErrorThenCoordinatesTest(t, &messages.ClientResponseError{Error: "didn't understand ServerRequestsCoordinates"})
 }
 
 func TestDriversMessageHandler_SurvivesClientErrorOnCoordinatesRequest(t *testing.T) {
-	driverErrorThenCoordinatesTest(t, messages.ClientError{Error: "can't retrieve coordinates from the device"})
+	driverErrorThenCoordinatesTest(t, &messages.ClientError{Error: "can't retrieve coordinates from the device"})
+}
+
+// TestDriversMessageHandler_HandlesRealDecodedMessage reproduces a real client's message as it
+// actually arrives at the server: encoded to wire bytes, then decoded via messages.Decode, which
+// always returns a pointer (see message_codec.go's Decode). The other tests in this file instead
+// feed the mock a value literal (messages.ClientRespondsCoordinates{...}), which is not what a
+// real client's message looks like once decoded, so they don't catch a switch that only matches
+// value types and never the pointer types Decode produces.
+func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
+	const driverId = "driver-1"
+
+	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
+	mainState.CreateDriver(driverId)
+
+	driversHub := ws.NewHubMock()
+	passengersHub := ws.NewHubMock()
+
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub)
+	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
+
+	raw, err := messages.Encode("id-1", messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28})
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	_, decoded, err := messages.Decode(raw)
+	if err != nil {
+		t.Fatalf("Decode: %v", err)
+	}
+
+	driversHub.FeedIncomingMessage(ws.ClientMessage{
+		ClientId: driverId,
+		Message:  decoded,
+	})
+
+	waitFor(t, 200*time.Millisecond,
+		func() bool {
+			driver := mainState.GetDriverById(driverId)
+			return driver != nil && driver.Lat == 54.68 && driver.Lon == 25.28
+		},
+		func() string {
+			driver := mainState.GetDriverById(driverId)
+			if driver == nil {
+				return fmt.Sprintf("GetDriverById(%q) = nil, want driver with Lat=54.68 Lon=25.28", driverId)
+			}
+			return fmt.Sprintf("driver coordinates = {%v %v}, want {54.68 25.28} — Handle's type switch may not match %T, the pointer type Decode actually produces", driver.Lat, driver.Lon, decoded)
+		},
+	)
 }
 
 func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
@@ -143,7 +190,7 @@ func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 		}
 		driversHub.FeedIncomingMessage(ws.ClientMessage{
 			ClientId: sent.ClientId,
-			Message:  messages.ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius"},
+			Message:  &messages.ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius"},
 		})
 	}
 

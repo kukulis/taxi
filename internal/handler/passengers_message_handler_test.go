@@ -36,7 +36,7 @@ func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testi
 		}
 		passengersHub.FeedIncomingMessage(ws.ClientMessage{
 			ClientId: sent.ClientId,
-			Message:  messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
+			Message:  &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
 		})
 	}
 
@@ -79,7 +79,7 @@ func TestPassengersMessageHandler_UpdatesPassengerInfoOnResponse(t *testing.T) {
 		}
 		passengersHub.FeedIncomingMessage(ws.ClientMessage{
 			ClientId: sent.ClientId,
-			Message:  messages.ClientRespondsInfo{Phone: "+37060054321"},
+			Message:  &messages.ClientRespondsInfo{Phone: "+37060054321"},
 		})
 	}
 
