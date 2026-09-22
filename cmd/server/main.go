@@ -1,11 +1,20 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"darbelis.eu/taxi/internal/di"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Warning: .env file not found, using default values")
+	}
 
 	dispatcher := di.GetDispatcher()
 	mainState := di.GetMainState()
@@ -35,5 +44,15 @@ func main() {
 	di.RegisterWsRoutes(router)
 	di.RegisterWebRoutes(router)
 
-	_ = router.Run(":8880")
+	//_ = router.Run(":8880")
+
+	useTslString := os.Getenv("USE_TSL")
+
+	useTls := useTslString == "true"
+
+	if useTls {
+		_ = router.RunTLS(":5443", "./tls/server.crt", "./tls/server.key")
+	} else {
+		_ = router.Run(":8880")
+	}
 }

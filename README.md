@@ -44,3 +44,21 @@ Assume you have node installed in to your machine. The required version is 18 or
 
     go run cmd/wsclient/main.go -type driver_accepts_offer -data '{"passenger_id":"p1"}'
 
+
+## certificates
+
+Cmd line go to tls directory and run command:
+
+    openssl genrsa -out server.key 2048
+    
+    openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
+
+Example to run without questions prompt:
+
+    openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650 -nodes -subj "/C=LT/ST=Lietuva/L=Kaunas/O=Darbelis/OU=taxi/CN=taxi"
+
+For testing from a phone, the certificate needs a `subjectAltName` matching the address the phone will
+actually connect to (your dev machine's LAN IP, e.g. `192.168.1.23`, found via `ip addr` / `ifconfig`) —
+without it, mobile browsers reject the certificate outright instead of offering to proceed anyway:
+
+    openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650 -nodes -subj "/C=LT/ST=Lietuva/L=Kaunas/O=Darbelis/OU=taxi/CN=taxi" -addext "subjectAltName=IP:192.168.1.23,IP:127.0.0.1,DNS:localhost"
