@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 
 	"darbelis.eu/taxi/internal/events"
@@ -20,16 +21,19 @@ type MainState struct {
 	// Clock provides the current time for timestamps such as Driver/Passenger
 	// CreatedAt.
 	Clock util.Clock
+
+	invitationsContainer *InvitationsContainer
 }
 
 func NewMainState(clock util.Clock) *MainState {
 	return &MainState{
-		drivers:         make(map[string]*Driver),
-		passengers:      make(map[string]*Passenger),
-		driversLock:     sync.Mutex{},
-		passengersLock:  sync.Mutex{},
-		dedicatedEvents: make(chan util.Event, 256),
-		Clock:           clock,
+		drivers:              make(map[string]*Driver),
+		passengers:           make(map[string]*Passenger),
+		driversLock:          sync.Mutex{},
+		passengersLock:       sync.Mutex{},
+		dedicatedEvents:      make(chan util.Event, 256),
+		Clock:                clock,
+		invitationsContainer: NewInvitationsContainer(),
 	}
 }
 
@@ -90,6 +94,37 @@ func (s *MainState) CreateDriver(id string) *Driver {
 
 	driver.Active = true
 	return driver
+}
+
+// DriverDistance pairs a Driver with its distance in kilometers from a query point.
+type DriverDistance struct {
+	Driver   *Driver
+	Distance float64
+}
+
+// GetNearestDrivers returns every active driver with known coordinates
+// (CoordinatesReceivedAt set), sorted by ascending distance in kilometers from
+// (lat, lon). Brute force: computes the distance to every active driver, no
+// spatial index. Callers decide how many results to actually use.
+func (s *MainState) GetNearestDrivers(lat, lon float64) []DriverDistance {
+	drivers := s.GetDriversSnapshot()
+
+	result := make([]DriverDistance, 0, len(drivers))
+	for _, driver := range drivers {
+		if !driver.Active || driver.CoordinatesReceivedAt.IsZero() {
+			continue
+		}
+		result = append(result, DriverDistance{
+			Driver:   driver,
+			Distance: util.HaversineDistanceKm(lat, lon, driver.Lat, driver.Lon),
+		})
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Distance < result[j].Distance
+	})
+
+	return result
 }
 
 // RemoveDriver marks the driver with the given id inactive. The record is kept,
@@ -205,4 +240,8 @@ func (s *MainState) HandleDedicatedEvents() {
 		}
 
 	}
+}
+
+func (s *MainState) GetInvitationsContainer() *InvitationsContainer {
+	return s.invitationsContainer
 }
