@@ -19,15 +19,19 @@ func NewWebController(mainState *state.MainState) *WebController {
 }
 
 func (controller *WebController) Index(c *gin.Context) {
+	RollCookie(c)
 	c.HTML(http.StatusOK, "main.gohtml", gin.H{})
 }
 func (controller *WebController) Driver(c *gin.Context) {
+	RollCookie(c)
 	c.HTML(http.StatusOK, "driver.gohtml", gin.H{})
 }
 func (controller *WebController) Passenger(c *gin.Context) {
+	RollCookie(c)
 	c.HTML(http.StatusOK, "passenger.gohtml", gin.H{})
 }
 func (controller *WebController) Observer(c *gin.Context) {
+	RollCookie(c)
 	drivers := controller.mainState.GetDriversSnapshot()
 	if len(drivers) > observerTableLimit {
 		drivers = drivers[:observerTableLimit]

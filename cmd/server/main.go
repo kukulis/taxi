@@ -42,11 +42,10 @@ func main() {
 	go di.GetPassengersWsHandler().Handle(di.GetPassengersHub().GetIncomingMessagesChannel())
 
 	go di.GetTaxiDispatcher().TickForDriversUpdates()
+	go di.GetTaxiDispatcher().TickForPassengersUpdates()
 
 	di.RegisterWsRoutes(router)
 	di.RegisterWebRoutes(router)
-
-	//_ = router.Run(":8880")
 
 	useTslString := os.Getenv("USE_TSL")
 

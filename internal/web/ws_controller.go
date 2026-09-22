@@ -4,8 +4,11 @@ import (
 	"log"
 
 	"darbelis.eu/taxi/internal/ws"
-	"darbelis.eu/taxi/pkg/util"
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	ClientCookieName = "gt_taxi_id"
 )
 
 type WsController struct {
@@ -18,21 +21,23 @@ func NewWsController(driversHub *ws.Hub, passengersHub *ws.Hub) *WsController {
 }
 
 func (c *WsController) ServeDriversWebSocketConnection(ctx *gin.Context) {
-	clientId, err := util.RandomHash(8)
+	clientId, err := RollCookie(ctx)
 	if err != nil {
 		log.Println("Failed to create a client id", err)
 		ctx.AbortWithError(500, err)
 		return
 	}
+
 	c.driversHub.RegisterWebSocketClient(clientId, ctx.Writer, ctx.Request)
 }
 
 func (c *WsController) ServePassengersWebSocketConnection(ctx *gin.Context) {
-	clientId, err := util.RandomHash(8)
+	clientId, err := RollCookie(ctx)
 	if err != nil {
 		log.Println("Failed to create a client id", err)
 		ctx.AbortWithError(500, err)
 		return
 	}
+
 	c.passengersHub.RegisterWebSocketClient(clientId, ctx.Writer, ctx.Request)
 }
