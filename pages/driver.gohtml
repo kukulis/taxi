@@ -4,5 +4,17 @@
 </head>
 <body>
 <h1>Driver</h1>
+<div id="driver-block"></div>
+<script type="module">
+    import {DriverComponent} from "/assets/js/driver_component.js";
+    import {GetE} from "/assets/js/util.js";
+
+    const driverComponent = new DriverComponent();
+    const driverBlock = GetE("driver-block");
+    driverBlock.appendChild( await driverComponent.render());
+
+    console.log("Driver page loaded");
+
+</script>
 </body>
 </html>
