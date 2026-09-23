@@ -25,6 +25,10 @@ var dispatcher *util.Dispatcher = nil
 
 var taxiDispatcher *handler.TaxiDispatcher = nil
 
+var driverStatusChangeForDriverListener *handler.DriverStatusChangeForDriverListener = nil
+var driverStatusChangeForInvitationListener *handler.DriverStatusChangeForInvitationListener = nil
+var onboardRegisteredDriverListener *handler.OnboardRegisteredDriverListener = nil
+
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
 		wsControllerInstance = web.NewWsController(GetDriversHub(), GetPassengersHub())
@@ -103,4 +107,28 @@ func GetTaxiDispatcher() *handler.TaxiDispatcher {
 	}
 
 	return taxiDispatcher
+}
+
+func GetDriverStatusChangeForDriverListener() *handler.DriverStatusChangeForDriverListener {
+	if driverStatusChangeForDriverListener == nil {
+		driverStatusChangeForDriverListener = handler.NewDriverStatusChangeForDriverListener(GetMainState())
+	}
+
+	return driverStatusChangeForDriverListener
+}
+
+func GetDriverStatusChangeForInvitationListener() *handler.DriverStatusChangeForInvitationListener {
+	if driverStatusChangeForInvitationListener == nil {
+		driverStatusChangeForInvitationListener = handler.NewDriverStatusChangeForInvitationListener(GetMainState(), GetPassengersHub())
+	}
+
+	return driverStatusChangeForInvitationListener
+}
+
+func GetOnboardRegisteredDriverListener() *handler.OnboardRegisteredDriverListener {
+	if onboardRegisteredDriverListener == nil {
+		onboardRegisteredDriverListener = handler.NewOnboardRegisteredDriverListener(GetMainState())
+	}
+
+	return onboardRegisteredDriverListener
 }

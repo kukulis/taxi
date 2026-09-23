@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"darbelis.eu/taxi/internal/di"
+	"darbelis.eu/taxi/internal/events"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -19,6 +20,10 @@ func main() {
 	dispatcher := di.GetDispatcher()
 	mainState := di.GetMainState()
 	di.InitializeListenersFromMainState(mainState, dispatcher)
+
+	dispatcher.AddListener(events.DriverStatusChangedEventName, di.GetDriverStatusChangeForDriverListener().Handle)
+	dispatcher.AddListener(events.DriverStatusChangedEventName, di.GetDriverStatusChangeForInvitationListener().Handle)
+	dispatcher.AddListener(events.ClientRegisteredEventName, di.GetOnboardRegisteredDriverListener().Handle)
 
 	go mainState.HandleDedicatedEvents()
 

@@ -7,6 +7,7 @@ import (
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/ws"
+	"darbelis.eu/taxi/pkg/util"
 )
 
 type PassengersMessageHandler struct {
@@ -92,14 +93,57 @@ func (p *PassengersMessageHandler) handleClientError(clientId string, msg *messa
 
 func (p *PassengersMessageHandler) handlePassengerInvitesDriver(clientId string, msg *messages.PassengerInvitesDriver) {
 	p.logger.Info("passenger invites driver", "client_id", clientId, "driver_id", msg.DriverId, "lat", msg.Lat, "lon", msg.Lon)
+
+	invitationId, err := util.RandomHash(8)
+	if err != nil {
+		p.logger.Error("failed to create invitation id", "error", err)
+		return
+	}
+
+	invitation := state.NewInvitation(invitationId)
+	invitation.PassengerId = clientId
+	invitation.DriverId = msg.DriverId
+	invitation.CreatedAt = p.mainState.Clock.Now()
+
+	p.mainState.GetInvitationsContainer().Add(*invitation)
+
+	p.driversHub.SendMessage(ws.ClientMessage{
+		ClientId: msg.DriverId,
+		Message: messages.ServerOffersPassenger{
+			PassengerId: clientId,
+			Lat:         msg.Lat,
+			Lon:         msg.Lon,
+		},
+	})
 }
 
 func (p *PassengersMessageHandler) handlePassengerCancelsInvite(clientId string, msg *messages.PassengerCancelsInvite) {
 	p.logger.Info("passenger cancels invite", "client_id", clientId, "driver_id", msg.DriverId)
+
+	invitations := p.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
+		PassengerId: clientId,
+		DriverId:    msg.DriverId,
+	})
+	if len(invitations) == 0 {
+		p.logger.Warn("PassengerCancelsInvite for unknown invitation", "client_id", clientId, "driver_id", msg.DriverId)
+		return
+	}
+	invitation := invitations[0]
+
+	p.mainState.GetInvitationsContainer().Update(invitation.Id, func(inv *state.Invitation) {
+		inv.Status = state.InvitationStatusCanceled
+		inv.CancelledAt = p.mainState.Clock.Now()
+	})
+
+	p.driversHub.SendMessage(ws.ClientMessage{
+		ClientId: msg.DriverId,
+		Message:  messages.ServerCancelsOffer{PassengerId: clientId},
+	})
 }
 
 func (p *PassengersMessageHandler) handlePassengerRequestDriverCoords(clientId string, msg *messages.PassengerRequestDriverCoords) {
 	p.logger.Info("passenger requests driver coordinates", "client_id", clientId, "driver_id", msg.DriverId)
+	// TODO after MVP
 }
 
 // forcing to implement interface

@@ -16,6 +16,7 @@ type MainState struct {
 	passengers     map[string]*Passenger
 	passengersLock sync.Mutex
 
+	// TODO move to the OnboardRegisteredDriverListener
 	dedicatedEvents chan util.Event
 
 	// Clock provides the current time for timestamps such as Driver/Passenger

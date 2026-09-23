@@ -224,7 +224,3 @@ func (d *DriversMessageHandler) handleDriverChangesStatus(clientId string, msg *
 
 // forcing to implement interface
 var _ MessageHandler = &DriversMessageHandler{}
-
-// another class
-// check if driver has invitation with state 'driving' , call function 'finishDriving' ( skeleton with TODO now )
-// find the invitation by the driver which is accepted, change status to 'driving'
