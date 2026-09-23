@@ -3,7 +3,8 @@ package state
 type InvitationsFilter struct {
 	PassengerId string
 	DriverId    string
-	Status      string
+	// TODO modify to array of strings
+	Status string
 }
 
 func (f *InvitationsFilter) Match(invitation Invitation) bool {

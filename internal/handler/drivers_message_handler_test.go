@@ -49,7 +49,7 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 
 	passengersHub := ws.NewHubMock()
 
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub)
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{})
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
 	driversHub.SendMessage(ws.ClientMessage{
@@ -100,7 +100,7 @@ func driverErrorThenCoordinatesTest(t *testing.T, errorReply messages.MessageInt
 
 	passengersHub := ws.NewHubMock()
 
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub)
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{})
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
 	driversHub.SendMessage(ws.ClientMessage{ClientId: driverId, Message: messages.ServerRequestsCoordinates{}})
@@ -144,7 +144,7 @@ func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 	driversHub := ws.NewHubMock()
 	passengersHub := ws.NewHubMock()
 
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub)
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{})
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
 	raw, err := messages.Encode("id-1", messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28})
@@ -196,7 +196,7 @@ func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 
 	passengersHub := ws.NewHubMock()
 
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub)
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{})
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
 	driversHub.SendMessage(ws.ClientMessage{

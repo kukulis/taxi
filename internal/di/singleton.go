@@ -67,7 +67,7 @@ func GetPassengersHub() *ws.Hub {
 
 func GetDriversWsHandler() handler.MessageHandler {
 	if driversMessagesWsHandler == nil {
-		driversMessagesWsHandler = handler.NewDriversMessageHandler(GetMainState(), GetDriversHub(), GetPassengersHub())
+		driversMessagesWsHandler = handler.NewDriversMessageHandler(GetMainState(), GetDriversHub(), GetPassengersHub(), GetDispatcher())
 	}
 
 	return driversMessagesWsHandler
