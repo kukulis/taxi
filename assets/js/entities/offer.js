@@ -1,6 +1,9 @@
 export class Offer {
     lat = null;
-    lng = null;
+    lon = null;
+    /**
+     * @type {string}
+     */
     passengerId = null;
     status = null;
     time = null;
@@ -11,7 +14,7 @@ export class Offer {
     }
 
     setLng(lng) {
-        this.lng = lng;
+        this.lon = lng;
         return this;
     }
 
@@ -35,7 +38,7 @@ export class Offer {
     }
 
     getLng() {
-        return this.lng;
+        return this.lon;
     }
 
     getPassengerId() {
@@ -48,5 +51,14 @@ export class Offer {
 
     getTime() {
         return this.time;
+    }
+
+    fromObject(obj) {
+        this.lat = obj.lat;
+        this.lon = obj.lon;
+        this.passengerId = obj.passenger_id;
+        this.status = obj.status;
+        this.time = obj.time;
+        return this;
     }
 }

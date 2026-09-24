@@ -35,10 +35,10 @@ export class PassengerComponent {
      * @type {[Invitation]}
      */
     invitations = [
-        (new Invitation()).setDriverId('1234567890')
-            .setStatus(InvitationStatus.PENDING)
-            .setLat(12)
-            .setLon(50)
+        // (new Invitation()).setDriverId('1234567890')
+        //     .setStatus(InvitationStatus.PENDING)
+        //     .setLat(12)
+        //     .setLon(50)
     ];
 
     constructor(passengerId, apiClient) {
@@ -59,6 +59,18 @@ export class PassengerComponent {
         return AppChildren(this.passengerView, [this.infoView, this.invitationsView, this.driversView]);
     }
 
+    /**
+     * Status text with a per-status class (invitation-status-pending, ...) for its color.
+     * @param {string} className
+     * @param {string} status
+     * @returns {HTMLElement}
+     */
+    statusBadge(className, status) {
+        const badge = NewECT('span', className, status);
+        badge.classList.add('invitation-status-' + status);
+        return badge;
+    }
+
     renderInvitations() {
         ClearE(this.invitationsView);
 
@@ -68,13 +80,22 @@ export class PassengerComponent {
             const parts = [
                 NewECT('span', 'invitation-driver', invitation.getDriverId()),
                 NewECT('span', 'invitation-coords', `(${invitation.getLat()}, ${invitation.getLon()})`),
-                NewECT('span', 'invitation-status', invitation.getStatus()),
+                this.statusBadge('invitation-status', invitation.getStatus()),
             ];
 
+            const actions = NewEC('span', 'invitation-actions');
             if (this.isActiveInvitation(invitation)) {
                 const cancelButton = NewECT('button', 'invitation-cancel', 'cancel');
                 cancelButton.addEventListener('click', () => this.onInvitationCancelClick(invitation));
-                parts.push(cancelButton);
+                actions.appendChild(cancelButton);
+            } else if (invitation.getStatus() === InvitationStatus.REJECTED
+                || invitation.getStatus() === InvitationStatus.COMPLETED) {
+                const hideButton = NewECT('button', 'invitation-hide', 'hide');
+                hideButton.addEventListener('click', () => this.onInvitationHideClick(invitation));
+                actions.appendChild(hideButton);
+            }
+            if (actions.hasChildNodes()) {
+                parts.push(actions);
             }
 
             const row = NewEC('div', 'invitation-row');
@@ -110,17 +131,28 @@ export class PassengerComponent {
     }
 
     /**
+     * Removes a finished invitation from the list; the server keeps it.
+     * @param {Invitation} invitation
+     */
+    onInvitationHideClick(invitation) {
+        this.invitations = this.invitations.filter((i) => i !== invitation);
+        this.renderInvitations();
+    }
+
+    /**
      * Server notifications only carry driver_id, so they apply to the latest active invitation to that driver.
      * @param {string} driverId
      * @param {string} status
      */
     updateInvitationStatus(driverId, status) {
+        // driving is not cancelable (so not "active"), but the server still finishes it
         const invitation = this.invitations.findLast(
-            (i) => i.getDriverId() === driverId && this.isActiveInvitation(i),
+            (i) => i.getDriverId() === driverId
+                && (this.isActiveInvitation(i) || i.getStatus() === InvitationStatus.DRIVING),
         );
 
         if (!invitation) {
-            console.warn('no active invitation for driver', driverId, 'to set status', status);
+            console.warn('no open invitation for driver', driverId, 'to set status', status);
             return;
         }
 
@@ -238,6 +270,11 @@ export class PassengerComponent {
             return;
         }
         this.conn = new WebSocket(protocol + document.location.host + "/ws-passenger");
+        // send our coordinates right away instead of waiting for the server to ask;
+        // only once open, since send() throws while the socket is still connecting
+        this.conn.onopen = () => {
+            this.handleServerRequestsCoordinates({});
+        };
         this.conn.onclose = (evt) => {
             this.passengerView.appendChild(NewT('Websocket connection closed.'));
         };
@@ -267,6 +304,12 @@ export class PassengerComponent {
                 break;
             case MessageType.SERVER_NOTIFIES_INVITE_CANCELED:
                 this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.CANCELED);
+                break;
+            case MessageType.SERVER_NOTIFIES_VOYAGE_STARTED:
+                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.DRIVING);
+                break;
+            case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
+                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.COMPLETED);
                 break;
             default:
                 console.log('unhandled message type', envelope.type, envelope);

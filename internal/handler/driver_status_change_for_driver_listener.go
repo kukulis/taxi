@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"fmt"
-
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/pkg/util"
@@ -19,8 +17,6 @@ func NewDriverStatusChangeForDriverListener(mainState *state.MainState) *DriverS
 }
 
 func (l *DriverStatusChangeForDriverListener) Handle(e util.Event) {
-	fmt.Println("Handle status change for driver TODO")
-
 	statusChangeEvent := e.(events.DriverStatusChangedEvent)
 	//oldStatus := state.DriverStatus(statusChangeEvent.DriverStatusOld)
 	newStatus := state.DriverStatus(statusChangeEvent.DriverStatusNew)

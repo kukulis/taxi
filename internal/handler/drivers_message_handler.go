@@ -106,9 +106,11 @@ func (d *DriversMessageHandler) handleClientError(clientId string, msg *messages
 func (d *DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg *messages.DriverCancelsOffer) {
 	d.logger.Info("driver cancels offer", "client_id", clientId, "passenger_id", msg.PassengerId)
 
+	// the driver's "cancel" button is only shown on an accepted offer
 	invitations := d.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
 		DriverId:    clientId,
 		PassengerId: msg.PassengerId,
+		Status:      state.InvitationStatusAccepted,
 	})
 	if len(invitations) == 0 {
 		d.logger.Warn("DriverCancelsOffer for unknown invitation", "client_id", clientId, "passenger_id", msg.PassengerId)
@@ -130,9 +132,11 @@ func (d *DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg *m
 func (d *DriversMessageHandler) handleDriverAcceptsOffer(clientId string, msg *messages.DriverAcceptsOffer) {
 	d.logger.Info("driver accepts offer", "client_id", clientId, "passenger_id", msg.PassengerId)
 
+	// only a pending invitation can be accepted; older rejected/completed ones with the same pair must be skipped
 	invitations := d.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
 		DriverId:    clientId,
 		PassengerId: msg.PassengerId,
+		Status:      state.InvitationStatusPending,
 	})
 	if len(invitations) == 0 {
 		d.logger.Warn("DriverAcceptsOffer for unknown invitation", "client_id", clientId, "passenger_id", msg.PassengerId)
@@ -173,6 +177,7 @@ func (d *DriversMessageHandler) handleDriverRejectsOffer(clientId string, msg *m
 	invitations := d.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
 		DriverId:    clientId,
 		PassengerId: msg.PassengerId,
+		Status:      state.InvitationStatusPending,
 	})
 	if len(invitations) == 0 {
 		d.logger.Warn("DriverRejectsOffer for unknown invitation", "client_id", clientId, "passenger_id", msg.PassengerId)

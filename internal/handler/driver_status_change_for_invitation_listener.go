@@ -1,33 +1,35 @@
 package handler
 
 import (
-	"fmt"
-
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/ws"
 	"darbelis.eu/taxi/pkg/util"
+	"github.com/bytedance/gopkg/util/logger"
 )
 
 // DriverStatusChangeForInvitationListener The listener is moved outside 'state' package to avoid cyclic dependency
 type DriverStatusChangeForInvitationListener struct {
 	mainState     *state.MainState
+	driversHub    ws.HubInterface
 	passengersHub ws.HubInterface
 }
 
 func NewDriverStatusChangeForInvitationListener(
 	mainState *state.MainState,
+	driversHub ws.HubInterface,
 	passengersHub ws.HubInterface,
 ) *DriverStatusChangeForInvitationListener {
 	return &DriverStatusChangeForInvitationListener{
 		mainState:     mainState,
+		driversHub:    driversHub,
 		passengersHub: passengersHub,
 	}
 }
 
 func (l *DriverStatusChangeForInvitationListener) Handle(e util.Event) {
-	fmt.Println("Handle status change for invitation TODO")
+	logger.Info("DriverStatusChangeForInvitationListener.Handle called with event ", e.GetName())
 
 	statusChangeEvent := e.(events.DriverStatusChangedEvent)
 	oldStatus := state.DriverStatus(statusChangeEvent.DriverStatusOld)
@@ -48,15 +50,12 @@ func (l *DriverStatusChangeForInvitationListener) Handle(e util.Event) {
 			l.mainState.GetInvitationsContainer().Update(invitation.Id, func(inv *state.Invitation) {
 				inv.Status = state.InvitationStatusCompleted
 			})
-			// TODO send message to passenger
-			l.passengersHub.SendMessage(
-				ws.ClientMessage{
-					ClientId: invitation.PassengerId,
-					Message: messages.ServerNotifiesVoyageFinished{
-						DriverId:    statusChangeEvent.DriverId,
-						PassengerId: invitation.PassengerId,
-					},
-				})
+			voyageFinished := messages.ServerNotifiesVoyageFinished{
+				DriverId:    statusChangeEvent.DriverId,
+				PassengerId: invitation.PassengerId,
+			}
+			l.passengersHub.SendMessage(ws.ClientMessage{ClientId: invitation.PassengerId, Message: voyageFinished})
+			l.driversHub.SendMessage(ws.ClientMessage{ClientId: statusChangeEvent.DriverId, Message: voyageFinished})
 		}
 
 		return
@@ -68,6 +67,7 @@ func (l *DriverStatusChangeForInvitationListener) Handle(e util.Event) {
 				DriverId: statusChangeEvent.DriverId,
 				Status:   state.InvitationStatusAccepted,
 			})
+		logger.Info("DriverStatusChangeForInvitationListener.Handle: idle->working, invitations count: ", len(invitations), "")
 		if len(invitations) > 0 {
 			invitation := invitations[0]
 			// TODO decide what to do if there are more invitations
@@ -75,15 +75,12 @@ func (l *DriverStatusChangeForInvitationListener) Handle(e util.Event) {
 				inv.Status = state.InvitationStatusDriving
 			})
 
-			// TODO send message to passenger
-			l.passengersHub.SendMessage(
-				ws.ClientMessage{
-					ClientId: invitation.PassengerId,
-					Message: messages.ServerNotifiesVoyageStarted{
-						DriverId:    statusChangeEvent.DriverId,
-						PassengerId: invitation.PassengerId,
-					},
-				})
+			voyageStarted := messages.ServerNotifiesVoyageStarted{
+				DriverId:    statusChangeEvent.DriverId,
+				PassengerId: invitation.PassengerId,
+			}
+			l.passengersHub.SendMessage(ws.ClientMessage{ClientId: invitation.PassengerId, Message: voyageStarted})
+			l.driversHub.SendMessage(ws.ClientMessage{ClientId: statusChangeEvent.DriverId, Message: voyageStarted})
 		}
 
 		return

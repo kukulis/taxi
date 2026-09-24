@@ -1,6 +1,15 @@
 import {AppChildren, ClearE, NewEC, NewECT, NewT} from "./util.js";
 import {DriverStatus, InvitationStatus, MessageType} from "./constants.js";
 import {Offer} from "./entities/offer.js";
+import {
+    DriverAcceptsOffer,
+    DriverCancelsOffer,
+    DriverRejectsOffer,
+    ServerCancelsOffer,
+    ServerNotifiesVoyageFinished,
+    ServerNotifiesVoyageStarted,
+    ServerOffersPassenger
+} from "./entities/messages.js";
 
 export class DriverComponent {
 
@@ -31,22 +40,10 @@ export class DriverComponent {
     constructor(driverId) {
         this.driverId = driverId;
 
-
-        // TODO remove after test
         // TODO load offers from REST api on a first load. This will require an API endpoint in the server too.
-        this.offers.push(
-            new Offer()
-                .setLat(12)
-                .setLng(50)
-                .setStatus(InvitationStatus.PENDING)
-                .setPassengerId('123123')
-                .setTime(new Date()),
-        );
 
         // TODO in case driver reconnects after a short disconnection,
         // create an api endpoint for driver to get the current status too.
-
-        // this.selectedStatus = this.currentStatus;
     }
 
     async render() {
@@ -125,6 +122,18 @@ export class DriverComponent {
         this.renderStatuses();
     }
 
+    /**
+     * Status text with a per-status class (invitation-status-pending, ...) for its color.
+     * @param {string} className
+     * @param {string} status
+     * @returns {HTMLElement}
+     */
+    statusBadge(className, status) {
+        const badge = NewECT('span', className, status);
+        badge.classList.add('invitation-status-' + status);
+        return badge;
+    }
+
     renderOffers() {
         ClearE(this.offersView);
 
@@ -133,8 +142,8 @@ export class DriverComponent {
         for (const offer of this.offers) {
             const parts = [
                 NewECT('span', 'offer-client', offer.getPassengerId()),
-                NewECT('span', 'offer-coords', `(${offer.lat}, ${offer.lng})`),
-                NewECT('span', 'offer-status', offer.getStatus()),
+                NewECT('span', 'offer-coords', `(${offer.lat}, ${offer.lon})`),
+                this.statusBadge('offer-status', offer.getStatus()),
             ];
 
             const actions = this.offerActions(offer);
@@ -171,21 +180,53 @@ export class DriverComponent {
             case InvitationStatus.ACCEPTED:
                 addButton('cancel', (o) => this.onOfferCancelClick(o));
                 break;
+            case InvitationStatus.REJECTED:
+            case InvitationStatus.CANCELED:
+            case InvitationStatus.COMPLETED:
+                addButton('hide', (o) => this.onOfferHideClick(o));
+                break;
         }
 
         return cell;
     }
 
+    /**
+     * Removes a finished offer from the list; the server keeps it.
+     * @param {Offer} offer
+     */
+    onOfferHideClick(offer) {
+        this.offers = this.offers.filter((o) => o !== offer);
+        this.renderOffers();
+    }
+
+    /**
+     * @param {Offer} offer
+     */
     onOfferAcceptClick(offer) {
-        // TODO
+        const message = new DriverAcceptsOffer(offer.passengerId)
+        this.sendMessage(message.getMessageType(), message);
+        // is this pointer?
+        offer.setStatus(InvitationStatus.ACCEPTED);
+
+        this.renderOffers();
     }
 
     onOfferRejectClick(offer) {
-        // TODO
+        const message = new DriverRejectsOffer(offer.passengerId)
+        this.sendMessage(message.getMessageType(), message);
+
+        this.offers = this.offers.filter((o) => o !== offer);
+
+        this.renderOffers();
     }
 
     onOfferCancelClick(offer) {
-        // TODO
+        const message = new DriverCancelsOffer(offer.passengerId)
+        this.sendMessage(message.getMessageType(), message);
+
+        this.offers = this.offers.filter((o) => o !== offer);
+
+        this.renderOffers();
     }
 
     initWs(isTls) {
@@ -200,6 +241,11 @@ export class DriverComponent {
             return;
         }
         this.conn = new WebSocket(protocol + document.location.host + "/ws-driver");
+        // send our coordinates right away instead of waiting for the server to ask;
+        // only once open, since send() throws while the socket is still connecting
+        this.conn.onopen = () => {
+            this.handleServerRequestsCoordinates({});
+        };
         this.conn.onclose = (evt) => {
             this.driverView.appendChild(NewT('Websocket connection closed.'));
         };
@@ -279,22 +325,61 @@ export class DriverComponent {
     }
 
     handleServerOffersPassenger(data) {
-        console.log('server offered passenger, not implemented yet', data);
-        // TODO: add data to the incoming-invites table
+        const message = new ServerOffersPassenger().fromObject(data);
+
+        const offer = new Offer()
+            .setLat(message.lat)
+            .setLng(message.lon)
+            .setPassengerId(message.passenger_id)
+            .setStatus(InvitationStatus.PENDING)
+        ;
+
+        this.offers.push(offer)
+
+        this.renderOffers();
     }
 
     handleServerCancelsOffer(data) {
-        console.log('server canceled offer, not implemented yet', data);
-        // TODO: remove the offer from the incoming-invites table
+        const message = new ServerCancelsOffer().fromObject(data);
+        const offer = this.offers.findLast((o) => o.getPassengerId() === message.passenger_id);
+        if (!offer) {
+            console.warn('no offer found for passenger', message.passenger_id);
+            return;
+        }
+        offer.setStatus(InvitationStatus.CANCELED);
+        this.renderOffers();
     }
 
     handleServerNotifiesVoyageStarted(data) {
-        console.log('server notified voyage started, not implemented yet', data);
-        // TODO: switch UI to "trip in progress"
+        console.log('voyage started', data);
+
+        const message = new ServerNotifiesVoyageStarted().fromObject(data);
+
+        // latest accepted offer: older offers from the same passenger may still be in the list
+        const offer = this.offers.findLast((o) =>
+            o.getPassengerId() === message.passenger_id && o.getStatus() === InvitationStatus.ACCEPTED);
+        if (!offer) {
+            console.warn('no accepted offer for passenger', message.passenger_id);
+            return;
+        }
+
+        offer.setStatus(InvitationStatus.DRIVING);
+        this.renderOffers();
     }
 
     handleServerNotifiesVoyageFinished(data) {
-        console.log('server notified voyage finished, not implemented yet', data);
-        // TODO: switch UI back to available/idle
+        console.log('voyage finished', data);
+        const message = new ServerNotifiesVoyageFinished().fromObject(data);
+
+        // latest driving offer: older offers from the same passenger may still be in the list
+        const offer = this.offers.findLast((o) =>
+            o.getPassengerId() === message.passenger_id && o.getStatus() === InvitationStatus.DRIVING);
+        if (!offer) {
+            console.warn('no driving offer for passenger', message.passenger_id);
+            return;
+        }
+
+        offer.setStatus(InvitationStatus.COMPLETED);
+        this.renderOffers();
     }
 }
