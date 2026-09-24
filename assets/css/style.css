@@ -115,3 +115,25 @@ body {
     border-radius: 6px;
     cursor: pointer;
 }
+
+/* === errors */
+.error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 8px 12px;
+    padding: 8px 12px;
+    color: #b00020;
+    background: #fdecee;
+    border: 1px solid #b00020;
+    border-radius: 6px;
+}
+
+.error-close {
+    background: none;
+    border: none;
+    color: #b00020;
+    font-size: 18px;
+    cursor: pointer;
+}
