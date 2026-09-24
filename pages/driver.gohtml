@@ -1,15 +1,17 @@
 <html>
 <head>
     <title>Driver</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-<h1>Driver</h1>
 <div id="driver-block"></div>
 <script type="module">
     import {DriverComponent} from "/assets/js/driver_component.js";
-    import {GetE} from "/assets/js/util.js";
+    import {GetCookie, GetE} from "/assets/js/util.js";
 
-    const driverComponent = new DriverComponent();
+    const driverId = GetCookie("gt_taxi_id");
+    const driverComponent = new DriverComponent(driverId);
     const driverBlock = GetE("driver-block");
     driverBlock.appendChild( await driverComponent.render());
 

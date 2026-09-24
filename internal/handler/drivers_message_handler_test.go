@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/ws"
@@ -172,6 +173,33 @@ func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 				return fmt.Sprintf("GetDriverById(%q) = nil, want driver with Lat=54.68 Lon=25.28", driverId)
 			}
 			return fmt.Sprintf("driver coordinates = {%v %v}, want {54.68 25.28} — Handle's type switch may not match %T, the pointer type Decode actually produces", driver.Lat, driver.Lon, decoded)
+		},
+	)
+}
+
+// Wires the handler to the real listener, so the event the handler dispatches must be the
+// type the listener asserts (a pointer/value mismatch here panicked the server).
+func TestDriversMessageHandler_ChangesStatusThroughListener(t *testing.T) {
+	const driverId = "driver-1"
+
+	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
+	mainState.CreateDriver(driverId)
+
+	dispatcher := util.NewDispatcher()
+	dispatcher.AddListener(events.DriverStatusChangedEventName, NewDriverStatusChangeForDriverListener(mainState).Handle)
+
+	driversHub := ws.NewHubMock()
+	go NewDriversMessageHandler(mainState, driversHub, ws.NewHubMock(), dispatcher).Handle(driversHub.GetIncomingMessagesChannel())
+
+	driversHub.FeedIncomingMessage(ws.ClientMessage{
+		ClientId: driverId,
+		Message:  &messages.DriverChangesStatus{Status: state.DriverStatusIdle},
+	})
+
+	waitFor(t, 200*time.Millisecond,
+		func() bool { return mainState.GetDriverById(driverId).Status == state.DriverStatusIdle },
+		func() string {
+			return fmt.Sprintf("driver.Status = %q, want %q", mainState.GetDriverById(driverId).Status, state.DriverStatusIdle)
 		},
 	)
 }

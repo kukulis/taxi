@@ -39,6 +39,21 @@ export function GetE(id) {
 }
 
 /**
+ * @param {string} name
+ * @returns {string|null}
+ */
+export function GetCookie(name) {
+    for (const pair of document.cookie.split('; ')) {
+        const [key, value] = pair.split('=');
+        if (key === name) {
+            return decodeURIComponent(value);
+        }
+    }
+
+    return null;
+}
+
+/**
  * @param {HTMLElement} element
  * @returns {HTMLElement}
  */

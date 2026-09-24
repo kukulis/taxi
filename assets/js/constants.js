@@ -29,3 +29,20 @@ export const MessageType = {
     SERVER_NOTIFIES_VOYAGE_STARTED: 'server_notifies_voyage_started',
     SERVER_NOTIFIES_VOYAGE_FINISHED: 'server_notifies_voyage_finished',
 };
+
+export const DriverStatus = {
+    IDLE: 'idle',
+    WORKING: 'working',
+    RESTING: 'resting',
+    OFFLINE: 'offline',
+}
+
+// used for invites and offers
+export const InvitationStatus = {
+    PENDING: 'pending',
+    ACCEPTED: 'driving',
+    REJECTED: 'rejected',
+    CANCELLED: 'cancelled',
+    DRIVING: 'driving',
+    FINISHED: 'finished',
+}

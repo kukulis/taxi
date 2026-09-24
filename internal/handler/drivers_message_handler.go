@@ -201,7 +201,7 @@ func (d *DriversMessageHandler) handleDriverChangesStatus(clientId string, msg *
 		return
 	}
 
-	event := &events.DriverStatusChangedEvent{
+	event := events.DriverStatusChangedEvent{
 		DriverId:        clientId,
 		DriverStatusOld: string(driver.Status),
 		DriverStatusNew: string(msg.Status),
