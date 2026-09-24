@@ -37,12 +37,12 @@ export const DriverStatus = {
     OFFLINE: 'offline',
 }
 
-// used for invites and offers
+// used for invites and offers. Mirrors internal/state/invitation.go — keep the two in sync.
 export const InvitationStatus = {
     PENDING: 'pending',
     ACCEPTED: 'accepted',
     REJECTED: 'rejected',
-    CANCELLED: 'cancelled',
+    CANCELED: 'cancelled',
     DRIVING: 'driving',
-    FINISHED: 'finished',
+    COMPLETED: 'completed',
 }

@@ -6,7 +6,7 @@ const (
 	InvitationStatusPending   = "pending"
 	InvitationStatusAccepted  = "accepted"
 	InvitationStatusRejected  = "rejected"
-	InvitationStatusCanceled  = "canceled"
+	InvitationStatusCanceled  = "cancelled"
 	InvitationStatusDriving   = "driving"
 	InvitationStatusCompleted = "completed"
 )

@@ -1,6 +1,7 @@
 import {AppChildren, ClearE, NewEC, NewECT, NewT} from "./util.js";
-import {MessageType} from "./constants.js";
+import {InvitationStatus, MessageType} from "./constants.js";
 import {DriverSearchResult} from "./entities/driver_search_result.js";
+import {Invitation} from "./entities/invitation.js";
 
 export class PassengerComponent {
 
@@ -8,6 +9,8 @@ export class PassengerComponent {
     // main view
     passengerView = null;
     infoView = null;
+    // invitations sent to drivers
+    invitationsView = null;
     // distance buttons + drivers list
     driversView = null;
     driversListView = null;
@@ -18,19 +21,24 @@ export class PassengerComponent {
     lon = null;
 
     /**
-     *
      * @type {ApiClient}
      */
     apiClient = null;
 
-    // TODO remove values after test
-    driversSearchResults = [
-        (new DriverSearchResult())
-            .setDriverId('1234567890')
-            .setDriverInfo('Driver 1')
+    /**
+     * @type {DriverSearchResult[]}
+     */
+    driversSearchResults = [];
+
+    /**
+     *
+     * @type {[Invitation]}
+     */
+    invitations = [
+        (new Invitation()).setDriverId('1234567890')
+            .setStatus(InvitationStatus.PENDING)
             .setLat(12)
             .setLon(50)
-            .setDistanceKm(1.2),
     ];
 
     constructor(passengerId, apiClient) {
@@ -41,12 +49,83 @@ export class PassengerComponent {
     async render() {
         this.passengerView = NewEC('div', 'passenger-component');
         this.infoView = NewEC('div', 'passenger-info');
+        this.invitationsView = NewEC('div', 'passenger-invitations');
         this.driversView = NewEC('div', 'passenger-drivers');
 
         this.renderInfo();
+        this.renderInvitations();
         this.renderDriversView();
 
-        return AppChildren(this.passengerView, [this.infoView, this.driversView]);
+        return AppChildren(this.passengerView, [this.infoView, this.invitationsView, this.driversView]);
+    }
+
+    renderInvitations() {
+        ClearE(this.invitationsView);
+
+        this.invitationsView.appendChild(NewECT('h3', 'invitations-title', 'Invitations'));
+
+        for (const invitation of this.invitations) {
+            const parts = [
+                NewECT('span', 'invitation-driver', invitation.getDriverId()),
+                NewECT('span', 'invitation-coords', `(${invitation.getLat()}, ${invitation.getLon()})`),
+                NewECT('span', 'invitation-status', invitation.getStatus()),
+            ];
+
+            if (this.isActiveInvitation(invitation)) {
+                const cancelButton = NewECT('button', 'invitation-cancel', 'cancel');
+                cancelButton.addEventListener('click', () => this.onInvitationCancelClick(invitation));
+                parts.push(cancelButton);
+            }
+
+            const row = NewEC('div', 'invitation-row');
+            parts.forEach((part, i) => {
+                if (i > 0) {
+                    row.appendChild(NewECT('span', 'invitation-divider', '|'));
+                }
+                row.appendChild(part);
+            });
+
+            this.invitationsView.appendChild(row);
+        }
+    }
+
+    /**
+     * Pending or accepted: the passenger can still cancel it and the server may still update it.
+     * @param {Invitation} invitation
+     * @returns {boolean}
+     */
+    isActiveInvitation(invitation) {
+        return invitation.getStatus() === InvitationStatus.PENDING
+            || invitation.getStatus() === InvitationStatus.ACCEPTED;
+    }
+
+    /**
+     * @param {Invitation} invitation
+     */
+    onInvitationCancelClick(invitation) {
+        this.sendMessage(MessageType.PASSENGER_CANCELS_INVITE, {driver_id: invitation.getDriverId()});
+
+        this.invitations = this.invitations.filter((i) => i !== invitation);
+        this.renderInvitations();
+    }
+
+    /**
+     * Server notifications only carry driver_id, so they apply to the latest active invitation to that driver.
+     * @param {string} driverId
+     * @param {string} status
+     */
+    updateInvitationStatus(driverId, status) {
+        const invitation = this.invitations.findLast(
+            (i) => i.getDriverId() === driverId && this.isActiveInvitation(i),
+        );
+
+        if (!invitation) {
+            console.warn('no active invitation for driver', driverId, 'to set status', status);
+            return;
+        }
+
+        invitation.setStatus(status);
+        this.renderInvitations();
     }
 
     renderDriversView() {
@@ -92,6 +171,10 @@ export class PassengerComponent {
                 NewECT('span', 'driver-row-distance', `${driver.distanceKm.toFixed(2)} km`),
             ];
 
+            const inviteButton = NewECT('button', 'driver-row-invite', 'invite');
+            inviteButton.addEventListener('click', () => this.onInviteClick(driver));
+            parts.push(inviteButton);
+
             const row = NewEC('div', 'driver-row');
             parts.forEach((part, i) => {
                 if (i > 0) {
@@ -102,6 +185,33 @@ export class PassengerComponent {
 
             this.driversListView.appendChild(row);
         }
+    }
+
+    /**
+     * @param {DriverSearchResult} driver
+     */
+    onInviteClick(driver) {
+        if (this.lat === null || this.lon === null) {
+            console.warn('no passenger coordinates yet, cannot invite a driver');
+            return;
+        }
+
+        // the invitation row shows where the driver is; the message carries where the passenger is (pickup point)
+        this.invitations.push(
+            new Invitation()
+                .setDriverId(driver.driverId)
+                .setLat(driver.lat)
+                .setLon(driver.lon)
+                .setStatus(InvitationStatus.PENDING)
+                .setTime(new Date()),
+        );
+        this.renderInvitations();
+
+        this.sendMessage(MessageType.PASSENGER_INVITES_DRIVER, {
+            driver_id: driver.driverId,
+            lat: this.lat,
+            lon: this.lon,
+        });
     }
 
     renderInfo() {
@@ -148,6 +258,15 @@ export class PassengerComponent {
                 break;
             case MessageType.SERVER_REQUESTS_CLIENT_INFO:
                 this.handleServerRequestsClientInfo(envelope.data);
+                break;
+            case MessageType.SERVER_NOTIFIES_INVITE_ACCEPTED:
+                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.ACCEPTED);
+                break;
+            case MessageType.SERVER_NOTIFIES_INVITE_REJECTED:
+                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.REJECTED);
+                break;
+            case MessageType.SERVER_NOTIFIES_INVITE_CANCELED:
+                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.CANCELED);
                 break;
             default:
                 console.log('unhandled message type', envelope.type, envelope);
