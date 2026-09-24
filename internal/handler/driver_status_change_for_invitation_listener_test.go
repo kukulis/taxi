@@ -32,7 +32,7 @@ func TestDriverStatusChangeForInvitationListener_StartsVoyageOnIdleToWorking(t *
 	}
 
 	dispatcher := util.NewDispatcher()
-	listener := NewDriverStatusChangeForInvitationListener(mainState, passengersHub)
+	listener := NewDriverStatusChangeForInvitationListener(mainState, ws.NewHubMock(), passengersHub)
 	dispatcher.AddListener(events.DriverStatusChangedEventName, listener.Handle)
 
 	dispatcher.Dispatch(events.DriverStatusChangedEvent{
@@ -85,7 +85,7 @@ func TestDriverStatusChangeForInvitationListener_FinishesVoyageOnWorkingToIdle(t
 	}
 
 	dispatcher := util.NewDispatcher()
-	listener := NewDriverStatusChangeForInvitationListener(mainState, passengersHub)
+	listener := NewDriverStatusChangeForInvitationListener(mainState, ws.NewHubMock(), passengersHub)
 	dispatcher.AddListener(events.DriverStatusChangedEventName, listener.Handle)
 
 	dispatcher.Dispatch(events.DriverStatusChangedEvent{
@@ -157,7 +157,7 @@ func TestDriverStatusChangeForInvitationListener_CancelsPendingInvitationsOnRest
 	}
 
 	dispatcher := util.NewDispatcher()
-	listener := NewDriverStatusChangeForInvitationListener(mainState, passengersHub)
+	listener := NewDriverStatusChangeForInvitationListener(mainState, ws.NewHubMock(), passengersHub)
 	dispatcher.AddListener(events.DriverStatusChangedEventName, listener.Handle)
 
 	dispatcher.Dispatch(events.DriverStatusChangedEvent{

@@ -19,6 +19,7 @@ func NewDriverApiController(mainState *state.MainState) *DriverApiController {
 
 // Search handles GET /api/driver?searchLat=..&searchLon=..&distance=..
 // distance is in kilometers, matching MainState.GetNearestDrivers' unit.
+// Only idle drivers are returned.
 func (c *DriverApiController) Search(ctx *gin.Context) {
 	searchLat, err := strconv.ParseFloat(ctx.Query("searchLat"), 64)
 	if err != nil {
@@ -44,6 +45,10 @@ func (c *DriverApiController) Search(ctx *gin.Context) {
 	for _, driverDistance := range nearest {
 		if driverDistance.Distance > maxDistanceKm {
 			break // GetNearestDrivers is sorted ascending, so nothing further will match either
+		}
+		// only idle drivers can take a passenger, so only they are offered to be invited
+		if driverDistance.Driver.Status != state.DriverStatusIdle {
+			continue
 		}
 		results = append(results, dao.DriverSearchResult{
 			DriverId:   driverDistance.Driver.Id,

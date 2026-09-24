@@ -124,11 +124,19 @@ func (p *PassengersMessageHandler) handlePassengerCancelsInvite(clientId string,
 		PassengerId: clientId,
 		DriverId:    msg.DriverId,
 	})
-	if len(invitations) == 0 {
+	// the passenger can cancel a pending or accepted invitation; skip older finished ones with the same pair
+	// TODO replace this loop with InvitationsFilter statuses once it accepts multiple values
+	var invitation *state.Invitation
+	for _, inv := range invitations {
+		if inv.Status == state.InvitationStatusPending || inv.Status == state.InvitationStatusAccepted {
+			invitation = inv
+			break
+		}
+	}
+	if invitation == nil {
 		p.logger.Warn("PassengerCancelsInvite for unknown invitation", "client_id", clientId, "driver_id", msg.DriverId)
 		return
 	}
-	invitation := invitations[0]
 
 	p.mainState.GetInvitationsContainer().Update(invitation.Id, func(inv *state.Invitation) {
 		inv.Status = state.InvitationStatusCanceled
