@@ -64,7 +64,8 @@ body {
 }
 
 .offer-row,
-.driver-row {
+.driver-row,
+.invitation-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -76,7 +77,8 @@ body {
 }
 
 .offer-divider,
-.driver-row-divider {
+.driver-row-divider,
+.invitation-divider {
     color: #999;
 }
 
@@ -97,7 +99,8 @@ body {
     color: #999;
 }
 
-/* === passenger component: drivers */
+/* === passenger component: invitations, drivers */
+.passenger-invitations,
 .passenger-drivers {
     padding: 12px;
 }
