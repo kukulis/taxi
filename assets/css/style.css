@@ -27,6 +27,12 @@ body {
     cursor: pointer;
     border-radius: 6px;
     max-width: 128px;
+    /* transparent until selected, so selecting doesn't change the square's size */
+    border: 4px solid transparent;
+}
+
+.status-square-selected {
+    border-color: #555;
 }
 
 .status-squares-container {

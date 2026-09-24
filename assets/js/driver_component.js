@@ -7,6 +7,7 @@ export class DriverComponent {
     driverId = null;
     // main view
     driverView = null;
+    infoView = null;
     // status squares container
     statusView = null;
     // offers table container
@@ -14,9 +15,12 @@ export class DriverComponent {
     // websocket connection
     conn = null;
 
-    currentStatus =  DriverStatus.RESTING;
+    currentStatus = DriverStatus.RESTING;
     // status square the user clicked on, but has not confirmed with 'select' yet
     selectedStatus = null;
+
+    lat = null;
+    lon = null;
 
     /**
      *
@@ -38,24 +42,43 @@ export class DriverComponent {
                 .setPassengerId('123123')
                 .setTime(new Date()),
         );
+
+        // TODO in case driver reconnects after a short disconnection,
+        // create an api endpoint for driver to get the current status too.
+
+        // this.selectedStatus = this.currentStatus;
     }
 
     async render() {
         this.driverView = NewEC('div', 'driver-component');
+        this.infoView = NewEC('div', 'driver-info');
         this.statusView = NewEC('div', 'driver-statuses');
         this.offersView = NewEC('div', 'driver-offers');
 
+        this.renderInfo();
         this.renderStatuses();
         this.renderOffers();
 
-        return AppChildren(this.driverView, [this.statusView, this.offersView]);
+        return AppChildren(this.driverView, [this.infoView, this.statusView, this.offersView]);
+    }
+
+    renderInfo() {
+        ClearE(this.infoView);
+        this.infoView.appendChild(NewECT('h3', 'driver-title', 'Driver'));
+        this.infoView.appendChild(NewECT('div', 'driver-id-info', this.driverId));
+
+        console.log('lat and lon ', this.lat, this.lon);
+
+        if (this.lat && this.lon) {
+            this.infoView.appendChild(NewECT('div', 'driver-location', `(${this.lat}, ${this.lon})`));
+        } else {
+            this.infoView.appendChild(NewECT('div', 'driver-location', '...'));
+        }
     }
 
     renderStatuses() {
         ClearE(this.statusView);
 
-        this.statusView.appendChild(NewECT('h3', 'driver-title', 'Driver'));
-        this.statusView.appendChild(NewECT( 'div', 'driver-id-info',  this.driverId));
 
         const squaresDiv = NewEC('div', 'status-squares-container');
         for (const status of [DriverStatus.IDLE, DriverStatus.WORKING, DriverStatus.RESTING]) {
@@ -63,12 +86,14 @@ export class DriverComponent {
             square.classList.add('status-' + status);
             square.appendChild(NewECT('div', 'status-label', status));
 
-            if (status === this.currentStatus) {
-                square.appendChild(NewECT('div', 'status-check', '✓'));
+            if (status === this.selectedStatus) {
+                square.classList.add('status-square-selected');
             }
 
-            if (status === this.selectedStatus) {
-                const button = NewECT('button', 'status-select', 'select');
+            if (status === this.currentStatus) {
+                square.appendChild(NewECT('div', 'status-check', '✓'));
+            } else if (status === this.selectedStatus) {
+                const button = NewECT('button', 'status-select', 'Go');
                 button.addEventListener('click', (event) => {
                     // don't let the square's click handler re-render under us
                     event.stopPropagation();
@@ -224,10 +249,11 @@ export class DriverComponent {
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                console.log('got coordinates', lat, lon);
-                this.sendMessage(MessageType.CLIENT_RESPONDS_COORDINATES, {lat, lon});
+                this.lat = position.coords.latitude;
+                this.lon = position.coords.longitude;
+                console.log('got coordinates', this.lat, this.lon);
+                this.sendMessage(MessageType.CLIENT_RESPONDS_COORDINATES, {lat: this.lat, lon: this.lon});
+                this.renderInfo()
             },
             (error) => {
                 console.error('failed to get coordinates:', error.message);

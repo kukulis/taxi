@@ -7,6 +7,9 @@ export class PassengerComponent {
     // websocket connection
     conn = null;
 
+    lat = null;
+    lon = null;
+
     async render() {
         this.passengerView = NewEC('div', 'passenger-component');
 
@@ -64,10 +67,10 @@ export class PassengerComponent {
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                console.log('got coordinates', lat, lon);
-                this.sendMessage(MessageType.CLIENT_RESPONDS_COORDINATES, {lat, lon});
+                this.lat = position.coords.latitude;
+                this.lon = position.coords.longitude;
+                console.log('got coordinates', this.lat, this.lon);
+                this.sendMessage(MessageType.CLIENT_RESPONDS_COORDINATES, {lat: this.lat, lon: this.lon});
             },
             (error) => {
                 console.error('failed to get coordinates:', error.message);
