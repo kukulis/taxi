@@ -3,7 +3,8 @@ package state
 type InvitationsFilter struct {
 	PassengerId string
 	DriverId    string
-	// TODO modify to array of strings
+	// TODO modify to array of strings (match any of them), e.g. pending OR accepted for
+	//  PassengersMessageHandler.handlePassengerCancelsInvite, which filters in code for now
 	Status string
 }
 

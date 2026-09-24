@@ -2,12 +2,13 @@ package web
 
 import (
 	"net/http"
+	"sort"
 
 	"darbelis.eu/taxi/internal/state"
 	"github.com/gin-gonic/gin"
 )
 
-// observerTableLimit caps how many drivers/passengers the observer page shows.
+// observerTableLimit caps how many drivers/passengers/invitations the observer page shows.
 const observerTableLimit = 5
 
 type WebController struct {
@@ -42,8 +43,18 @@ func (controller *WebController) Observer(c *gin.Context) {
 		passengers = passengers[:observerTableLimit]
 	}
 
+	// empty filter matches all; the container is a map, so sort for a stable newest-first view
+	invitations := controller.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{})
+	sort.Slice(invitations, func(i, j int) bool {
+		return invitations[i].CreatedAt.After(invitations[j].CreatedAt)
+	})
+	if len(invitations) > observerTableLimit {
+		invitations = invitations[:observerTableLimit]
+	}
+
 	c.HTML(http.StatusOK, "observer.gohtml", gin.H{
-		"Drivers":    drivers,
-		"Passengers": passengers,
+		"Drivers":     drivers,
+		"Passengers":  passengers,
+		"Invitations": invitations,
 	})
 }

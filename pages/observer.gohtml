@@ -63,6 +63,40 @@
     </tbody>
 </table>
 
+<h2>Invitations (up to 5, newest first)</h2>
+<table border="1" cellpadding="4">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Passenger</th>
+        <th>Driver</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Accepted</th>
+        <th>Rejected</th>
+        <th>Cancelled</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Invitations}}
+    <tr>
+        <td>{{.Id}}</td>
+        <td>{{.PassengerId}}</td>
+        <td>{{.DriverId}}</td>
+        <td>{{.Status}}</td>
+        <td>{{if not .CreatedAt.IsZero}}{{.CreatedAt.Format "15:04:05"}}{{end}}</td>
+        <td>{{if not .AcceptedAt.IsZero}}{{.AcceptedAt.Format "15:04:05"}}{{end}}</td>
+        <td>{{if not .RejectedAt.IsZero}}{{.RejectedAt.Format "15:04:05"}}{{end}}</td>
+        <td>{{if not .CancelledAt.IsZero}}{{.CancelledAt.Format "15:04:05"}}{{end}}</td>
+    </tr>
+    {{else}}
+    <tr>
+        <td colspan="8">No invitations</td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+
 <p><a href="/observer">Refresh</a></p>
 </body>
 </html>

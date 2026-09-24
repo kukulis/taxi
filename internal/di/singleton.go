@@ -119,7 +119,7 @@ func GetDriverStatusChangeForDriverListener() *handler.DriverStatusChangeForDriv
 
 func GetDriverStatusChangeForInvitationListener() *handler.DriverStatusChangeForInvitationListener {
 	if driverStatusChangeForInvitationListener == nil {
-		driverStatusChangeForInvitationListener = handler.NewDriverStatusChangeForInvitationListener(GetMainState(), GetPassengersHub())
+		driverStatusChangeForInvitationListener = handler.NewDriverStatusChangeForInvitationListener(GetMainState(), GetDriversHub(), GetPassengersHub())
 	}
 
 	return driverStatusChangeForInvitationListener
