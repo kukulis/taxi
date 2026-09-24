@@ -40,7 +40,7 @@ export const DriverStatus = {
 // used for invites and offers
 export const InvitationStatus = {
     PENDING: 'pending',
-    ACCEPTED: 'driving',
+    ACCEPTED: 'accepted',
     REJECTED: 'rejected',
     CANCELLED: 'cancelled',
     DRIVING: 'driving',
