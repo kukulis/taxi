@@ -1,21 +1,119 @@
-import {NewEC, NewT} from "./util.js";
+import {AppChildren, ClearE, NewEC, NewECT, NewT} from "./util.js";
 import {MessageType} from "./constants.js";
+import {DriverSearchResult} from "./entities/driver_search_result.js";
 
 export class PassengerComponent {
+
+    passengerId = null;
     // main view
     passengerView = null;
+    infoView = null;
+    // distance buttons + drivers list
+    driversView = null;
+    driversListView = null;
     // websocket connection
     conn = null;
 
     lat = null;
     lon = null;
 
+    /**
+     *
+     * @type {ApiClient}
+     */
+    apiClient = null;
+
+    // TODO remove values after test
+    driversSearchResults = [
+        (new DriverSearchResult())
+            .setDriverId('1234567890')
+            .setDriverInfo('Driver 1')
+            .setLat(12)
+            .setLon(50)
+            .setDistanceKm(1.2),
+    ];
+
+    constructor(passengerId, apiClient) {
+        this.passengerId = passengerId;
+        this.apiClient = apiClient;
+    }
+
     async render() {
         this.passengerView = NewEC('div', 'passenger-component');
+        this.infoView = NewEC('div', 'passenger-info');
+        this.driversView = NewEC('div', 'passenger-drivers');
 
-        this.passengerView.appendChild(NewT('TODO'));
+        this.renderInfo();
+        this.renderDriversView();
 
-        return this.passengerView;
+        return AppChildren(this.passengerView, [this.infoView, this.driversView]);
+    }
+
+    renderDriversView() {
+        ClearE(this.driversView);
+
+        this.driversView.appendChild(NewECT('h3', 'drivers-title', 'Drivers'));
+
+        const buttons = NewEC('div', 'distance-buttons');
+        for (const [label, distanceKm] of [['250m', 0.25], ['500m', 0.5], ['1km', 1], ['5km', 5]]) {
+            const button = NewECT('button', 'distance-button', label);
+            button.addEventListener('click', () => this.onDistanceClick(distanceKm));
+            buttons.appendChild(button);
+        }
+
+        this.driversListView = NewEC('div', 'drivers-list');
+
+        AppChildren(this.driversView, [buttons, this.driversListView]);
+
+        this.renderDrivers();
+    }
+
+    /**
+     * @param {number} distanceKm
+     */
+    async onDistanceClick(distanceKm) {
+        if (this.lat === null || this.lon === null) {
+            console.warn('no passenger coordinates yet, cannot search drivers');
+            return;
+        }
+
+        this.driversSearchResults = await this.apiClient.getDrivers(this.lat, this.lon, distanceKm);
+        this.renderDrivers();
+    }
+
+    renderDrivers() {
+        ClearE(this.driversListView);
+
+        for (const driver of this.driversSearchResults) {
+            const parts = [
+                NewECT('span', 'driver-row-id', driver.driverId),
+                NewECT('span', 'driver-row-info', driver.driverInfo),
+                NewECT('span', 'driver-row-coords', `(${driver.lat}, ${driver.lon})`),
+                NewECT('span', 'driver-row-distance', `${driver.distanceKm.toFixed(2)} km`),
+            ];
+
+            const row = NewEC('div', 'driver-row');
+            parts.forEach((part, i) => {
+                if (i > 0) {
+                    row.appendChild(NewECT('span', 'driver-row-divider', '|'));
+                }
+                row.appendChild(part);
+            });
+
+            this.driversListView.appendChild(row);
+        }
+    }
+
+    renderInfo() {
+        ClearE(this.infoView);
+        this.infoView.appendChild(NewECT('h3', 'passenger-title', 'Passenger'));
+        this.infoView.appendChild(NewECT('div', 'passenger-id-info', this.passengerId));
+
+        if (this.lat !== null && this.lon !== null) {
+            this.infoView.appendChild(NewECT('div', 'passenger-location', `(${this.lat}, ${this.lon})`));
+        } else {
+            this.infoView.appendChild(NewECT('div', 'passenger-location', '...'));
+        }
     }
 
     initWs(isTls) {
@@ -71,6 +169,7 @@ export class PassengerComponent {
                 this.lon = position.coords.longitude;
                 console.log('got coordinates', this.lat, this.lon);
                 this.sendMessage(MessageType.CLIENT_RESPONDS_COORDINATES, {lat: this.lat, lon: this.lon});
+                this.renderInfo();
             },
             (error) => {
                 console.error('failed to get coordinates:', error.message);

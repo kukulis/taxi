@@ -1,14 +1,15 @@
 <html>
 <head>
     <title>Passenger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
-<h1>Passenger</h1>
 <div id="errors"></div>
 <div id="passenger-block"></div>
 <script type="module">
     import {PassengerComponent} from "/assets/js/passenger_component.js";
-    import {GetE} from "/assets/js/util.js";
+    import {GetCookie, GetE} from "/assets/js/util.js";
     import {Dispatcher} from "/assets/js/dispatcher.js";
     import {NewECT} from "/assets/js/util.js";
     import {ApiClient} from "/assets/js/api.js";
@@ -32,7 +33,8 @@
 
     const api = new ApiClient(dispatcher);
 
-    const passengerComponent = new PassengerComponent();
+    const passengerId = GetCookie("gt_taxi_id");
+    const passengerComponent = new PassengerComponent(passengerId, api);
     const passengerBlock = GetE("passenger-block");
     passengerBlock.appendChild( await passengerComponent.render());
 
@@ -40,6 +42,7 @@
 
     let isTls = window.location.protocol === "https:";
     passengerComponent.initWs(isTls);
+    passengerComponent.handleServerRequestsCoordinates({})
 
 </script>
 </body>

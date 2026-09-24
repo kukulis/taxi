@@ -20,8 +20,9 @@ export class ApiClient {
 
         if (!response.ok) {
             this.dispatcher.dispatch('error', {message: data.error});
+            return [];
         }
 
-        return data.drivers.map(DriverSearchResult.fromObject);
+        return data.drivers.map( (element) => new DriverSearchResult().fromObject(element));
     }
 }

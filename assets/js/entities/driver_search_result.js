@@ -10,14 +10,39 @@ export class DriverSearchResult {
      * @param {Object} obj one driver from the /api/drivers JSON response
      * @returns {DriverSearchResult}
      */
-    static fromObject(obj) {
-        const result = new DriverSearchResult();
-        result.driverId = obj.driver_id;
-        result.driverInfo = obj.driver_info;
-        result.lat = obj.lat;
-        result.lon = obj.lon;
-        result.distanceKm = obj.distance_km;
+    fromObject(obj) {
+        // const result = new DriverSearchResult();
+        this.driverId = obj.driver_id;
+        this.driverInfo = obj.driver_info;
+        this.lat = obj.lat;
+        this.lon = obj.lon;
+        this.distanceKm = obj.distance_km;
 
-        return result;
+        return this;
+    }
+
+    setDriverId(driverId) {
+        this.driverId = driverId;
+        return this;
+    }
+
+    setDriverInfo(driverInfo) {
+        this.driverInfo = driverInfo;
+        return this;
+    }
+
+    setLat(lat) {
+        this.lat = lat;
+        return this;
+    }
+
+    setLon(lon) {
+        this.lon = lon;
+        return this;
+    }
+
+    setDistanceKm(distanceKm) {
+        this.distanceKm = distanceKm;
+        return this;
     }
 }
