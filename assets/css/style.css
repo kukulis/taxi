@@ -63,7 +63,8 @@ body {
     padding: 12px;
 }
 
-.offer-row {
+.offer-row,
+.driver-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -74,7 +75,8 @@ body {
     border-radius: 8px;
 }
 
-.offer-divider {
+.offer-divider,
+.driver-row-divider {
     color: #999;
 }
 
@@ -83,12 +85,33 @@ body {
 }
 
 
-.driver-title {
+.driver-title,
+.passenger-title {
     line-height: 1.5;
     margin: 0;
 }
 
-.driver-id-info {
+.driver-id-info,
+.passenger-id-info {
     font-size: 12px;
     color: #999;
+}
+
+/* === passenger component: drivers */
+.passenger-drivers {
+    padding: 12px;
+}
+
+.distance-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.distance-button {
+    flex: 1;
+    font-size: 16px;
+    padding: 8px 0;
+    border-radius: 6px;
+    cursor: pointer;
 }
