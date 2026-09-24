@@ -16,7 +16,7 @@ const (
 	DriversTickFrequency         = time.Second * 15
 	PassengersCoordinatesTimeout = time.Second * 60
 	PassengersInfoTimeout        = time.Hour * 24
-	PassengersTickFrequency      = time.Second * 60
+	PassengersTickFrequency      = time.Second * 15
 )
 
 type TaxiDispatcher struct {

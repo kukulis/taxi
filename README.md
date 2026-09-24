@@ -1,4 +1,4 @@
-# web game 
+# Helping to communicate between drivers and passengers 
 
 Test multiple files
 
@@ -68,3 +68,6 @@ without it, mobile browsers reject the certificate outright instead of offering 
 
     node --test js-tests
 
+## calculate code lines
+
+    find . -name '*.go' | xargs wc -l

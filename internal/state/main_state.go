@@ -91,6 +91,7 @@ func (s *MainState) CreateDriver(id string) *Driver {
 		driver.Id = id
 		driver.CreatedAt = s.Clock.Now()
 		s.drivers[id] = driver
+		driver.Status = DriverStatusResting
 	}
 
 	driver.Active = true
