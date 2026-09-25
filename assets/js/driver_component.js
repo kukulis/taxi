@@ -177,9 +177,16 @@ export class DriverComponent {
                 addButton('accept', (o) => this.onOfferAcceptClick(o));
                 addButton('reject', (o) => this.onOfferRejectClick(o));
                 break;
-            case InvitationStatus.ACCEPTED:
+            case InvitationStatus.ACCEPTED: {
+                // invisible stand-in keeps the 'accept' slot occupied, so 'cancel' appears where 'reject' was
+                // instead of sliding under the driver's finger right after tapping 'accept'
+                const placeholder = NewECT('button', 'offer-placeholder', 'accept');
+                placeholder.disabled = true;
+                placeholder.setAttribute('aria-hidden', 'true');
+                cell.appendChild(placeholder);
                 addButton('cancel', (o) => this.onOfferCancelClick(o));
                 break;
+            }
             case InvitationStatus.REJECTED:
             case InvitationStatus.CANCELED:
             case InvitationStatus.COMPLETED:

@@ -244,6 +244,10 @@ export class PassengerComponent {
             lat: this.lat,
             lon: this.lon,
         });
+
+        // the list goes stale quickly (drivers change status), so drop it; a distance button reloads it
+        this.driversSearchResults = [];
+        this.renderDrivers();
     }
 
     renderInfo() {
