@@ -7,6 +7,9 @@ type InvitationsContainer struct {
 	// TODO solve storage to database and cleaning memory after MVP
 	invitations map[string]*Invitation
 
+	invitationsByDriverId    map[string][]*Invitation
+	invitationsByPassengerId map[string][]*Invitation
+
 	invitationsLock sync.Mutex
 }
 

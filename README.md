@@ -71,3 +71,9 @@ without it, mobile browsers reject the certificate outright instead of offering 
 ## calculate code lines
 
     find . -name '*.go' | xargs wc -l
+
+# build for linux
+
+    CGO_ENABLED=0 go build -o server cmd/server/main.go
+
+
