@@ -2,6 +2,8 @@
 // Field names are the Go json tags (snake_case), so an instance can be sent as-is
 // and an incoming envelope.data can be loaded with new X().fromObject(data).
 import {MessageType} from "../constants.js";
+import {Offer} from "./offer.js";
+import {Invitation} from "./invitation.js";
 
 // === to driver or to passenger
 
@@ -339,5 +341,51 @@ export class ServerNotifiesVoyageFinished {
 
     getMessageType() {
         return MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED;
+    }
+}
+
+// driver id is in the envelope object
+export class ServerRefreshDriverStatus {
+    fromObject(obj) {
+        this.status = obj.status;
+        return this;
+    }
+
+    getMessageType() {
+        return MessageType.SERVER_REFRESH_DRIVER_STATUS;
+    }
+}
+
+// offers is an array of OfferDto: {invitation_id, status, passenger_id, lat, lon}
+export class ServerRefreshDriverOffers {
+
+    fromObject(obj) {
+        this.offers = obj.offers.map((o) => new Offer().fromObject(o));
+        return this;
+    }
+
+    getMessageType() {
+        return MessageType.SERVER_REFRESH_DRIVER_OFFERS;
+    }
+}
+
+// invitations is an array of InvitationDto: {invitation_id, status, driver_id, lat, lon}
+export class ServerRefreshPassengerInvitations {
+    constructor(invitations = []) {
+        this.invitations = invitations;
+    }
+
+    fromObject(obj) {
+        this.invitations = obj.invitations;
+        return this;
+    }
+
+    getMessageType() {
+        return MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS;
+    }
+
+    // converts the raw InvitationDto array into Invitation entities
+    getInvitations() {
+        return this.invitations.map((i) => new Invitation().fromObject(i));
     }
 }

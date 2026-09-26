@@ -2,6 +2,7 @@ import {AppChildren, ClearE, NewEC, NewECT, NewT} from "./util.js";
 import {InvitationStatus, MessageType} from "./constants.js";
 import {DriverSearchResult} from "./entities/driver_search_result.js";
 import {Invitation} from "./entities/invitation.js";
+import {ServerRefreshPassengerInvitations} from "./entities/messages.js";
 
 export class PassengerComponent {
 
@@ -315,6 +316,9 @@ export class PassengerComponent {
             case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
                 this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.COMPLETED);
                 break;
+            case MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS:
+                this.handleServerRefreshInvitations(envelope.data);
+                break;
             default:
                 console.log('unhandled message type', envelope.type, envelope);
         }
@@ -349,6 +353,13 @@ export class PassengerComponent {
         // TODO: real phone once there's an input for it; empty for now.
         console.log('server requested client info, replying with empty values for now');
         this.sendMessage(MessageType.CLIENT_RESPONDS_INFO, {});
+    }
+
+    handleServerRefreshInvitations(data) {
+        const message = new ServerRefreshPassengerInvitations().fromObject(data);
+
+        this.invitations = message.getInvitations();
+        this.renderInvitations();
     }
 
     sendMessage(type, data) {

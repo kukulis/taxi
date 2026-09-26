@@ -21,3 +21,7 @@ type Driver struct {
 func NewDriver() *Driver {
 	return &Driver{}
 }
+
+func GetDriverId(d *Driver) string {
+	return d.Id
+}

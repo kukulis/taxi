@@ -18,3 +18,5 @@ type Passenger struct {
 func NewPassenger() *Passenger {
 	return &Passenger{}
 }
+
+func GetPassengerId(p *Passenger) string { return p.Id }

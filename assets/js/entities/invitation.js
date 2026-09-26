@@ -49,4 +49,13 @@ export class Invitation {
     getTime() {
         return this.time;
     }
+
+    fromObject(obj) {
+        this.lat = obj.lat;
+        this.lon = obj.lon;
+        this.driverId = obj.driver_id;
+        this.status = obj.status;
+        this.time = obj.time;
+        return this;
+    }
 }

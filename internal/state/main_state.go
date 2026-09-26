@@ -59,6 +59,25 @@ func (s *MainState) GetDriverById(id string) *Driver {
 	return &driverCopy
 }
 
+// GetDriversByIds returns the drivers found for the given ids. Ids with no
+// matching driver are simply absent from the result.
+func (s *MainState) GetDriversByIds(ids []string) []*Driver {
+	s.driversLock.Lock()
+	defer s.driversLock.Unlock()
+
+	driversList := make([]*Driver, 0, len(ids))
+	for _, id := range ids {
+		driver, ok := s.drivers[id]
+		if !ok {
+			continue
+		}
+		driverCopy := *driver
+		driversList = append(driversList, &driverCopy)
+	}
+
+	return driversList
+}
+
 // UpdateDriver locks the drivers map, looks up the driver by id and, if found,
 // calls mutate on it in place. It reports whether the driver was found.
 func (s *MainState) UpdateDriver(id string, mutate func(*Driver)) bool {
@@ -143,6 +162,38 @@ func (s *MainState) GetPassengersSnapshot() []*Passenger {
 
 	passengersList := make([]*Passenger, 0, len(s.passengers))
 	for _, passenger := range s.passengers {
+		passengerCopy := *passenger
+		passengersList = append(passengersList, &passengerCopy)
+	}
+
+	return passengersList
+}
+
+func (s *MainState) GetPassengerById(id string) *Passenger {
+	s.passengersLock.Lock()
+	defer s.passengersLock.Unlock()
+
+	passenger, ok := s.passengers[id]
+	if !ok {
+		return nil
+	}
+
+	passengerCopy := *passenger
+	return &passengerCopy
+}
+
+// GetPassengersByIds returns the passengers found for the given ids. Ids with
+// no matching passenger are simply absent from the result.
+func (s *MainState) GetPassengersByIds(ids []string) []*Passenger {
+	s.passengersLock.Lock()
+	defer s.passengersLock.Unlock()
+
+	passengersList := make([]*Passenger, 0, len(ids))
+	for _, id := range ids {
+		passenger, ok := s.passengers[id]
+		if !ok {
+			continue
+		}
 		passengerCopy := *passenger
 		passengersList = append(passengersList, &passengerCopy)
 	}

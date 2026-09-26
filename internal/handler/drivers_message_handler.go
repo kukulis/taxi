@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
 
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/messages"
@@ -57,19 +58,7 @@ func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 		case *messages.DriverChangesStatus:
 			d.handleDriverChangesStatus(message.ClientId, msg)
 		case *message_common.ClientRegisteredMessage:
-
-			// todo move to handle* function
-			driver := d.mainState.CreateDriver(message.ClientId)
-
-			d.driversHub.SendMessage(ws.ClientMessage{
-				ClientId: message.ClientId,
-				Message: messages.ServerRefreshDriverStatus{
-					Status: string(driver.Status),
-				},
-			})
-
-			// TODO send driver offers
-
+			d.handleClientRegistered(message.ClientId, msg)
 		case *message_common.ClientUnregisteredMessage:
 			d.mainState.RemoveDriver(message.ClientId)
 		default:
@@ -81,6 +70,56 @@ func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 	}
 }
 
+// handleClientRegistered handling virtual message about a driver registration
+func (d *DriversMessageHandler) handleClientRegistered(clientId string, msg *message_common.ClientRegisteredMessage) {
+	driver := d.mainState.CreateDriver(clientId)
+
+	// ============  Refresh driver status ===================================
+
+	d.driversHub.SendMessage(ws.ClientMessage{
+		ClientId: clientId,
+		Message: messages.ServerRefreshDriverStatus{
+			Status: string(driver.Status),
+		},
+	})
+
+	// ============ Send invitations related to the driver ====================
+
+	// only the offers still relevant to the driver; rejected/cancelled/completed ones are done with
+	invitations := d.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
+		DriverId: clientId,
+		Statuses: []string{
+			state.InvitationStatusPending,
+			state.InvitationStatusAccepted,
+			state.InvitationStatusDriving,
+		},
+	})
+
+	passengers := d.mainState.GetPassengersByIds(util.ArrayMap(invitations, state.GetInvitationPassengerId))
+
+	state.AssignPassengersToInvitations(invitations, passengers)
+
+	offers := util.ArrayMap(invitations, func(invitation *state.Invitation) messages.OfferDto {
+		return messages.OfferDto{
+			InvitationId: invitation.Id,
+			Status:       invitation.Status,
+			PassengerId:  invitation.PassengerId,
+			Lat:          strconv.FormatFloat(invitation.GetPassengerLat(), 'f', -1, 64),
+			Lon:          strconv.FormatFloat(invitation.GetPassengerLon(), 'f', -1, 64),
+		}
+	})
+
+	d.driversHub.SendMessage(ws.ClientMessage{
+		ClientId: clientId,
+		Message: messages.ServerRefreshDriverOffers{
+			Offers: offers,
+		},
+	})
+
+	// ====================== finito ======================================
+}
+
+// handleClientRespondsCoordinates write received coordinates to a main state
 func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string, msg *messages.ClientRespondsCoordinates) {
 	found := d.mainState.UpdateDriver(clientId, func(driver *state.Driver) {
 		driver.Lat = msg.Lat

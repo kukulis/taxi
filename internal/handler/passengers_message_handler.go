@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
 
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
@@ -48,7 +49,7 @@ func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws2.ClientMessag
 			p.handlePassengerRequestDriverCoords(message.ClientId, msg)
 
 		case *message_common.ClientRegisteredMessage:
-			p.mainState.CreatePassenger(message.ClientId)
+			p.handleClientRegistered(message.ClientId, msg)
 
 		case *message_common.ClientUnregisteredMessage:
 			p.mainState.RemovePassenger(message.ClientId)
@@ -60,6 +61,41 @@ func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws2.ClientMessag
 			)
 		}
 	}
+}
+
+func (p *PassengersMessageHandler) handleClientRegistered(clientId string, msg *message_common.ClientRegisteredMessage) {
+	p.mainState.CreatePassenger(clientId)
+
+	// only the invitations still relevant to the passenger; rejected/cancelled/completed ones are done with
+	invitations := p.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
+		PassengerId: clientId,
+		Statuses: []string{
+			state.InvitationStatusPending,
+			state.InvitationStatusAccepted,
+			state.InvitationStatusDriving,
+		},
+	})
+
+	drivers := p.mainState.GetDriversByIds(util.ArrayMap(invitations, state.GetInvitationDriverId))
+
+	state.AssignDriversToInvitations(invitations, drivers)
+
+	dtos := util.ArrayMap(invitations, func(invitation *state.Invitation) messages.InvitationDto {
+		return messages.InvitationDto{
+			InvitationId: invitation.Id,
+			Status:       invitation.Status,
+			DriverId:     invitation.DriverId,
+			Lat:          strconv.FormatFloat(invitation.GetDriverLat(), 'f', -1, 64),
+			Lon:          strconv.FormatFloat(invitation.GetDriverLon(), 'f', -1, 64),
+		}
+	})
+
+	p.passengersHub.SendMessage(ws2.ClientMessage{
+		ClientId: clientId,
+		Message: messages.ServerRefreshPassengerInvitations{
+			Invitations: dtos,
+		},
+	})
 }
 
 func (p *PassengersMessageHandler) handleClientRespondsCoordinates(clientId string, msg *messages.ClientRespondsCoordinates) {

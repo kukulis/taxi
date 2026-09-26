@@ -8,3 +8,5 @@ type OfferDto struct {
 	Lat         string `json:"lat"`
 	Lon         string `json:"lon"`
 }
+
+func GetOfferPassengerId(dto *OfferDto) string { return dto.PassengerId }

@@ -28,6 +28,10 @@ export const MessageType = {
     SERVER_RESPONDS_DRIVER_COORDS: 'server_responds_driver_coordinates',
     SERVER_NOTIFIES_VOYAGE_STARTED: 'server_notifies_voyage_started',
     SERVER_NOTIFIES_VOYAGE_FINISHED: 'server_notifies_voyage_finished',
+
+    SERVER_REFRESH_DRIVER_STATUS: 'server_refresh_driver_status',
+    SERVER_REFRESH_DRIVER_OFFERS: 'server_refresh_driver_offers',
+    SERVER_REFRESH_PASSENGER_INVITATIONS: 'server_refresh_passenger_invitations',
 };
 
 export const DriverStatus = {

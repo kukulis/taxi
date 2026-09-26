@@ -8,7 +8,9 @@ import {
     ServerCancelsOffer,
     ServerNotifiesVoyageFinished,
     ServerNotifiesVoyageStarted,
-    ServerOffersPassenger
+    ServerOffersPassenger,
+    ServerRefreshDriverOffers,
+    ServerRefreshDriverStatus,
 } from "./entities/messages.js";
 
 export class DriverComponent {
@@ -286,6 +288,13 @@ export class DriverComponent {
             case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
                 this.handleServerNotifiesVoyageFinished(envelope.data);
                 break;
+            case MessageType.SERVER_REFRESH_DRIVER_STATUS:
+                this.handleServerRefreshStatus(envelope.data)
+                break;
+            case MessageType.SERVER_REFRESH_DRIVER_OFFERS:
+                this.handleServerRefreshOffers(envelope.data)
+                break;
+
             default:
                 console.log('unhandled message type', envelope.type, envelope);
         }
@@ -388,5 +397,18 @@ export class DriverComponent {
 
         offer.setStatus(InvitationStatus.COMPLETED);
         this.renderOffers();
+    }
+
+    handleServerRefreshStatus(data) {
+        const message = new ServerRefreshDriverStatus().fromObject(data)
+        this.currentStatus = message.status
+        this.renderStatuses()
+
+    }
+
+    handleServerRefreshOffers(data) {
+        const message = new ServerRefreshDriverOffers().fromObject(data)
+        this.offers = message.offers
+        this.renderOffers()
     }
 }
