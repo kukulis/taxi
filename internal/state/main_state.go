@@ -213,6 +213,7 @@ func (s *MainState) AddDedicatedEvent(event util.Event) bool {
 	}
 }
 
+// CreateRegistrationRelatedListener Deprecated
 func (s *MainState) CreateRegistrationRelatedListener() func(event util.Event) {
 	return func(event util.Event) {
 		if !s.AddDedicatedEvent(event) {

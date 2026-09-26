@@ -7,11 +7,13 @@ const (
 	ClientTypePassenger         = "passenger"
 )
 
+// ClientRegisteredEvent @Deprecated use virtual messages instead
 type ClientRegisteredEvent struct {
 	ClientId   string
 	ClientType string
 }
 
+// ClientUnregisteredEvent @Deprecated use virtual messages instead
 type ClientUnregisteredEvent struct {
 	ClientId   string
 	ClientType string

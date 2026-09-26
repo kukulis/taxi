@@ -7,6 +7,7 @@ import (
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
+	"darbelis.eu/taxi/pkg/message_common"
 	"darbelis.eu/taxi/pkg/util"
 	ws2 "darbelis.eu/taxi/pkg/ws"
 )
@@ -55,6 +56,11 @@ func (d *DriversMessageHandler) Handle(messageChannel <-chan ws2.ClientMessage) 
 			d.handleDriverRejectsOffer(message.ClientId, msg)
 		case *messages.DriverChangesStatus:
 			d.handleDriverChangesStatus(message.ClientId, msg)
+		case *message_common.ClientRegisteredMessage:
+			d.mainState.CreateDriver(message.ClientId)
+
+		case *message_common.ClientUnregisteredMessage:
+			d.mainState.RemoveDriver(message.ClientId)
 		default:
 			d.logger.Warn("unexpected message type",
 				"client_id", message.ClientId,

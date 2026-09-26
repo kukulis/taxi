@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	DriversCoordinatesTimeout    = time.Second * 15
-	DriversInfoTimeout           = time.Hour * 12
-	DriversTickFrequency         = time.Second * 15
-	PassengersCoordinatesTimeout = time.Second * 60
+	DriversCoordinatesTimeout = time.Second * 900
+	DriversInfoTimeout        = time.Hour * 12
+	DriversTickFrequency      = time.Second * 15
+
+	PassengersCoordinatesTimeout = time.Second * 900
 	PassengersInfoTimeout        = time.Hour * 24
 	PassengersTickFrequency      = time.Second * 15
 )

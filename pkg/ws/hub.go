@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/pkg/message_common"
 	"darbelis.eu/taxi/pkg/util"
 	"github.com/gorilla/websocket"
@@ -75,7 +74,14 @@ func (h *Hub) Run() {
 		case c := <-h.registerChannel:
 			h.clients[c.GetClientId()] = c
 
-			h.dispatch(events.NewClientRegisteredEvent(c.GetClientId(), events.WithRegisteredClientType(h.clientType)))
+			//h.dispatch(events.NewClientRegisteredEvent(c.GetClientId(), events.WithRegisteredClientType(h.clientType)))
+			h.incomingMessagesChannel <- ClientMessage{
+				ClientId: c.clientId,
+				Message: &message_common.ClientRegisteredMessage{
+					ClientId:   c.GetClientId(),
+					ClientType: h.clientType,
+				},
+			}
 		case clientId := <-h.unregisterChannel:
 			client, ok := h.clients[clientId]
 
@@ -87,7 +93,15 @@ func (h *Hub) Run() {
 
 			// consider whether to use a wrapper Close function
 			client.conn.Close()
-			h.dispatch(events.NewClientUnregisteredEvent(client.GetClientId(), events.WithUnregisteredClientType(h.clientType)))
+
+			h.incomingMessagesChannel <- ClientMessage{
+				ClientId: client.GetClientId(),
+				Message: &message_common.ClientUnregisteredMessage{
+					ClientId:   client.GetClientId(),
+					ClientType: h.clientType,
+				},
+			}
+			//h.dispatch(events.NewClientUnregisteredEvent(client.GetClientId(), events.WithUnregisteredClientType(h.clientType)))
 
 		case clientMessage := <-h.outgoingMessagesChannel:
 			client, ok := h.clients[clientMessage.ClientId]

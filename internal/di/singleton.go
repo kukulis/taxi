@@ -126,6 +126,7 @@ func GetDriverStatusChangeForInvitationListener() *handler.DriverStatusChangeFor
 	return driverStatusChangeForInvitationListener
 }
 
+// GetOnboardRegisteredDriverListener @Deprecated
 func GetOnboardRegisteredDriverListener() *handler.OnboardRegisteredDriverListener {
 	if onboardRegisteredDriverListener == nil {
 		onboardRegisteredDriverListener = handler.NewOnboardRegisteredDriverListener(GetMainState())

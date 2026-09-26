@@ -6,6 +6,7 @@ import (
 	"darbelis.eu/taxi/pkg/util"
 )
 
+// InitializeListenersFromMainState Deprecated
 func InitializeListenersFromMainState(mainState *state.MainState, dispatcher *util.Dispatcher) {
 	dispatcher.AddListener(events.ClientRegisteredEventName, mainState.CreateRegistrationRelatedListener())
 	dispatcher.AddListener(events.ClientUnregisteredEventName, mainState.CreateRegistrationRelatedListener())

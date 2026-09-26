@@ -8,7 +8,7 @@ import (
 	"darbelis.eu/taxi/pkg/util"
 )
 
-// OnboardRegisteredDriverListener onboards a newly registered driver.
+// OnboardRegisteredDriverListener @Deprecated, we will use virtual messages onboards a newly registered driver.
 // Dedicated to take a registration channel from MainState
 type OnboardRegisteredDriverListener struct {
 	mainState *state.MainState

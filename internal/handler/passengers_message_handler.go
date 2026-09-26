@@ -6,6 +6,7 @@ import (
 
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
+	"darbelis.eu/taxi/pkg/message_common"
 	"darbelis.eu/taxi/pkg/util"
 	ws2 "darbelis.eu/taxi/pkg/ws"
 )
@@ -45,6 +46,13 @@ func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws2.ClientMessag
 			p.handlePassengerCancelsInvite(message.ClientId, msg)
 		case *messages.PassengerRequestDriverCoords:
 			p.handlePassengerRequestDriverCoords(message.ClientId, msg)
+
+		case *message_common.ClientRegisteredMessage:
+			p.mainState.CreatePassenger(message.ClientId)
+
+		case *message_common.ClientUnregisteredMessage:
+			p.mainState.RemovePassenger(message.ClientId)
+
 		default:
 			p.logger.Warn("unexpected message type",
 				"client_id", message.ClientId,

@@ -23,6 +23,8 @@ func main() {
 
 	dispatcher.AddListener(events.DriverStatusChangedEventName, di.GetDriverStatusChangeForDriverListener().Handle)
 	dispatcher.AddListener(events.DriverStatusChangedEventName, di.GetDriverStatusChangeForInvitationListener().Handle)
+
+	// Deprecated
 	dispatcher.AddListener(events.ClientRegisteredEventName, di.GetOnboardRegisteredDriverListener().Handle)
 
 	go mainState.HandleDedicatedEvents()
