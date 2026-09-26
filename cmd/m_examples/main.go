@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/pkg/util"
@@ -10,7 +11,7 @@ import (
 
 // exampleMessages mirrors internal/messages/message_codec_test.go's roundTripMessages:
 // one value per message type, with non-zero fields.
-var exampleMessages = []messages.MessageInterface{
+var exampleMessages = []message_common.MessageInterface{
 	messages.ServerRequestsCoordinates{},
 	messages.ServerRequestsClientInfo{},
 	messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"darbelis.eu/taxi/internal/events"
+	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/ws"
@@ -77,7 +78,7 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 // whose first reply is errorReply, then a valid ClientRespondsCoordinates. It asserts the
 // coordinates end up in MainState, which only happens if the handler survives the error
 // message and keeps consuming the channel instead of getting stuck on it.
-func driverErrorThenCoordinatesTest(t *testing.T, errorReply messages.MessageInterface) {
+func driverErrorThenCoordinatesTest(t *testing.T, errorReply message_common.MessageInterface) {
 	t.Helper()
 	const driverId = "driver-1"
 

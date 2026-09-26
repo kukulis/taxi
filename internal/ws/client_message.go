@@ -1,9 +1,11 @@
 package ws
 
-import "darbelis.eu/taxi/internal/messages"
+import (
+	"darbelis.eu/taxi/internal/message_common"
+)
 
 type ClientMessage struct {
 	ClientId  string
 	MessageId string
-	Message   messages.MessageInterface
+	Message   message_common.MessageInterface
 }

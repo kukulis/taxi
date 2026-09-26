@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 
+	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/pkg/util"
 	"github.com/gorilla/websocket"
@@ -35,7 +36,7 @@ func main() {
 
 	envelope := messages.Envelope{
 		Id:   id,
-		Type: messages.MessageType(*msgType),
+		Type: message_common.MessageType(*msgType),
 		Data: json.RawMessage(*data),
 	}
 

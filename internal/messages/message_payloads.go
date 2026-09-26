@@ -1,18 +1,21 @@
 package messages
 
-import "darbelis.eu/taxi/internal/state"
+import (
+	"darbelis.eu/taxi/internal/message_common"
+	"darbelis.eu/taxi/internal/state"
+)
 
 // === to driver or to passenger
 
 type ServerRequestsCoordinates struct{}
 
-func (ServerRequestsCoordinates) GetMessageType() MessageType {
+func (ServerRequestsCoordinates) GetMessageType() message_common.MessageType {
 	return MessageTypeServerRequestsCoordinates
 }
 
 type ServerRequestsClientInfo struct{}
 
-func (ServerRequestsClientInfo) GetMessageType() MessageType {
+func (ServerRequestsClientInfo) GetMessageType() message_common.MessageType {
 	return MessageTypeServerRequestsClientInfo
 }
 
@@ -23,7 +26,7 @@ type ClientRespondsCoordinates struct {
 	Lon float64 `json:"lon"`
 }
 
-func (ClientRespondsCoordinates) GetMessageType() MessageType {
+func (ClientRespondsCoordinates) GetMessageType() message_common.MessageType {
 	return MessageTypeClientRespondsCoordinates
 }
 
@@ -36,7 +39,7 @@ type ClientRespondsInfo struct {
 	Ip          string `json:"ip,omitempty"`
 }
 
-func (ClientRespondsInfo) GetMessageType() MessageType {
+func (ClientRespondsInfo) GetMessageType() message_common.MessageType {
 	return MessageTypeClientRespondsInfo
 }
 
@@ -46,7 +49,7 @@ type ClientResponseError struct {
 	Error string `json:"error"`
 }
 
-func (ClientResponseError) GetMessageType() MessageType {
+func (ClientResponseError) GetMessageType() message_common.MessageType {
 	return MessageTypeClientResponseError
 }
 
@@ -56,7 +59,7 @@ type ClientError struct {
 	Error string `json:"error"`
 }
 
-func (ClientError) GetMessageType() MessageType {
+func (ClientError) GetMessageType() message_common.MessageType {
 	return MessageTypeClientError
 }
 
@@ -68,7 +71,7 @@ type ServerOffersPassenger struct {
 	Lon         float64 `json:"lon"`
 }
 
-func (ServerOffersPassenger) GetMessageType() MessageType {
+func (ServerOffersPassenger) GetMessageType() message_common.MessageType {
 	return MessageTypeServerOffersPassenger
 }
 
@@ -76,7 +79,7 @@ type ServerCancelsOffer struct {
 	PassengerId string `json:"passenger_id"`
 }
 
-func (ServerCancelsOffer) GetMessageType() MessageType {
+func (ServerCancelsOffer) GetMessageType() message_common.MessageType {
 	return MessageTypeServerCancelsOffer
 }
 
@@ -84,7 +87,7 @@ type DriverCancelsOffer struct {
 	PassengerId string `json:"passenger_id"`
 }
 
-func (DriverCancelsOffer) GetMessageType() MessageType {
+func (DriverCancelsOffer) GetMessageType() message_common.MessageType {
 	return MessageTypeDriverCancelsOffer
 }
 
@@ -92,7 +95,7 @@ type DriverAcceptsOffer struct {
 	PassengerId string `json:"passenger_id"`
 }
 
-func (DriverAcceptsOffer) GetMessageType() MessageType {
+func (DriverAcceptsOffer) GetMessageType() message_common.MessageType {
 	return MessageTypeDriverAcceptsOffer
 }
 
@@ -100,7 +103,7 @@ type DriverRejectsOffer struct {
 	PassengerId string `json:"passenger_id"`
 }
 
-func (DriverRejectsOffer) GetMessageType() MessageType {
+func (DriverRejectsOffer) GetMessageType() message_common.MessageType {
 	return MessageTypeDriverRejectsOffer
 }
 
@@ -108,7 +111,7 @@ type DriverChangesStatus struct {
 	Status state.DriverStatus `json:"status"`
 }
 
-func (DriverChangesStatus) GetMessageType() MessageType {
+func (DriverChangesStatus) GetMessageType() message_common.MessageType {
 	return MessageTypeDriverChangesStatus
 }
 
@@ -120,7 +123,7 @@ type PassengerInvitesDriver struct {
 	Lon      float64 `json:"lon"`
 }
 
-func (PassengerInvitesDriver) GetMessageType() MessageType {
+func (PassengerInvitesDriver) GetMessageType() message_common.MessageType {
 	return MessageTypePassengerInvitesDriver
 }
 
@@ -128,7 +131,7 @@ type PassengerCancelsInvite struct {
 	DriverId string `json:"driver_id"`
 }
 
-func (PassengerCancelsInvite) GetMessageType() MessageType {
+func (PassengerCancelsInvite) GetMessageType() message_common.MessageType {
 	return MessageTypePassengerCancelsInvite
 }
 
@@ -136,7 +139,7 @@ type ServerNotifiesInviteAccepted struct {
 	DriverId string `json:"driver_id"`
 }
 
-func (ServerNotifiesInviteAccepted) GetMessageType() MessageType {
+func (ServerNotifiesInviteAccepted) GetMessageType() message_common.MessageType {
 	return MessageTypeServerNotifiesInviteAccepted
 }
 
@@ -144,7 +147,7 @@ type ServerNotifiesInviteRejected struct {
 	DriverId string `json:"driver_id"`
 }
 
-func (ServerNotifiesInviteRejected) GetMessageType() MessageType {
+func (ServerNotifiesInviteRejected) GetMessageType() message_common.MessageType {
 	return MessageTypeServerNotifiesInviteRejected
 }
 
@@ -152,7 +155,7 @@ type ServerNotifiesInviteCanceled struct {
 	DriverId string `json:"driver_id"`
 }
 
-func (ServerNotifiesInviteCanceled) GetMessageType() MessageType {
+func (ServerNotifiesInviteCanceled) GetMessageType() message_common.MessageType {
 	return MessageTypeServerNotifiesInviteCanceled
 }
 
@@ -160,7 +163,7 @@ type PassengerRequestDriverCoords struct {
 	DriverId string `json:"driver_id"`
 }
 
-func (PassengerRequestDriverCoords) GetMessageType() MessageType {
+func (PassengerRequestDriverCoords) GetMessageType() message_common.MessageType {
 	return MessageTypePassengerRequestDriverCoords
 }
 
@@ -170,7 +173,7 @@ type ServerRespondsDriverCoords struct {
 	Lon      float64 `json:"lon"`
 }
 
-func (ServerRespondsDriverCoords) GetMessageType() MessageType {
+func (ServerRespondsDriverCoords) GetMessageType() message_common.MessageType {
 	return MessageTypeServerRespondsDriverCoords
 }
 
@@ -179,7 +182,7 @@ type ServerNotifiesVoyageStarted struct {
 	PassengerId string `json:"passenger_id"`
 }
 
-func (ServerNotifiesVoyageStarted) GetMessageType() MessageType {
+func (ServerNotifiesVoyageStarted) GetMessageType() message_common.MessageType {
 	return MessageTypeServerNotifiesVoyageStarted
 }
 
@@ -188,7 +191,7 @@ type ServerNotifiesVoyageFinished struct {
 	PassengerId string `json:"passenger_id"`
 }
 
-func (ServerNotifiesVoyageFinished) GetMessageType() MessageType {
+func (ServerNotifiesVoyageFinished) GetMessageType() message_common.MessageType {
 	return MessageTypeServerNotifiesVoyageFinished
 }
 
@@ -197,7 +200,7 @@ type ServerRefreshDriverStatus struct {
 	Status string `json:"status"`
 }
 
-func (ServerRefreshDriverStatus) GetMessageType() MessageType {
+func (ServerRefreshDriverStatus) GetMessageType() message_common.MessageType {
 	return MessageTypeServerRefreshDriverStatus
 }
 
@@ -205,7 +208,7 @@ type ServerRefreshDriverOffers struct {
 	Offers []OfferDto `json:"offers"`
 }
 
-func (ServerRefreshDriverOffers) GetMessageType() MessageType {
+func (ServerRefreshDriverOffers) GetMessageType() message_common.MessageType {
 	return MessageTypeServerRefreshDriverOffers
 }
 
@@ -213,6 +216,40 @@ type ServerRefreshPassengerInvitations struct {
 	Invitations []InvitationDto `json:"invitations"`
 }
 
-func (ServerRefreshPassengerInvitations) GetMessageType() MessageType {
+func (ServerRefreshPassengerInvitations) GetMessageType() message_common.MessageType {
 	return MessageTypeServerRefreshPassengerInvitations
+}
+
+// --- virtual messages (internal notifications, not sent by any client)
+
+type DriverRegistered struct {
+	DriverId string `json:"driver_id"`
+}
+
+func (DriverRegistered) GetMessageType() message_common.MessageType {
+	return VirtualMessageTypeDriverRegistered
+}
+
+type DriverUnregistered struct {
+	DriverId string `json:"driver_id"`
+}
+
+func (DriverUnregistered) GetMessageType() message_common.MessageType {
+	return VirtualMessageTypeDriverUnregistered
+}
+
+type PassengerRegistered struct {
+	PassengerId string `json:"passenger_id"`
+}
+
+func (PassengerRegistered) GetMessageType() message_common.MessageType {
+	return VirtualMessageTypePassengerRegistered
+}
+
+type PassengerUnregistered struct {
+	PassengerId string `json:"passenger_id"`
+}
+
+func (PassengerUnregistered) GetMessageType() message_common.MessageType {
+	return VirtualMessageTypePassengerUnregistered
 }

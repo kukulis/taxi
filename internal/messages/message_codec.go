@@ -3,11 +3,13 @@ package messages
 import (
 	"encoding/json"
 	"fmt"
+
+	"darbelis.eu/taxi/internal/message_common"
 )
 
 // Encode wraps the payload into an Envelope and marshals it.
 // The type is taken from the payload, so it can not disagree with the data.
-func Encode(id string, msg MessageInterface) ([]byte, error) {
+func Encode(id string, msg message_common.MessageInterface) ([]byte, error) {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -22,13 +24,13 @@ func Encode(id string, msg MessageInterface) ([]byte, error) {
 
 // Decode unmarshals the Envelope, then the payload into the struct matching the type.
 // The returned message is a pointer to the payload struct.
-func Decode(raw []byte) (string, MessageInterface, error) {
+func Decode(raw []byte) (string, message_common.MessageInterface, error) {
 	var env Envelope
 	if err := json.Unmarshal(raw, &env); err != nil {
 		return "", nil, err
 	}
 
-	var msg MessageInterface
+	var msg message_common.MessageInterface
 	switch env.Type {
 	case MessageTypeServerRequestsCoordinates:
 		msg = &ServerRequestsCoordinates{}
@@ -80,6 +82,15 @@ func Decode(raw []byte) (string, MessageInterface, error) {
 		msg = &ServerRefreshDriverOffers{}
 	case MessageTypeServerRefreshPassengerInvitations:
 		msg = &ServerRefreshPassengerInvitations{}
+
+	case VirtualMessageTypeDriverRegistered:
+		msg = &DriverRegistered{}
+	case VirtualMessageTypeDriverUnregistered:
+		msg = &DriverUnregistered{}
+	case VirtualMessageTypePassengerRegistered:
+		msg = &PassengerRegistered{}
+	case VirtualMessageTypePassengerUnregistered:
+		msg = &PassengerUnregistered{}
 
 	default:
 		return env.Id, nil, fmt.Errorf("unknown message type %q", env.Type)

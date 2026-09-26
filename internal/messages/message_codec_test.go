@@ -4,11 +4,12 @@ import (
 	"reflect"
 	"testing"
 
+	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/internal/state"
 )
 
 // one value for every message type, with non-zero fields
-var roundTripMessages = []MessageInterface{
+var roundTripMessages = []message_common.MessageInterface{
 	ServerRequestsCoordinates{},
 	ServerRequestsClientInfo{},
 	ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
@@ -36,6 +37,11 @@ var roundTripMessages = []MessageInterface{
 	ServerRefreshDriverStatus{Status: string(state.DriverStatusWorking)},
 	ServerRefreshDriverOffers{Offers: []OfferDto{{InvitationId: "i1", Status: "pending", PassengerId: "p1", Lat: "54.68", Lon: "25.28"}}},
 	ServerRefreshPassengerInvitations{Invitations: []InvitationDto{{InvitationId: "i1", Status: "pending", DriverId: "d1", Lat: "54.68", Lon: "25.28"}}},
+
+	DriverRegistered{DriverId: "d1"},
+	DriverUnregistered{DriverId: "d1"},
+	PassengerRegistered{PassengerId: "p1"},
+	PassengerUnregistered{PassengerId: "p1"},
 }
 
 func TestEncodeDecodeRoundTrip(t *testing.T) {
@@ -71,7 +77,7 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 
 // every MessageType constant must be handled by Decode
 func TestDecodeHandlesAllMessageTypes(t *testing.T) {
-	allTypes := []MessageType{
+	allTypes := []message_common.MessageType{
 		MessageTypeServerRequestsCoordinates,
 		MessageTypeServerRequestsClientInfo,
 		MessageTypeClientRespondsCoordinates,
@@ -96,9 +102,13 @@ func TestDecodeHandlesAllMessageTypes(t *testing.T) {
 		MessageTypeServerRefreshDriverStatus,
 		MessageTypeServerRefreshDriverOffers,
 		MessageTypeServerRefreshPassengerInvitations,
+		VirtualMessageTypeDriverRegistered,
+		VirtualMessageTypeDriverUnregistered,
+		VirtualMessageTypePassengerRegistered,
+		VirtualMessageTypePassengerUnregistered,
 	}
 
-	covered := map[MessageType]bool{}
+	covered := map[message_common.MessageType]bool{}
 	for _, m := range roundTripMessages {
 		covered[m.GetMessageType()] = true
 	}
