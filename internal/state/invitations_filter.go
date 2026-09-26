@@ -3,9 +3,9 @@ package state
 type InvitationsFilter struct {
 	PassengerId string
 	DriverId    string
-	// TODO modify to array of strings (match any of them), e.g. pending OR accepted for
-	//  PassengersMessageHandler.handlePassengerCancelsInvite, which filters in code for now
-	Status string
+	Status      string
+
+	Statuses []string
 }
 
 func (f *InvitationsFilter) Match(invitation Invitation) bool {
@@ -18,6 +18,16 @@ func (f *InvitationsFilter) Match(invitation Invitation) bool {
 	}
 
 	if f.Status != "" && f.Status != invitation.Status {
+		return false
+	}
+
+	if f.Statuses != nil && len(f.Statuses) != 0 {
+
+		for _, s := range f.Statuses {
+			if s == invitation.Status {
+				return true
+			}
+		}
 		return false
 	}
 

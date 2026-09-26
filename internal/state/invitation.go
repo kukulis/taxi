@@ -1,6 +1,9 @@
 package state
 
-import "time"
+import (
+	"cmp"
+	"time"
+)
 
 const (
 	InvitationStatusPending   = "pending"
@@ -24,4 +27,12 @@ type Invitation struct {
 
 func NewInvitation(id string) *Invitation {
 	return &Invitation{Id: id, Status: InvitationStatusPending}
+}
+
+func InvitationComparatorById(a *Invitation, b *Invitation) int {
+	return cmp.Compare(a.Id, b.Id)
+}
+
+func GetInvitationId(i *Invitation) string {
+	return i.Id
 }
