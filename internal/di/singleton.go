@@ -3,6 +3,7 @@ package di
 import (
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/handler"
+	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/web"
 	"darbelis.eu/taxi/internal/ws"
@@ -55,7 +56,7 @@ func GetDriverApiController() *web.DriverApiController {
 
 func GetDriversHub() *ws.Hub {
 	if driversHubInstance == nil {
-		driversHubInstance = ws.NewHub(GetDispatcher(), events.ClientTypeDriver)
+		driversHubInstance = ws.NewHub(GetDispatcher(), events.ClientTypeDriver, messages.Encode, messages.Decode)
 	}
 
 	return driversHubInstance
@@ -63,7 +64,7 @@ func GetDriversHub() *ws.Hub {
 
 func GetPassengersHub() *ws.Hub {
 	if passengersHubInstance == nil {
-		passengersHubInstance = ws.NewHub(GetDispatcher(), events.ClientTypePassenger)
+		passengersHubInstance = ws.NewHub(GetDispatcher(), events.ClientTypePassenger, messages.Encode, messages.Decode)
 	}
 
 	return passengersHubInstance

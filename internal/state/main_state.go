@@ -7,6 +7,7 @@ import (
 
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/pkg/util"
+	"github.com/bytedance/gopkg/util/logger"
 )
 
 type MainState struct {
@@ -82,6 +83,8 @@ func (s *MainState) UpdateDriver(id string, mutate func(*Driver)) bool {
 // CreateDriver adds a new driver with the given id, or reactivates the existing
 // record if one is already present, and returns it.
 func (s *MainState) CreateDriver(id string) *Driver {
+
+	logger.Info("MainState.CreateDriver called")
 	s.driversLock.Lock()
 	defer s.driversLock.Unlock()
 
@@ -171,6 +174,8 @@ func (s *MainState) UpdatePassenger(id string, mutate func(*Passenger)) bool {
 // CreatePassenger adds a new passenger with the given id, or reactivates the existing
 // record if one is already present, and returns it.
 func (s *MainState) CreatePassenger(id string) *Passenger {
+	logger.Info("MainState.CreatePassenger called")
+
 	s.passengersLock.Lock()
 	defer s.passengersLock.Unlock()
 

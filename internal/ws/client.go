@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"darbelis.eu/taxi/internal/messages"
+	"darbelis.eu/taxi/internal/message_common"
 	"github.com/gorilla/websocket"
 )
 
@@ -28,13 +28,21 @@ type Client struct {
 	// will pass client id when closed
 	closedNotifier chan string
 	logger         *slog.Logger
+	encodeFunc     message_common.EncodeFunc
+	decodeFunc     message_common.DecodeFunc
 }
 
 func (c *Client) GetClientId() string {
 	return c.clientId
 }
 
-func NewClient(clientId string, conn *websocket.Conn, incomingMessages chan ClientMessage, closedNotifier chan string) *Client {
+func NewClient(clientId string,
+	conn *websocket.Conn,
+	incomingMessages chan ClientMessage,
+	closedNotifier chan string,
+	encodeFunc message_common.EncodeFunc,
+	decodeFunc message_common.DecodeFunc,
+) *Client {
 	return &Client{
 		clientId:                   clientId,
 		outgoingThisClientMessages: make(chan ClientMessage, 256),
@@ -42,6 +50,8 @@ func NewClient(clientId string, conn *websocket.Conn, incomingMessages chan Clie
 		incomingMessages:           incomingMessages,
 		closedNotifier:             closedNotifier,
 		logger:                     slog.Default().With("component", "Client", "client_id", clientId),
+		encodeFunc:                 encodeFunc,
+		decodeFunc:                 decodeFunc,
 	}
 }
 
@@ -74,7 +84,7 @@ func (c *Client) readPump() {
 		}
 		//messageBytes = bytes.TrimSpace(bytes.Replace(messageBytes, newline, space, -1))
 
-		messageId, message, err := messages.Decode(messageBytes)
+		messageId, message, err := c.decodeFunc(messageBytes)
 		if err != nil {
 			// better handling later
 			c.logger.Warn("message decode error", "error", err)
@@ -105,7 +115,7 @@ func (c *Client) writePump() {
 				return
 			}
 
-			messageBytes, err := messages.Encode(clientMessage.MessageId, clientMessage.Message)
+			messageBytes, err := c.encodeFunc(clientMessage.MessageId, clientMessage.Message)
 
 			if err != nil {
 				c.logger.Error("message encode error", "error", err)

@@ -10,6 +10,7 @@ import (
 	"runtime/debug"
 
 	"darbelis.eu/taxi/internal/events"
+	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/pkg/util"
 	"github.com/gorilla/websocket"
 )
@@ -37,9 +38,18 @@ type Hub struct {
 	dispatcher *util.Dispatcher
 	clientType string
 	logger     *slog.Logger
+
+	encodeFunc message_common.EncodeFunc
+	decodeFunc message_common.DecodeFunc
 }
 
-func NewHub(dispatcher *util.Dispatcher, clientType string) *Hub {
+func NewHub(
+	dispatcher *util.Dispatcher,
+	clientType string,
+	encodeFunc message_common.EncodeFunc,
+	decodeFunc message_common.DecodeFunc,
+
+) *Hub {
 	return &Hub{
 		registerChannel:         make(chan *Client),
 		unregisterChannel:       make(chan string, 256),
@@ -48,7 +58,9 @@ func NewHub(dispatcher *util.Dispatcher, clientType string) *Hub {
 		outgoingMessagesChannel: make(chan ClientMessage, 256),
 		dispatcher:              dispatcher,
 		clientType:              clientType,
-		logger:                  slog.Default().With("component", "Hub", "client_type", clientType),
+		logger:                  slog.Default().With("component", "Hubmessages.D", "client_type", clientType),
+		encodeFunc:              encodeFunc,
+		decodeFunc:              decodeFunc,
 	}
 }
 
@@ -115,7 +127,7 @@ func (h *Hub) RegisterWebSocketClient(clientId string, w http.ResponseWriter, r 
 		return
 	}
 
-	c := NewClient(clientId, conn, h.incomingMessagesChannel, h.unregisterChannel)
+	c := NewClient(clientId, conn, h.incomingMessagesChannel, h.unregisterChannel, h.encodeFunc, h.decodeFunc)
 	h.registerChannel <- c
 
 	go c.writePump()

@@ -37,11 +37,6 @@ var roundTripMessages = []message_common.MessageInterface{
 	ServerRefreshDriverStatus{Status: string(state.DriverStatusWorking)},
 	ServerRefreshDriverOffers{Offers: []OfferDto{{InvitationId: "i1", Status: "pending", PassengerId: "p1", Lat: "54.68", Lon: "25.28"}}},
 	ServerRefreshPassengerInvitations{Invitations: []InvitationDto{{InvitationId: "i1", Status: "pending", DriverId: "d1", Lat: "54.68", Lon: "25.28"}}},
-
-	DriverRegistered{DriverId: "d1"},
-	DriverUnregistered{DriverId: "d1"},
-	PassengerRegistered{PassengerId: "p1"},
-	PassengerUnregistered{PassengerId: "p1"},
 }
 
 func TestEncodeDecodeRoundTrip(t *testing.T) {
@@ -102,10 +97,6 @@ func TestDecodeHandlesAllMessageTypes(t *testing.T) {
 		MessageTypeServerRefreshDriverStatus,
 		MessageTypeServerRefreshDriverOffers,
 		MessageTypeServerRefreshPassengerInvitations,
-		VirtualMessageTypeDriverRegistered,
-		VirtualMessageTypeDriverUnregistered,
-		VirtualMessageTypePassengerRegistered,
-		VirtualMessageTypePassengerUnregistered,
 	}
 
 	covered := map[message_common.MessageType]bool{}

@@ -7,3 +7,7 @@ type MessageType string
 type MessageInterface interface {
 	GetMessageType() MessageType
 }
+
+type EncodeFunc func(id string, msg MessageInterface) ([]byte, error)
+
+type DecodeFunc func(raw []byte) (string, MessageInterface, error)

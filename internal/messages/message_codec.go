@@ -83,15 +83,6 @@ func Decode(raw []byte) (string, message_common.MessageInterface, error) {
 	case MessageTypeServerRefreshPassengerInvitations:
 		msg = &ServerRefreshPassengerInvitations{}
 
-	case VirtualMessageTypeDriverRegistered:
-		msg = &DriverRegistered{}
-	case VirtualMessageTypeDriverUnregistered:
-		msg = &DriverUnregistered{}
-	case VirtualMessageTypePassengerRegistered:
-		msg = &PassengerRegistered{}
-	case VirtualMessageTypePassengerUnregistered:
-		msg = &PassengerUnregistered{}
-
 	default:
 		return env.Id, nil, fmt.Errorf("unknown message type %q", env.Type)
 	}

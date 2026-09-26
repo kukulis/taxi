@@ -56,11 +56,4 @@ const (
 	MessageTypeServerRefreshDriverStatus         message_common.MessageType = "server_refresh_driver_status"
 	MessageTypeServerRefreshDriverOffers         message_common.MessageType = "server_refresh_driver_offers"
 	MessageTypeServerRefreshPassengerInvitations message_common.MessageType = "server_refresh_passenger_invitations"
-
-	// --- virtual messages (internal notifications, not sent by any client)
-
-	VirtualMessageTypeDriverRegistered      message_common.MessageType = "driver_registered"
-	VirtualMessageTypeDriverUnregistered    message_common.MessageType = "driver_unregistered"
-	VirtualMessageTypePassengerRegistered   message_common.MessageType = "passenger_registered"
-	VirtualMessageTypePassengerUnregistered message_common.MessageType = "passenger_unregistered"
 )
