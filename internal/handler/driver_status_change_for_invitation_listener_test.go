@@ -23,7 +23,7 @@ func TestDriverStatusChangeForInvitationListener_StartsVoyageOnIdleToWorking(t *
 	invitation.DriverId = driverId
 	invitation.PassengerId = passengerId
 	invitation.Status = state.InvitationStatusAccepted
-	mainState.GetInvitationsContainer().Add(*invitation)
+	mainState.GetInvitationsContainer().Add(invitation)
 
 	var sent []ws.ClientMessage
 	passengersHub := ws.NewHubMock()
@@ -76,7 +76,7 @@ func TestDriverStatusChangeForInvitationListener_FinishesVoyageOnWorkingToIdle(t
 	invitation.DriverId = driverId
 	invitation.PassengerId = passengerId
 	invitation.Status = state.InvitationStatusDriving
-	mainState.GetInvitationsContainer().Add(*invitation)
+	mainState.GetInvitationsContainer().Add(invitation)
 
 	var sent []ws.ClientMessage
 	passengersHub := ws.NewHubMock()
@@ -135,20 +135,20 @@ func TestDriverStatusChangeForInvitationListener_CancelsPendingInvitationsOnRest
 	invitation1.DriverId = driverId
 	invitation1.PassengerId = passenger1Id
 	invitation1.Status = state.InvitationStatusPending
-	mainState.GetInvitationsContainer().Add(*invitation1)
+	mainState.GetInvitationsContainer().Add(invitation1)
 
 	invitation2 := state.NewInvitation("inv-2")
 	invitation2.DriverId = driverId
 	invitation2.PassengerId = passenger2Id
 	invitation2.Status = state.InvitationStatusPending
-	mainState.GetInvitationsContainer().Add(*invitation2)
+	mainState.GetInvitationsContainer().Add(invitation2)
 
 	// unrelated invitation, different driver - must not be touched
 	otherInvitation := state.NewInvitation("inv-3")
 	otherInvitation.DriverId = otherDriverId
 	otherInvitation.PassengerId = otherPassengerId
 	otherInvitation.Status = state.InvitationStatusPending
-	mainState.GetInvitationsContainer().Add(*otherInvitation)
+	mainState.GetInvitationsContainer().Add(otherInvitation)
 
 	var sent []ws.ClientMessage
 	passengersHub := ws.NewHubMock()

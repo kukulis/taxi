@@ -105,7 +105,7 @@ func (p *PassengersMessageHandler) handlePassengerInvitesDriver(clientId string,
 	invitation.DriverId = msg.DriverId
 	invitation.CreatedAt = p.mainState.Clock.Now()
 
-	p.mainState.GetInvitationsContainer().Add(*invitation)
+	p.mainState.GetInvitationsContainer().Add(invitation)
 
 	p.driversHub.SendMessage(ws.ClientMessage{
 		ClientId: msg.DriverId,

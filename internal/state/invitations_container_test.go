@@ -12,8 +12,11 @@ import (
 func TestInvitationsContainer_AddRepeated(t *testing.T) {
 	invitationsContainer := NewInvitationsContainer()
 
+	// try to remove from empty
+	invitationsContainer.Remove("0")
+
 	invitationsContainer.Add(
-		Invitation{
+		&Invitation{
 			Id:          "1",
 			PassengerId: "pass1",
 			DriverId:    "driver1",
@@ -21,7 +24,7 @@ func TestInvitationsContainer_AddRepeated(t *testing.T) {
 		},
 	)
 	invitationsContainer.Add(
-		Invitation{
+		&Invitation{
 			Id:          "2",
 			PassengerId: "pass1",
 			DriverId:    "driver1",
@@ -30,7 +33,7 @@ func TestInvitationsContainer_AddRepeated(t *testing.T) {
 	)
 
 	invitationsContainer.Add(
-		Invitation{
+		&Invitation{
 			Id:          "3",
 			PassengerId: "pass2",
 			DriverId:    "driver1",
@@ -39,7 +42,7 @@ func TestInvitationsContainer_AddRepeated(t *testing.T) {
 	)
 
 	invitationsContainer.Add(
-		Invitation{
+		&Invitation{
 			Id:          "4",
 			PassengerId: "pass2",
 			DriverId:    "driver2",
@@ -48,7 +51,7 @@ func TestInvitationsContainer_AddRepeated(t *testing.T) {
 	)
 
 	invitationsContainer.Add(
-		Invitation{
+		&Invitation{
 			Id:          "5",
 			PassengerId: "pass1",
 			DriverId:    "driver2",
@@ -56,25 +59,25 @@ func TestInvitationsContainer_AddRepeated(t *testing.T) {
 		},
 	)
 
-	inviations := invitationsContainer.GetInvitationsSnapshot(&InvitationsFilter{
+	invitations := invitationsContainer.GetInvitationsSnapshot(&InvitationsFilter{
 		PassengerId: "pass1",
 		DriverId:    "driver1",
 	})
 
-	slices.SortFunc(inviations, func(a, b *Invitation) int {
+	slices.SortFunc(invitations, func(a, b *Invitation) int {
 		return cmp.Compare(a.Id, b.Id)
 	})
 
-	if len(inviations) != 2 {
-		t.Errorf("inviations count = %d, want 2", len(inviations))
+	if len(invitations) != 2 {
+		t.Errorf("inviations count = %d, want 2", len(invitations))
 	}
 
-	if inviations[0].Id != "1" {
-		t.Errorf("inviation[0].Id = %q, want %q", inviations[0].Id, "1")
+	if invitations[0].Id != "1" {
+		t.Errorf("inviation[0].Id = %q, want %q", invitations[0].Id, "1")
 	}
 
-	if inviations[1].Id != "2" {
-		t.Errorf("inviation[1].Id = %q, want %q", inviations[1].Id, "2")
+	if invitations[1].Id != "2" {
+		t.Errorf("inviation[1].Id = %q, want %q", invitations[1].Id, "2")
 	}
 
 	inviations2 := invitationsContainer.GetInvitationsSnapshot(&InvitationsFilter{
@@ -137,4 +140,12 @@ func TestInvitationsContainer_AddRepeated(t *testing.T) {
 	slices.SortFunc(pass1AfterDelete, InvitationComparatorById)
 	test_utils.AssertEquals([]string{"1", "2", "5"}, util.ArrayMap(pass1AfterDelete, GetInvitationId), t, false, "Driver 1 after deletion")
 
+	// lets remove last related to driver2
+	invitationsContainer.Remove("5")
+
+	// test no panic
+	invitationsContainer.Remove("5")
+
+	// try to remove never existed
+	invitationsContainer.Remove("6")
 }
