@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"darbelis.eu/taxi/internal/dao"
+	"darbelis.eu/taxi/internal/dto"
 	"darbelis.eu/taxi/internal/state"
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +41,7 @@ func (c *DriverApiController) Search(ctx *gin.Context) {
 
 	nearest := c.mainState.GetNearestDrivers(searchLat, searchLon)
 
-	results := make([]dao.DriverSearchResult, 0, len(nearest))
+	results := make([]dto.DriverSearchResult, 0, len(nearest))
 	for _, driverDistance := range nearest {
 		if driverDistance.Distance > maxDistanceKm {
 			break // GetNearestDrivers is sorted ascending, so nothing further will match either
@@ -50,7 +50,7 @@ func (c *DriverApiController) Search(ctx *gin.Context) {
 		if driverDistance.Driver.Status != state.DriverStatusIdle {
 			continue
 		}
-		results = append(results, dao.DriverSearchResult{
+		results = append(results, dto.DriverSearchResult{
 			DriverId:   driverDistance.Driver.Id,
 			Lat:        driverDistance.Driver.Lat,
 			Lon:        driverDistance.Driver.Lon,

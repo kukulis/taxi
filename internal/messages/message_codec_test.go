@@ -32,6 +32,10 @@ var roundTripMessages = []MessageInterface{
 	ServerRespondsDriverCoords{DriverId: "d1", Lat: 54.68, Lon: 25.28},
 	ServerNotifiesVoyageStarted{DriverId: "d1", PassengerId: "p1"},
 	ServerNotifiesVoyageFinished{DriverId: "d1", PassengerId: "p1"},
+
+	ServerRefreshDriverStatus{Status: string(state.DriverStatusWorking)},
+	ServerRefreshDriverOffers{Offers: []OfferDto{{InvitationId: "i1", Status: "pending", PassengerId: "p1", Lat: "54.68", Lon: "25.28"}}},
+	ServerRefreshPassengerInvitations{Invitations: []InvitationDto{{InvitationId: "i1", Status: "pending", DriverId: "d1", Lat: "54.68", Lon: "25.28"}}},
 }
 
 func TestEncodeDecodeRoundTrip(t *testing.T) {
@@ -89,6 +93,9 @@ func TestDecodeHandlesAllMessageTypes(t *testing.T) {
 		MessageTypeServerRespondsDriverCoords,
 		MessageTypeServerNotifiesVoyageStarted,
 		MessageTypeServerNotifiesVoyageFinished,
+		MessageTypeServerRefreshDriverStatus,
+		MessageTypeServerRefreshDriverOffers,
+		MessageTypeServerRefreshPassengerInvitations,
 	}
 
 	covered := map[MessageType]bool{}

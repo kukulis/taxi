@@ -191,3 +191,28 @@ type ServerNotifiesVoyageFinished struct {
 func (ServerNotifiesVoyageFinished) GetMessageType() MessageType {
 	return MessageTypeServerNotifiesVoyageFinished
 }
+
+// ServerRefreshDriverStatus driver id is in the envelope object
+type ServerRefreshDriverStatus struct {
+	Status string `json:"status"`
+}
+
+func (ServerRefreshDriverStatus) GetMessageType() MessageType {
+	return MessageTypeServerRefreshDriverStatus
+}
+
+type ServerRefreshDriverOffers struct {
+	Offers []OfferDto `json:"offers"`
+}
+
+func (ServerRefreshDriverOffers) GetMessageType() MessageType {
+	return MessageTypeServerRefreshDriverOffers
+}
+
+type ServerRefreshPassengerInvitations struct {
+	Invitations []InvitationDto `json:"invitations"`
+}
+
+func (ServerRefreshPassengerInvitations) GetMessageType() MessageType {
+	return MessageTypeServerRefreshPassengerInvitations
+}

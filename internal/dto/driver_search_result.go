@@ -1,4 +1,4 @@
-package dao
+package dto
 
 // DriverSearchResult is the JSON shape for one driver in a nearest-drivers search result.
 type DriverSearchResult struct {

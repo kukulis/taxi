@@ -74,6 +74,12 @@ func Decode(raw []byte) (string, MessageInterface, error) {
 		msg = &ServerNotifiesVoyageStarted{}
 	case MessageTypeServerNotifiesVoyageFinished:
 		msg = &ServerNotifiesVoyageFinished{}
+	case MessageTypeServerRefreshDriverStatus:
+		msg = &ServerRefreshDriverStatus{}
+	case MessageTypeServerRefreshDriverOffers:
+		msg = &ServerRefreshDriverOffers{}
+	case MessageTypeServerRefreshPassengerInvitations:
+		msg = &ServerRefreshPassengerInvitations{}
 
 	default:
 		return env.Id, nil, fmt.Errorf("unknown message type %q", env.Type)

@@ -56,4 +56,8 @@ const (
 	MessageTypeServerRespondsDriverCoords   MessageType = "server_responds_driver_coordinates"
 	MessageTypeServerNotifiesVoyageStarted  MessageType = "server_notifies_voyage_started"
 	MessageTypeServerNotifiesVoyageFinished MessageType = "server_notifies_voyage_finished"
+
+	MessageTypeServerRefreshDriverStatus         MessageType = "server_refresh_driver_status"
+	MessageTypeServerRefreshDriverOffers         MessageType = "server_refresh_driver_offers"
+	MessageTypeServerRefreshPassengerInvitations MessageType = "server_refresh_passenger_invitations"
 )
