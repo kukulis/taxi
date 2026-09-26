@@ -9,21 +9,21 @@ import (
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/pkg/message_common"
 	"darbelis.eu/taxi/pkg/util"
-	ws2 "darbelis.eu/taxi/pkg/ws"
+	"darbelis.eu/taxi/pkg/ws"
 )
 
 type DriversMessageHandler struct {
 	mainState     *state.MainState
-	driversHub    ws2.HubInterface
-	passengersHub ws2.HubInterface
+	driversHub    ws.HubInterface
+	passengersHub ws.HubInterface
 	logger        *slog.Logger
 	dispatcher    *util.Dispatcher
 }
 
 func NewDriversMessageHandler(
 	mainState *state.MainState,
-	driversHub ws2.HubInterface,
-	passengersHub ws2.HubInterface,
+	driversHub ws.HubInterface,
+	passengersHub ws.HubInterface,
 	dispatcher *util.Dispatcher,
 ) *DriversMessageHandler {
 	return &DriversMessageHandler{
@@ -35,7 +35,7 @@ func NewDriversMessageHandler(
 	}
 }
 
-func (d *DriversMessageHandler) Handle(messageChannel <-chan ws2.ClientMessage) {
+func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 	for {
 		message := <-messageChannel
 
@@ -57,7 +57,18 @@ func (d *DriversMessageHandler) Handle(messageChannel <-chan ws2.ClientMessage) 
 		case *messages.DriverChangesStatus:
 			d.handleDriverChangesStatus(message.ClientId, msg)
 		case *message_common.ClientRegisteredMessage:
-			d.mainState.CreateDriver(message.ClientId)
+
+			// todo move to handle* function
+			driver := d.mainState.CreateDriver(message.ClientId)
+
+			d.driversHub.SendMessage(ws.ClientMessage{
+				ClientId: message.ClientId,
+				Message: messages.ServerRefreshDriverStatus{
+					Status: string(driver.Status),
+				},
+			})
+
+			// TODO send driver offers
 
 		case *message_common.ClientUnregisteredMessage:
 			d.mainState.RemoveDriver(message.ClientId)
@@ -129,7 +140,7 @@ func (d *DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg *m
 		inv.CancelledAt = d.mainState.Clock.Now()
 	})
 
-	d.passengersHub.SendMessage(ws2.ClientMessage{
+	d.passengersHub.SendMessage(ws.ClientMessage{
 		ClientId: invitation.PassengerId,
 		Message:  messages.ServerNotifiesInviteCanceled{DriverId: clientId},
 	})
@@ -165,13 +176,13 @@ func (d *DriversMessageHandler) handleDriverAcceptsOffer(clientId string, msg *m
 			inv.Status = state.InvitationStatusRejected
 			inv.RejectedAt = d.mainState.Clock.Now()
 		})
-		d.passengersHub.SendMessage(ws2.ClientMessage{
+		d.passengersHub.SendMessage(ws.ClientMessage{
 			ClientId: other.PassengerId,
 			Message:  messages.ServerNotifiesInviteRejected{DriverId: clientId},
 		})
 	}
 
-	d.passengersHub.SendMessage(ws2.ClientMessage{
+	d.passengersHub.SendMessage(ws.ClientMessage{
 		ClientId: accepted.PassengerId,
 		Message:  messages.ServerNotifiesInviteAccepted{DriverId: clientId},
 	})
@@ -196,7 +207,7 @@ func (d *DriversMessageHandler) handleDriverRejectsOffer(clientId string, msg *m
 		inv.RejectedAt = d.mainState.Clock.Now()
 	})
 
-	d.passengersHub.SendMessage(ws2.ClientMessage{
+	d.passengersHub.SendMessage(ws.ClientMessage{
 		ClientId: invitation.PassengerId,
 		Message:  messages.ServerNotifiesInviteRejected{DriverId: clientId},
 	})

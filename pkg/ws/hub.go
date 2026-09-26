@@ -34,6 +34,7 @@ type Hub struct {
 	incomingMessagesChannel chan ClientMessage
 	outgoingMessagesChannel chan ClientMessage
 
+	// dispatcher not usable now but still may be required later
 	dispatcher *util.Dispatcher
 	clientType string
 	logger     *slog.Logger

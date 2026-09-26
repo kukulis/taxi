@@ -18,16 +18,10 @@ func main() {
 	}
 
 	dispatcher := di.GetDispatcher()
-	mainState := di.GetMainState()
-	di.InitializeListenersFromMainState(mainState, dispatcher)
 
 	dispatcher.AddListener(events.DriverStatusChangedEventName, di.GetDriverStatusChangeForDriverListener().Handle)
 	dispatcher.AddListener(events.DriverStatusChangedEventName, di.GetDriverStatusChangeForInvitationListener().Handle)
-
-	// Deprecated
-	dispatcher.AddListener(events.ClientRegisteredEventName, di.GetOnboardRegisteredDriverListener().Handle)
-
-	go mainState.HandleDedicatedEvents()
+	dispatcher.AddListener(events.DriverStatusChangedEventName, di.GetDriverStatusChangeForClientListener().Handle)
 
 	router := gin.Default()
 

@@ -219,37 +219,3 @@ type ServerRefreshPassengerInvitations struct {
 func (ServerRefreshPassengerInvitations) GetMessageType() message_common.MessageType {
 	return MessageTypeServerRefreshPassengerInvitations
 }
-
-// --- virtual messages (internal notifications, not sent by any client)
-//
-//type DriverRegistered struct {
-//	DriverId string `json:"driver_id"`
-//}
-//
-//func (DriverRegistered) GetMessageType() message_common.MessageType {
-//	return VirtualMessageTypeDriverRegistered
-//}
-//
-//type DriverUnregistered struct {
-//	DriverId string `json:"driver_id"`
-//}
-//
-//func (DriverUnregistered) GetMessageType() message_common.MessageType {
-//	return VirtualMessageTypeDriverUnregistered
-//}
-//
-//type PassengerRegistered struct {
-//	PassengerId string `json:"passenger_id"`
-//}
-//
-//func (PassengerRegistered) GetMessageType() message_common.MessageType {
-//	return VirtualMessageTypePassengerRegistered
-//}
-//
-//type PassengerUnregistered struct {
-//	PassengerId string `json:"passenger_id"`
-//}
-//
-//func (PassengerUnregistered) GetMessageType() message_common.MessageType {
-//	return VirtualMessageTypePassengerUnregistered
-//}

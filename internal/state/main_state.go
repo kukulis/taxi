@@ -1,11 +1,9 @@
 package state
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 
-	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/pkg/util"
 	"github.com/bytedance/gopkg/util/logger"
 )
@@ -16,9 +14,6 @@ type MainState struct {
 
 	passengers     map[string]*Passenger
 	passengersLock sync.Mutex
-
-	// dedicatedEvents Deprecated
-	dedicatedEvents chan util.Event
 
 	// Clock provides the current time for timestamps such as Driver/Passenger
 	// CreatedAt.
@@ -33,7 +28,6 @@ func NewMainState(clock util.Clock) *MainState {
 		passengers:           make(map[string]*Passenger),
 		driversLock:          sync.Mutex{},
 		passengersLock:       sync.Mutex{},
-		dedicatedEvents:      make(chan util.Event, 256),
 		Clock:                clock,
 		invitationsContainer: NewInvitationsContainer(),
 	}
@@ -199,55 +193,6 @@ func (s *MainState) RemovePassenger(id string) {
 
 	if passenger, ok := s.passengers[id]; ok {
 		passenger.Active = false
-	}
-}
-
-func (s *MainState) AddDedicatedEvent(event util.Event) bool {
-	select {
-	case s.dedicatedEvents <- event:
-		return true
-	default:
-
-		fmt.Println("dedicatedEvents channel is full or null")
-		return false
-	}
-}
-
-// CreateRegistrationRelatedListener Deprecated
-func (s *MainState) CreateRegistrationRelatedListener() func(event util.Event) {
-	return func(event util.Event) {
-		if !s.AddDedicatedEvent(event) {
-			fmt.Println("dropped event, dedicatedEvents channel is full or null:", event.GetName())
-		}
-	}
-}
-
-// HandleDedicatedEvents Deprecated
-func (s *MainState) HandleDedicatedEvents() {
-	for {
-		event := <-s.dedicatedEvents
-
-		switch e := event.(type) {
-		case *events.ClientRegisteredEvent:
-			switch e.ClientType {
-			case events.ClientTypeDriver:
-				s.CreateDriver(e.ClientId)
-				fmt.Println("Driver registered:", e.ClientId)
-			case events.ClientTypePassenger:
-				s.CreatePassenger(e.ClientId)
-				fmt.Println("Passenger registered:", e.ClientId)
-			}
-		case *events.ClientUnregisteredEvent:
-			switch e.ClientType {
-			case events.ClientTypeDriver:
-				s.RemoveDriver(e.ClientId)
-				fmt.Println("Driver unregistered/inactivated:", e.ClientId)
-			case events.ClientTypePassenger:
-				s.RemovePassenger(e.ClientId)
-				fmt.Println("Passenger unregistered/inactivated:", e.ClientId)
-			}
-		}
-
 	}
 }
 

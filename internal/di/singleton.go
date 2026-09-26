@@ -1,7 +1,6 @@
 package di
 
 import (
-	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/handler"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
@@ -28,7 +27,8 @@ var taxiDispatcher *handler.TaxiDispatcher = nil
 
 var driverStatusChangeForDriverListener *handler.DriverStatusChangeForDriverListener = nil
 var driverStatusChangeForInvitationListener *handler.DriverStatusChangeForInvitationListener = nil
-var onboardRegisteredDriverListener *handler.OnboardRegisteredDriverListener = nil
+
+var driverStatusChangeForClientListener *handler.DriverStatusChangeForClientListener = nil
 
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
@@ -56,7 +56,7 @@ func GetDriverApiController() *web.DriverApiController {
 
 func GetDriversHub() *ws.Hub {
 	if driversHubInstance == nil {
-		driversHubInstance = ws.NewHub(GetDispatcher(), events.ClientTypeDriver, messages.Encode, messages.Decode)
+		driversHubInstance = ws.NewHub(GetDispatcher(), "driver", messages.Encode, messages.Decode)
 	}
 
 	return driversHubInstance
@@ -64,7 +64,7 @@ func GetDriversHub() *ws.Hub {
 
 func GetPassengersHub() *ws.Hub {
 	if passengersHubInstance == nil {
-		passengersHubInstance = ws.NewHub(GetDispatcher(), events.ClientTypePassenger, messages.Encode, messages.Decode)
+		passengersHubInstance = ws.NewHub(GetDispatcher(), "passenger", messages.Encode, messages.Decode)
 	}
 
 	return passengersHubInstance
@@ -126,11 +126,11 @@ func GetDriverStatusChangeForInvitationListener() *handler.DriverStatusChangeFor
 	return driverStatusChangeForInvitationListener
 }
 
-// GetOnboardRegisteredDriverListener @Deprecated
-func GetOnboardRegisteredDriverListener() *handler.OnboardRegisteredDriverListener {
-	if onboardRegisteredDriverListener == nil {
-		onboardRegisteredDriverListener = handler.NewOnboardRegisteredDriverListener(GetMainState())
+func GetDriverStatusChangeForClientListener() *handler.DriverStatusChangeForClientListener {
+
+	if driverStatusChangeForClientListener == nil {
+		driverStatusChangeForClientListener = handler.NewDriverStatusChangeForClientListener(GetDriversHub())
 	}
 
-	return onboardRegisteredDriverListener
+	return driverStatusChangeForClientListener
 }
