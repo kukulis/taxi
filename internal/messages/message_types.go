@@ -3,7 +3,7 @@ package messages
 import (
 	"encoding/json"
 
-	"darbelis.eu/taxi/internal/message_common"
+	"darbelis.eu/taxi/pkg/message_common"
 )
 
 // Envelope is the wire format of every message.

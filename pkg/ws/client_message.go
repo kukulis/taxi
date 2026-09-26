@@ -1,7 +1,7 @@
 package ws
 
 import (
-	"darbelis.eu/taxi/internal/message_common"
+	"darbelis.eu/taxi/pkg/message_common"
 )
 
 type ClientMessage struct {

@@ -5,8 +5,8 @@ import (
 	"flag"
 	"log"
 
-	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/internal/messages"
+	"darbelis.eu/taxi/pkg/message_common"
 	"darbelis.eu/taxi/pkg/util"
 	"github.com/gorilla/websocket"
 )

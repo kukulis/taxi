@@ -6,8 +6,8 @@ import (
 
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
-	"darbelis.eu/taxi/internal/ws"
 	"darbelis.eu/taxi/pkg/util"
+	ws2 "darbelis.eu/taxi/pkg/ws"
 )
 
 const (
@@ -21,13 +21,13 @@ const (
 
 type TaxiDispatcher struct {
 	mainState     *state.MainState
-	driversHub    ws.HubInterface
-	passengersHub ws.HubInterface
+	driversHub    ws2.HubInterface
+	passengersHub ws2.HubInterface
 	clock         util.Clock
 	logger        *slog.Logger
 }
 
-func NewTaxiDispatcher(mainState *state.MainState, driversHub ws.HubInterface, passengersHub ws.HubInterface, clock util.Clock) *TaxiDispatcher {
+func NewTaxiDispatcher(mainState *state.MainState, driversHub ws2.HubInterface, passengersHub ws2.HubInterface, clock util.Clock) *TaxiDispatcher {
 	return &TaxiDispatcher{
 		mainState:     mainState,
 		driversHub:    driversHub,
@@ -68,7 +68,7 @@ func (t *TaxiDispatcher) RequestForDriversInfos() {
 			continue
 		}
 		if driver.InfoReceivedAt.IsZero() || now.Sub(driver.InfoReceivedAt) > DriversInfoTimeout {
-			t.driversHub.SendMessage(ws.ClientMessage{
+			t.driversHub.SendMessage(ws2.ClientMessage{
 				ClientId: driver.Id,
 				Message:  messages.ServerRequestsClientInfo{},
 			})
@@ -85,7 +85,7 @@ func (t *TaxiDispatcher) RequestForDriversCoordinates() {
 			continue
 		}
 		if driver.CoordinatesReceivedAt.IsZero() || now.Sub(driver.CoordinatesReceivedAt) > DriversCoordinatesTimeout {
-			t.driversHub.SendMessage(ws.ClientMessage{
+			t.driversHub.SendMessage(ws2.ClientMessage{
 				ClientId: driver.Id,
 				Message:  messages.ServerRequestsCoordinates{},
 			})
@@ -102,7 +102,7 @@ func (t *TaxiDispatcher) RequestForPassengersInfos() {
 			continue
 		}
 		if passenger.InfoReceivedAt.IsZero() || now.Sub(passenger.InfoReceivedAt) > PassengersInfoTimeout {
-			t.passengersHub.SendMessage(ws.ClientMessage{
+			t.passengersHub.SendMessage(ws2.ClientMessage{
 				ClientId: passenger.Id,
 				Message:  messages.ServerRequestsClientInfo{},
 			})
@@ -119,7 +119,7 @@ func (t *TaxiDispatcher) RequestForPassengersCoordinates() {
 			continue
 		}
 		if passenger.CoordinatesReceivedAt.IsZero() || now.Sub(passenger.CoordinatesReceivedAt) > PassengersCoordinatesTimeout {
-			t.passengersHub.SendMessage(ws.ClientMessage{
+			t.passengersHub.SendMessage(ws2.ClientMessage{
 				ClientId: passenger.Id,
 				Message:  messages.ServerRequestsCoordinates{},
 			})

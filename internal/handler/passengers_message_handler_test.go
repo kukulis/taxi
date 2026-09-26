@@ -7,8 +7,8 @@ import (
 
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
-	"darbelis.eu/taxi/internal/ws"
 	"darbelis.eu/taxi/pkg/util"
+	ws2 "darbelis.eu/taxi/pkg/ws"
 )
 
 // findPassenger returns the passenger with the given id from mainState's snapshot, or nil.
@@ -29,23 +29,23 @@ func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testi
 
 	// same hub mock initialization as in hub_mock_test.go: answering
 	// ServerRequestsCoordinates with ClientRespondsCoordinates on the incoming channel.
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(sent ws.ClientMessage) {
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(sent ws2.ClientMessage) {
 		if _, ok := sent.Message.(messages.ServerRequestsCoordinates); !ok {
 			return
 		}
-		passengersHub.FeedIncomingMessage(ws.ClientMessage{
+		passengersHub.FeedIncomingMessage(ws2.ClientMessage{
 			ClientId: sent.ClientId,
 			Message:  &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
 		})
 	}
 
-	driversHub := ws.NewHubMock()
+	driversHub := ws2.NewHubMock()
 
 	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub)
 	go passengersHandler.Handle(passengersHub.GetIncomingMessagesChannel())
 
-	passengersHub.SendMessage(ws.ClientMessage{
+	passengersHub.SendMessage(ws2.ClientMessage{
 		ClientId: passengerId,
 		Message:  messages.ServerRequestsCoordinates{},
 	})
@@ -72,23 +72,23 @@ func TestPassengersMessageHandler_UpdatesPassengerInfoOnResponse(t *testing.T) {
 	mainState.CreatePassenger(passengerId)
 
 	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(sent ws.ClientMessage) {
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(sent ws2.ClientMessage) {
 		if _, ok := sent.Message.(messages.ServerRequestsClientInfo); !ok {
 			return
 		}
-		passengersHub.FeedIncomingMessage(ws.ClientMessage{
+		passengersHub.FeedIncomingMessage(ws2.ClientMessage{
 			ClientId: sent.ClientId,
 			Message:  &messages.ClientRespondsInfo{Phone: "+37060054321"},
 		})
 	}
 
-	driversHub := ws.NewHubMock()
+	driversHub := ws2.NewHubMock()
 
 	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub)
 	go passengersHandler.Handle(passengersHub.GetIncomingMessagesChannel())
 
-	passengersHub.SendMessage(ws.ClientMessage{
+	passengersHub.SendMessage(ws2.ClientMessage{
 		ClientId: passengerId,
 		Message:  messages.ServerRequestsClientInfo{},
 	})

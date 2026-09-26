@@ -6,8 +6,8 @@ import (
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/web"
-	"darbelis.eu/taxi/internal/ws"
 	"darbelis.eu/taxi/pkg/util"
+	"darbelis.eu/taxi/pkg/ws"
 )
 
 var webControllerInstance *web.WebController = nil

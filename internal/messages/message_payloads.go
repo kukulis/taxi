@@ -1,8 +1,8 @@
 package messages
 
 import (
-	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/internal/state"
+	"darbelis.eu/taxi/pkg/message_common"
 )
 
 // === to driver or to passenger

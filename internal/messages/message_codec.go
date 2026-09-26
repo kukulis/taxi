@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"darbelis.eu/taxi/internal/message_common"
+	"darbelis.eu/taxi/pkg/message_common"
 )
 
 // Encode wraps the payload into an Envelope and marshals it.

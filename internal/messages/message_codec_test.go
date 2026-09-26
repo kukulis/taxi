@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/internal/state"
+	"darbelis.eu/taxi/pkg/message_common"
 )
 
 // one value for every message type, with non-zero fields

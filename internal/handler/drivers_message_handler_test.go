@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"darbelis.eu/taxi/internal/events"
-	"darbelis.eu/taxi/internal/message_common"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
-	"darbelis.eu/taxi/internal/ws"
+	"darbelis.eu/taxi/pkg/message_common"
 	"darbelis.eu/taxi/pkg/util"
+	ws2 "darbelis.eu/taxi/pkg/ws"
 )
 
 // waitFor polls condition until it returns true. If timeout elapses first, it fails the
@@ -38,23 +38,23 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 
 	// same drivers hub mock initialization as in hub_mock_test.go: answering
 	// ServerRequestsCoordinates with ClientRespondsCoordinates on the incoming channel.
-	driversHub := ws.NewHubMock()
-	driversHub.SendMessageFunc = func(sent ws.ClientMessage) {
+	driversHub := ws2.NewHubMock()
+	driversHub.SendMessageFunc = func(sent ws2.ClientMessage) {
 		if _, ok := sent.Message.(messages.ServerRequestsCoordinates); !ok {
 			return
 		}
-		driversHub.FeedIncomingMessage(ws.ClientMessage{
+		driversHub.FeedIncomingMessage(ws2.ClientMessage{
 			ClientId: sent.ClientId,
 			Message:  &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
 		})
 	}
 
-	passengersHub := ws.NewHubMock()
+	passengersHub := ws2.NewHubMock()
 
 	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{})
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
-	driversHub.SendMessage(ws.ClientMessage{
+	driversHub.SendMessage(ws2.ClientMessage{
 		ClientId: driverId,
 		Message:  messages.ServerRequestsCoordinates{},
 	})
@@ -86,27 +86,27 @@ func driverErrorThenCoordinatesTest(t *testing.T, errorReply message_common.Mess
 	mainState.CreateDriver(driverId)
 
 	requestCount := 0
-	driversHub := ws.NewHubMock()
-	driversHub.SendMessageFunc = func(sent ws.ClientMessage) {
+	driversHub := ws2.NewHubMock()
+	driversHub.SendMessageFunc = func(sent ws2.ClientMessage) {
 		if _, ok := sent.Message.(messages.ServerRequestsCoordinates); !ok {
 			return
 		}
 		requestCount++
 
-		reply := ws.ClientMessage{ClientId: sent.ClientId, Message: &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28}}
+		reply := ws2.ClientMessage{ClientId: sent.ClientId, Message: &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28}}
 		if requestCount == 1 {
 			reply.Message = errorReply
 		}
 		driversHub.FeedIncomingMessage(reply)
 	}
 
-	passengersHub := ws.NewHubMock()
+	passengersHub := ws2.NewHubMock()
 
 	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{})
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
-	driversHub.SendMessage(ws.ClientMessage{ClientId: driverId, Message: messages.ServerRequestsCoordinates{}})
-	driversHub.SendMessage(ws.ClientMessage{ClientId: driverId, Message: messages.ServerRequestsCoordinates{}})
+	driversHub.SendMessage(ws2.ClientMessage{ClientId: driverId, Message: messages.ServerRequestsCoordinates{}})
+	driversHub.SendMessage(ws2.ClientMessage{ClientId: driverId, Message: messages.ServerRequestsCoordinates{}})
 
 	waitFor(t, 200*time.Millisecond,
 		func() bool {
@@ -143,8 +143,8 @@ func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.CreateDriver(driverId)
 
-	driversHub := ws.NewHubMock()
-	passengersHub := ws.NewHubMock()
+	driversHub := ws2.NewHubMock()
+	passengersHub := ws2.NewHubMock()
 
 	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{})
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
@@ -158,7 +158,7 @@ func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 		t.Fatalf("Decode: %v", err)
 	}
 
-	driversHub.FeedIncomingMessage(ws.ClientMessage{
+	driversHub.FeedIncomingMessage(ws2.ClientMessage{
 		ClientId: driverId,
 		Message:  decoded,
 	})
@@ -189,10 +189,10 @@ func TestDriversMessageHandler_ChangesStatusThroughListener(t *testing.T) {
 	dispatcher := util.NewDispatcher()
 	dispatcher.AddListener(events.DriverStatusChangedEventName, NewDriverStatusChangeForDriverListener(mainState).Handle)
 
-	driversHub := ws.NewHubMock()
-	go NewDriversMessageHandler(mainState, driversHub, ws.NewHubMock(), dispatcher).Handle(driversHub.GetIncomingMessagesChannel())
+	driversHub := ws2.NewHubMock()
+	go NewDriversMessageHandler(mainState, driversHub, ws2.NewHubMock(), dispatcher).Handle(driversHub.GetIncomingMessagesChannel())
 
-	driversHub.FeedIncomingMessage(ws.ClientMessage{
+	driversHub.FeedIncomingMessage(ws2.ClientMessage{
 		ClientId: driverId,
 		Message:  &messages.DriverChangesStatus{Status: state.DriverStatusIdle},
 	})
@@ -212,23 +212,23 @@ func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 	mainState.CreateDriver(driverId)
 
 	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
-	driversHub := ws.NewHubMock()
-	driversHub.SendMessageFunc = func(sent ws.ClientMessage) {
+	driversHub := ws2.NewHubMock()
+	driversHub.SendMessageFunc = func(sent ws2.ClientMessage) {
 		if _, ok := sent.Message.(messages.ServerRequestsClientInfo); !ok {
 			return
 		}
-		driversHub.FeedIncomingMessage(ws.ClientMessage{
+		driversHub.FeedIncomingMessage(ws2.ClientMessage{
 			ClientId: sent.ClientId,
 			Message:  &messages.ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius"},
 		})
 	}
 
-	passengersHub := ws.NewHubMock()
+	passengersHub := ws2.NewHubMock()
 
 	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{})
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
-	driversHub.SendMessage(ws.ClientMessage{
+	driversHub.SendMessage(ws2.ClientMessage{
 		ClientId: driverId,
 		Message:  messages.ServerRequestsClientInfo{},
 	})

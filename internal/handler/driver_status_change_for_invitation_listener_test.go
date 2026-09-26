@@ -7,8 +7,8 @@ import (
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
-	"darbelis.eu/taxi/internal/ws"
 	"darbelis.eu/taxi/pkg/util"
+	ws2 "darbelis.eu/taxi/pkg/ws"
 )
 
 func TestDriverStatusChangeForInvitationListener_StartsVoyageOnIdleToWorking(t *testing.T) {
@@ -25,14 +25,14 @@ func TestDriverStatusChangeForInvitationListener_StartsVoyageOnIdleToWorking(t *
 	invitation.Status = state.InvitationStatusAccepted
 	mainState.GetInvitationsContainer().Add(invitation)
 
-	var sent []ws.ClientMessage
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var sent []ws2.ClientMessage
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		sent = append(sent, msg)
 	}
 
 	dispatcher := util.NewDispatcher()
-	listener := NewDriverStatusChangeForInvitationListener(mainState, ws.NewHubMock(), passengersHub)
+	listener := NewDriverStatusChangeForInvitationListener(mainState, ws2.NewHubMock(), passengersHub)
 	dispatcher.AddListener(events.DriverStatusChangedEventName, listener.Handle)
 
 	dispatcher.Dispatch(events.DriverStatusChangedEvent{
@@ -78,14 +78,14 @@ func TestDriverStatusChangeForInvitationListener_FinishesVoyageOnWorkingToIdle(t
 	invitation.Status = state.InvitationStatusDriving
 	mainState.GetInvitationsContainer().Add(invitation)
 
-	var sent []ws.ClientMessage
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var sent []ws2.ClientMessage
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		sent = append(sent, msg)
 	}
 
 	dispatcher := util.NewDispatcher()
-	listener := NewDriverStatusChangeForInvitationListener(mainState, ws.NewHubMock(), passengersHub)
+	listener := NewDriverStatusChangeForInvitationListener(mainState, ws2.NewHubMock(), passengersHub)
 	dispatcher.AddListener(events.DriverStatusChangedEventName, listener.Handle)
 
 	dispatcher.Dispatch(events.DriverStatusChangedEvent{
@@ -150,14 +150,14 @@ func TestDriverStatusChangeForInvitationListener_CancelsPendingInvitationsOnRest
 	otherInvitation.Status = state.InvitationStatusPending
 	mainState.GetInvitationsContainer().Add(otherInvitation)
 
-	var sent []ws.ClientMessage
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var sent []ws2.ClientMessage
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		sent = append(sent, msg)
 	}
 
 	dispatcher := util.NewDispatcher()
-	listener := NewDriverStatusChangeForInvitationListener(mainState, ws.NewHubMock(), passengersHub)
+	listener := NewDriverStatusChangeForInvitationListener(mainState, ws2.NewHubMock(), passengersHub)
 	dispatcher.AddListener(events.DriverStatusChangedEventName, listener.Handle)
 
 	dispatcher.Dispatch(events.DriverStatusChangedEvent{

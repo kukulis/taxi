@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 
-	"darbelis.eu/taxi/internal/ws"
+	"darbelis.eu/taxi/pkg/ws"
 )
 
 type MessageHandler interface {

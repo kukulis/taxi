@@ -10,7 +10,7 @@ import (
 	"runtime/debug"
 
 	"darbelis.eu/taxi/internal/events"
-	"darbelis.eu/taxi/internal/message_common"
+	"darbelis.eu/taxi/pkg/message_common"
 	"darbelis.eu/taxi/pkg/util"
 	"github.com/gorilla/websocket"
 )

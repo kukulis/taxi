@@ -4,22 +4,22 @@ import (
 	"darbelis.eu/taxi/internal/events"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
-	"darbelis.eu/taxi/internal/ws"
 	"darbelis.eu/taxi/pkg/util"
+	ws2 "darbelis.eu/taxi/pkg/ws"
 	"github.com/bytedance/gopkg/util/logger"
 )
 
 // DriverStatusChangeForInvitationListener The listener is moved outside 'state' package to avoid cyclic dependency
 type DriverStatusChangeForInvitationListener struct {
 	mainState     *state.MainState
-	driversHub    ws.HubInterface
-	passengersHub ws.HubInterface
+	driversHub    ws2.HubInterface
+	passengersHub ws2.HubInterface
 }
 
 func NewDriverStatusChangeForInvitationListener(
 	mainState *state.MainState,
-	driversHub ws.HubInterface,
-	passengersHub ws.HubInterface,
+	driversHub ws2.HubInterface,
+	passengersHub ws2.HubInterface,
 ) *DriverStatusChangeForInvitationListener {
 	return &DriverStatusChangeForInvitationListener{
 		mainState:     mainState,
@@ -54,8 +54,8 @@ func (l *DriverStatusChangeForInvitationListener) Handle(e util.Event) {
 				DriverId:    statusChangeEvent.DriverId,
 				PassengerId: invitation.PassengerId,
 			}
-			l.passengersHub.SendMessage(ws.ClientMessage{ClientId: invitation.PassengerId, Message: voyageFinished})
-			l.driversHub.SendMessage(ws.ClientMessage{ClientId: statusChangeEvent.DriverId, Message: voyageFinished})
+			l.passengersHub.SendMessage(ws2.ClientMessage{ClientId: invitation.PassengerId, Message: voyageFinished})
+			l.driversHub.SendMessage(ws2.ClientMessage{ClientId: statusChangeEvent.DriverId, Message: voyageFinished})
 		}
 
 		return
@@ -79,8 +79,8 @@ func (l *DriverStatusChangeForInvitationListener) Handle(e util.Event) {
 				DriverId:    statusChangeEvent.DriverId,
 				PassengerId: invitation.PassengerId,
 			}
-			l.passengersHub.SendMessage(ws.ClientMessage{ClientId: invitation.PassengerId, Message: voyageStarted})
-			l.driversHub.SendMessage(ws.ClientMessage{ClientId: statusChangeEvent.DriverId, Message: voyageStarted})
+			l.passengersHub.SendMessage(ws2.ClientMessage{ClientId: invitation.PassengerId, Message: voyageStarted})
+			l.driversHub.SendMessage(ws2.ClientMessage{ClientId: statusChangeEvent.DriverId, Message: voyageStarted})
 		}
 
 		return
@@ -99,7 +99,7 @@ func (l *DriverStatusChangeForInvitationListener) Handle(e util.Event) {
 			})
 
 			l.passengersHub.SendMessage(
-				ws.ClientMessage{
+				ws2.ClientMessage{
 					ClientId: invitation.PassengerId,
 					Message:  messages.ServerNotifiesInviteCanceled{DriverId: statusChangeEvent.DriverId},
 				})

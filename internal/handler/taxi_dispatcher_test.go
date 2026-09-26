@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"darbelis.eu/taxi/internal/state"
-	"darbelis.eu/taxi/internal/ws"
 	"darbelis.eu/taxi/pkg/util"
+	ws2 "darbelis.eu/taxi/pkg/ws"
 )
 
 var fixedTestTime = time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
@@ -16,15 +16,15 @@ func TestTaxiDispatcher_RequestForDriversInfos_SendsToDriversHub(t *testing.T) {
 	mainState := state.NewMainState(clock)
 	mainState.CreateDriver("driver-1")
 
-	var driversSent []ws.ClientMessage
-	driversHub := ws.NewHubMock()
-	driversHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var driversSent []ws2.ClientMessage
+	driversHub := ws2.NewHubMock()
+	driversHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		driversSent = append(driversSent, msg)
 	}
 
-	var passengersSent []ws.ClientMessage
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var passengersSent []ws2.ClientMessage
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		passengersSent = append(passengersSent, msg)
 	}
 
@@ -47,15 +47,15 @@ func TestTaxiDispatcher_RequestForDriversCoordinates_SendsToDriversHub(t *testin
 	mainState := state.NewMainState(clock)
 	mainState.CreateDriver("driver-1")
 
-	var driversSent []ws.ClientMessage
-	driversHub := ws.NewHubMock()
-	driversHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var driversSent []ws2.ClientMessage
+	driversHub := ws2.NewHubMock()
+	driversHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		driversSent = append(driversSent, msg)
 	}
 
-	var passengersSent []ws.ClientMessage
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var passengersSent []ws2.ClientMessage
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		passengersSent = append(passengersSent, msg)
 	}
 
@@ -78,15 +78,15 @@ func TestTaxiDispatcher_RequestForPassengersInfos_SendsToPassengersHub(t *testin
 	mainState := state.NewMainState(clock)
 	mainState.CreatePassenger("passenger-1")
 
-	var driversSent []ws.ClientMessage
-	driversHub := ws.NewHubMock()
-	driversHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var driversSent []ws2.ClientMessage
+	driversHub := ws2.NewHubMock()
+	driversHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		driversSent = append(driversSent, msg)
 	}
 
-	var passengersSent []ws.ClientMessage
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var passengersSent []ws2.ClientMessage
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		passengersSent = append(passengersSent, msg)
 	}
 
@@ -109,15 +109,15 @@ func TestTaxiDispatcher_RequestForPassengersCoordinates_SendsToPassengersHub(t *
 	mainState := state.NewMainState(clock)
 	mainState.CreatePassenger("passenger-1")
 
-	var driversSent []ws.ClientMessage
-	driversHub := ws.NewHubMock()
-	driversHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var driversSent []ws2.ClientMessage
+	driversHub := ws2.NewHubMock()
+	driversHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		driversSent = append(driversSent, msg)
 	}
 
-	var passengersSent []ws.ClientMessage
-	passengersHub := ws.NewHubMock()
-	passengersHub.SendMessageFunc = func(msg ws.ClientMessage) {
+	var passengersSent []ws2.ClientMessage
+	passengersHub := ws2.NewHubMock()
+	passengersHub.SendMessageFunc = func(msg ws2.ClientMessage) {
 		passengersSent = append(passengersSent, msg)
 	}
 

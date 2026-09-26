@@ -3,7 +3,7 @@ package web
 import (
 	"log"
 
-	"darbelis.eu/taxi/internal/ws"
+	"darbelis.eu/taxi/pkg/ws"
 	"github.com/gin-gonic/gin"
 )
 

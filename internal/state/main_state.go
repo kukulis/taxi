@@ -17,7 +17,7 @@ type MainState struct {
 	passengers     map[string]*Passenger
 	passengersLock sync.Mutex
 
-	// TODO move to the OnboardRegisteredDriverListener
+	// dedicatedEvents Deprecated
 	dedicatedEvents chan util.Event
 
 	// Clock provides the current time for timestamps such as Driver/Passenger
@@ -221,6 +221,7 @@ func (s *MainState) CreateRegistrationRelatedListener() func(event util.Event) {
 	}
 }
 
+// HandleDedicatedEvents Deprecated
 func (s *MainState) HandleDedicatedEvents() {
 	for {
 		event := <-s.dedicatedEvents

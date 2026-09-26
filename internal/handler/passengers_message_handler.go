@@ -6,18 +6,18 @@ import (
 
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
-	"darbelis.eu/taxi/internal/ws"
 	"darbelis.eu/taxi/pkg/util"
+	ws2 "darbelis.eu/taxi/pkg/ws"
 )
 
 type PassengersMessageHandler struct {
 	mainState     *state.MainState
-	driversHub    ws.HubInterface
-	passengersHub ws.HubInterface
+	driversHub    ws2.HubInterface
+	passengersHub ws2.HubInterface
 	logger        *slog.Logger
 }
 
-func NewPassengersMessageHandler(mainState *state.MainState, driversHub ws.HubInterface, passengersHub ws.HubInterface) *PassengersMessageHandler {
+func NewPassengersMessageHandler(mainState *state.MainState, driversHub ws2.HubInterface, passengersHub ws2.HubInterface) *PassengersMessageHandler {
 	return &PassengersMessageHandler{
 		mainState:     mainState,
 		driversHub:    driversHub,
@@ -26,7 +26,7 @@ func NewPassengersMessageHandler(mainState *state.MainState, driversHub ws.HubIn
 	}
 }
 
-func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
+func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws2.ClientMessage) {
 	for {
 		message := <-messageChannel
 
@@ -107,7 +107,7 @@ func (p *PassengersMessageHandler) handlePassengerInvitesDriver(clientId string,
 
 	p.mainState.GetInvitationsContainer().Add(invitation)
 
-	p.driversHub.SendMessage(ws.ClientMessage{
+	p.driversHub.SendMessage(ws2.ClientMessage{
 		ClientId: msg.DriverId,
 		Message: messages.ServerOffersPassenger{
 			PassengerId: clientId,
@@ -143,7 +143,7 @@ func (p *PassengersMessageHandler) handlePassengerCancelsInvite(clientId string,
 		inv.CancelledAt = p.mainState.Clock.Now()
 	})
 
-	p.driversHub.SendMessage(ws.ClientMessage{
+	p.driversHub.SendMessage(ws2.ClientMessage{
 		ClientId: msg.DriverId,
 		Message:  messages.ServerCancelsOffer{PassengerId: clientId},
 	})
