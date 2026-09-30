@@ -1,10 +1,13 @@
 package di
 
 import (
+	"os"
+
 	"darbelis.eu/taxi/internal/handler"
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/web"
+	"darbelis.eu/taxi/pkg/nominatim"
 	"darbelis.eu/taxi/pkg/util"
 	"darbelis.eu/taxi/pkg/ws"
 )
@@ -29,6 +32,8 @@ var driverStatusChangeForDriverListener *handler.DriverStatusChangeForDriverList
 var driverStatusChangeForInvitationListener *handler.DriverStatusChangeForInvitationListener = nil
 
 var driverStatusChangeForClientListener *handler.DriverStatusChangeForClientListener = nil
+
+var nominatimClient *nominatim.Client = nil
 
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
@@ -133,4 +138,16 @@ func GetDriverStatusChangeForClientListener() *handler.DriverStatusChangeForClie
 	}
 
 	return driverStatusChangeForClientListener
+}
+
+func NewNominatimClient() *nominatim.Client {
+	if nominatimClient == nil {
+		server := os.Getenv("NOMINATIM_SERVER")
+		user := os.Getenv("NOMINATIM_USER")
+		password := os.Getenv("NOMINATIM_PASSWORD")
+
+		nominatimClient = nominatim.NewClient(server, user, password)
+	}
+
+	return nominatimClient
 }
