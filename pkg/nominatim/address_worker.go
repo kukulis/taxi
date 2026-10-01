@@ -1,5 +1,7 @@
 package nominatim
 
+import "log"
+
 type AddressWorker struct {
 	client          *Client
 	requestsChannel chan AddressRequestToWorker
@@ -13,13 +15,14 @@ func (aw *AddressWorker) Handle() {
 			address, err := aw.client.ReverseGeocode(request.Lat, request.Lon)
 			request.Callback(address, err)
 		case <-aw.done:
+			log.Println("Address worker stopped")
 			return
 		}
 	}
 }
 
 // Stop signals Handle to return once it has finished processing any
-// in-flight request. Requests still queued in requestsChannel are dropped.
+// in-flight request.
 func (aw *AddressWorker) Stop() {
 	close(aw.done)
 }

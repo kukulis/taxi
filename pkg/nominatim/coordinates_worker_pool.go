@@ -3,6 +3,8 @@ package nominatim
 type CoordinatesWorkerPool struct {
 	client          *Client
 	requestsChannel chan CoordinatesRequestToWorker
+
+	pool []*CoordinatesWorker
 }
 
 func NewCoordinatesWorkerPool(client *Client) *CoordinatesWorkerPool {
@@ -16,11 +18,15 @@ func NewCoordinatesWorkerPool(client *Client) *CoordinatesWorkerPool {
 // pool's shared channel. Multiple workers can be created to process the
 // same queue concurrently.
 func (p *CoordinatesWorkerPool) CreateWorker() *CoordinatesWorker {
-	return &CoordinatesWorker{
+	worker := &CoordinatesWorker{
 		client:          p.client,
 		requestsChannel: p.requestsChannel,
 		done:            make(chan struct{}),
 	}
+
+	p.pool = append(p.pool, worker)
+
+	return worker
 }
 
 // AddRequest enqueues request without blocking. It reports false if the
@@ -32,4 +38,8 @@ func (p *CoordinatesWorkerPool) AddRequest(request CoordinatesRequestToWorker) b
 	default:
 		return false
 	}
+}
+
+func (p *CoordinatesWorkerPool) GetWorkersPool() []*CoordinatesWorker {
+	return p.pool
 }

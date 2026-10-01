@@ -3,6 +3,7 @@ package nominatim
 type AddressWorkerPool struct {
 	client          *Client
 	requestsChannel chan AddressRequestToWorker
+	pool            []*AddressWorker
 }
 
 func NewAddressWorkerPool(client *Client) *AddressWorkerPool {
@@ -16,11 +17,15 @@ func NewAddressWorkerPool(client *Client) *AddressWorkerPool {
 // shared channel. Multiple workers can be created to process the same queue
 // concurrently.
 func (p *AddressWorkerPool) CreateWorker() *AddressWorker {
-	return &AddressWorker{
+	worker := &AddressWorker{
 		client:          p.client,
 		requestsChannel: p.requestsChannel,
 		done:            make(chan struct{}),
 	}
+
+	p.pool = append(p.pool, worker)
+
+	return worker
 }
 
 // AddRequest enqueues request without blocking. It reports false if the
@@ -32,4 +37,8 @@ func (p *AddressWorkerPool) AddRequest(request AddressRequestToWorker) bool {
 	default:
 		return false
 	}
+}
+
+func (p *AddressWorkerPool) GetWorkersPool() []*AddressWorker {
+	return p.pool
 }

@@ -1,5 +1,7 @@
 package nominatim
 
+import "log"
+
 type CoordinatesWorker struct {
 	client          *Client
 	requestsChannel chan CoordinatesRequestToWorker
@@ -13,13 +15,14 @@ func (cw *CoordinatesWorker) Handle() {
 			lat, lon, err := cw.client.Geocode(request.Address)
 			request.Callback(lat, lon, err)
 		case <-cw.done:
+			log.Println("CoordinatesWorker stopped")
 			return
 		}
 	}
 }
 
 // Stop signals Handle to return once it has finished processing any
-// in-flight request. Requests still queued in requestsChannel are dropped.
+// in-flight request.
 func (cw *CoordinatesWorker) Stop() {
 	close(cw.done)
 }
