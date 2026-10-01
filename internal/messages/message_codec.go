@@ -82,6 +82,8 @@ func Decode(raw []byte) (string, message_common.MessageInterface, error) {
 		msg = &ServerRefreshDriverOffers{}
 	case MessageTypeServerRefreshPassengerInvitations:
 		msg = &ServerRefreshPassengerInvitations{}
+	case MessageTypeServerSendsClientAddress:
+		msg = &ServerSendsClientAddress{}
 
 	default:
 		return env.Id, nil, fmt.Errorf("unknown message type %q", env.Type)

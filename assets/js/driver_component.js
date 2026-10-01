@@ -10,7 +10,7 @@ import {
     ServerNotifiesVoyageStarted,
     ServerOffersPassenger,
     ServerRefreshDriverOffers,
-    ServerRefreshDriverStatus,
+    ServerRefreshDriverStatus, ServerSendsClientAddress,
 } from "./entities/messages.js";
 
 export class DriverComponent {
@@ -18,6 +18,10 @@ export class DriverComponent {
     driverId = null;
     // main view
     driverView = null;
+
+    /**
+     * @type {HTMLElement}
+     */
     infoView = null;
     // status squares container
     statusView = null;
@@ -32,6 +36,8 @@ export class DriverComponent {
 
     lat = null;
     lon = null;
+
+    address = "";
 
     /**
      *
@@ -73,6 +79,8 @@ export class DriverComponent {
         } else {
             this.infoView.appendChild(NewECT('div', 'driver-location', '...'));
         }
+
+        this.infoView.appendChild(NewECT('div', 'driver-address', this.address))
     }
 
     renderStatuses() {
@@ -295,6 +303,10 @@ export class DriverComponent {
                 this.handleServerRefreshOffers(envelope.data)
                 break;
 
+            case MessageType.SERVER_SENDS_CLIENT_ADDRESS:
+                this.handleServerSendsClientAddress(envelope.data)
+                break;
+
             default:
                 console.log('unhandled message type', envelope.type, envelope);
         }
@@ -410,5 +422,12 @@ export class DriverComponent {
         const message = new ServerRefreshDriverOffers().fromObject(data)
         this.offers = message.offers
         this.renderOffers()
+    }
+
+    handleServerSendsClientAddress(data) {
+        // console.log ("handling handleServerSendsClientAddress", data )
+        const message = new ServerSendsClientAddress().fromObject(data);
+        this.address = message.address;
+        this.renderInfo()
     }
 }

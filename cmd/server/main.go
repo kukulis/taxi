@@ -52,11 +52,11 @@ func main() {
 	go di.GetAddressWorkerPool().CreateWorker().Handle()
 
 	// Testing the stop
-	di.GetCoordinatesWorkerPool().GetWorkersPool()[0].Stop()
-	di.GetCoordinatesWorkerPool().GetWorkersPool()[1].Stop()
-
-	di.GetAddressWorkerPool().GetWorkersPool()[0].Stop()
-	di.GetAddressWorkerPool().GetWorkersPool()[1].Stop()
+	//di.GetCoordinatesWorkerPool().GetWorkersPool()[0].Stop()
+	//di.GetCoordinatesWorkerPool().GetWorkersPool()[1].Stop()
+	//
+	//di.GetAddressWorkerPool().GetWorkersPool()[0].Stop()
+	//di.GetAddressWorkerPool().GetWorkersPool()[1].Stop()
 
 	useTslString := os.Getenv("USE_TSL")
 

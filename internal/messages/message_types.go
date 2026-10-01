@@ -56,4 +56,6 @@ const (
 	MessageTypeServerRefreshDriverStatus         message_common.MessageType = "server_refresh_driver_status"
 	MessageTypeServerRefreshDriverOffers         message_common.MessageType = "server_refresh_driver_offers"
 	MessageTypeServerRefreshPassengerInvitations message_common.MessageType = "server_refresh_passenger_invitations"
+
+	MessageTypeServerSendsClientAddress message_common.MessageType = "server_sends_client_address"
 )

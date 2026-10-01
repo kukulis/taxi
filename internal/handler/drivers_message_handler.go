@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"strconv"
 
@@ -9,16 +10,19 @@ import (
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/pkg/message_common"
+	"darbelis.eu/taxi/pkg/nominatim"
 	"darbelis.eu/taxi/pkg/util"
 	"darbelis.eu/taxi/pkg/ws"
 )
 
 type DriversMessageHandler struct {
-	mainState     *state.MainState
-	driversHub    ws.HubInterface
-	passengersHub ws.HubInterface
-	logger        *slog.Logger
-	dispatcher    *util.Dispatcher
+	mainState                      *state.MainState
+	driversHub                     ws.HubInterface
+	passengersHub                  ws.HubInterface
+	logger                         *slog.Logger
+	dispatcher                     *util.Dispatcher
+	nominatimAddressWorkerPool     *nominatim.AddressWorkerPool
+	nominatimCoordinatesWorkerPool *nominatim.CoordinatesWorkerPool
 }
 
 func NewDriversMessageHandler(
@@ -26,13 +30,17 @@ func NewDriversMessageHandler(
 	driversHub ws.HubInterface,
 	passengersHub ws.HubInterface,
 	dispatcher *util.Dispatcher,
+	nominatimAddressWorkerPool *nominatim.AddressWorkerPool,
+	nominatimCoordinatesWorkerPool *nominatim.CoordinatesWorkerPool,
 ) *DriversMessageHandler {
 	return &DriversMessageHandler{
-		mainState:     mainState,
-		driversHub:    driversHub,
-		passengersHub: passengersHub,
-		logger:        slog.Default().With("handler", "DriversMessageHandler"),
-		dispatcher:    dispatcher,
+		mainState:                      mainState,
+		driversHub:                     driversHub,
+		passengersHub:                  passengersHub,
+		logger:                         slog.Default().With("handler", "DriversMessageHandler"),
+		dispatcher:                     dispatcher,
+		nominatimAddressWorkerPool:     nominatimAddressWorkerPool,
+		nominatimCoordinatesWorkerPool: nominatimCoordinatesWorkerPool,
 	}
 }
 
@@ -128,6 +136,26 @@ func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string,
 	})
 	if !found {
 		d.logger.Warn("ClientRespondsCoordinates from unknown driver", "client_id", clientId)
+		return
+	}
+
+	// ====================== send driver's address =======================
+
+	if d.nominatimAddressWorkerPool != nil {
+		d.nominatimAddressWorkerPool.AddRequest(nominatim.NewAddressRequestToWorker(
+			msg.Lat, msg.Lon, func(address string, err error) {
+				if err != nil {
+					log.Println("Failed to get address from nominatim", err.Error())
+					return
+				}
+				d.driversHub.SendMessage(ws.ClientMessage{
+					ClientId: clientId,
+					Message: messages.ServerSendsClientAddress{
+						Address: address,
+					},
+				})
+			},
+		))
 	}
 }
 

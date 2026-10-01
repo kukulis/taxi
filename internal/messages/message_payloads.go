@@ -219,3 +219,11 @@ type ServerRefreshPassengerInvitations struct {
 func (ServerRefreshPassengerInvitations) GetMessageType() message_common.MessageType {
 	return MessageTypeServerRefreshPassengerInvitations
 }
+
+type ServerSendsClientAddress struct {
+	Address string `json:"address"`
+}
+
+func (ServerSendsClientAddress) GetMessageType() message_common.MessageType {
+	return MessageTypeServerSendsClientAddress
+}

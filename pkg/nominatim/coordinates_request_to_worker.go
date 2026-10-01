@@ -7,8 +7,8 @@ type CoordinatesRequestToWorker struct {
 	Callback CoordinatesResponseCallback
 }
 
-func NewCoordinatesRequestToWorker(address string, callback CoordinatesResponseCallback) *CoordinatesRequestToWorker {
-	return &CoordinatesRequestToWorker{
+func NewCoordinatesRequestToWorker(address string, callback CoordinatesResponseCallback) CoordinatesRequestToWorker {
+	return CoordinatesRequestToWorker{
 		Address:  address,
 		Callback: callback,
 	}

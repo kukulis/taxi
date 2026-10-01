@@ -386,6 +386,21 @@ export class ServerRefreshPassengerInvitations {
 
     // converts the raw InvitationDto array into Invitation entities
     getInvitations() {
+        // TODO move mapping to 'fromObject', here return mapped data
         return this.invitations.map((i) => new Invitation().fromObject(i));
+    }
+}
+
+export class ServerSendsClientAddress {
+    constructor(address="" ) {
+        this.address = address;
+    }
+    fromObject(obj) {
+        this.address = obj.address;
+        return this;
+    }
+
+    getMessageType() {
+        return MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS;
     }
 }

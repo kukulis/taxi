@@ -8,8 +8,8 @@ type AddressRequestToWorker struct {
 	Callback AddressResponseCallback
 }
 
-func NewAddressRequestToWorker(lat float64, lon float64, callback AddressResponseCallback) *AddressRequestToWorker {
-	return &AddressRequestToWorker{
+func NewAddressRequestToWorker(lat float64, lon float64, callback AddressResponseCallback) AddressRequestToWorker {
+	return AddressRequestToWorker{
 		Lat:      lat,
 		Lon:      lon,
 		Callback: callback,

@@ -32,6 +32,7 @@ export const MessageType = {
     SERVER_REFRESH_DRIVER_STATUS: 'server_refresh_driver_status',
     SERVER_REFRESH_DRIVER_OFFERS: 'server_refresh_driver_offers',
     SERVER_REFRESH_PASSENGER_INVITATIONS: 'server_refresh_passenger_invitations',
+    SERVER_SENDS_CLIENT_ADDRESS: 'server_sends_client_address',
 };
 
 export const DriverStatus = {
