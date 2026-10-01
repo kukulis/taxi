@@ -2,7 +2,7 @@ import {AppChildren, ClearE, NewEC, NewECT, NewT} from "./util.js";
 import {InvitationStatus, MessageType} from "./constants.js";
 import {DriverSearchResult} from "./entities/driver_search_result.js";
 import {Invitation} from "./entities/invitation.js";
-import {ServerRefreshPassengerInvitations} from "./entities/messages.js";
+import {ServerRefreshPassengerInvitations, ServerSendsClientAddress} from "./entities/messages.js";
 
 export class PassengerComponent {
 
@@ -20,6 +20,7 @@ export class PassengerComponent {
 
     lat = null;
     lon = null;
+    address = "";
 
     /**
      * @type {ApiClient}
@@ -261,6 +262,7 @@ export class PassengerComponent {
         } else {
             this.infoView.appendChild(NewECT('div', 'passenger-location', '...'));
         }
+        this.infoView.appendChild(NewECT('div', 'passenger-address', this.address));
     }
 
     initWs(isTls) {
@@ -319,6 +321,9 @@ export class PassengerComponent {
             case MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS:
                 this.handleServerRefreshInvitations(envelope.data);
                 break;
+            case MessageType.SERVER_SENDS_CLIENT_ADDRESS:
+                this.handleServerSendsClientAddress(envelope.data);
+                break;
             default:
                 console.log('unhandled message type', envelope.type, envelope);
         }
@@ -360,6 +365,12 @@ export class PassengerComponent {
 
         this.invitations = message.getInvitations();
         this.renderInvitations();
+    }
+
+    handleServerSendsClientAddress(data) {
+        const message = new ServerSendsClientAddress().fromObject(data);
+        this.address = message.address;
+        this.renderInfo();
     }
 
     sendMessage(type, data) {

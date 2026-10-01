@@ -42,7 +42,7 @@ func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testi
 
 	driversHub := ws2.NewHubMock()
 
-	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub)
+	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub, nil)
 	go passengersHandler.Handle(passengersHub.GetIncomingMessagesChannel())
 
 	passengersHub.SendMessage(ws2.ClientMessage{
@@ -85,7 +85,7 @@ func TestPassengersMessageHandler_UpdatesPassengerInfoOnResponse(t *testing.T) {
 
 	driversHub := ws2.NewHubMock()
 
-	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub)
+	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub, nil)
 	go passengersHandler.Handle(passengersHub.GetIncomingMessagesChannel())
 
 	passengersHub.SendMessage(ws2.ClientMessage{

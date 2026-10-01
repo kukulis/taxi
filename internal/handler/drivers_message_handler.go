@@ -16,13 +16,12 @@ import (
 )
 
 type DriversMessageHandler struct {
-	mainState                      *state.MainState
-	driversHub                     ws.HubInterface
-	passengersHub                  ws.HubInterface
-	logger                         *slog.Logger
-	dispatcher                     *util.Dispatcher
-	nominatimAddressWorkerPool     *nominatim.AddressWorkerPool
-	nominatimCoordinatesWorkerPool *nominatim.CoordinatesWorkerPool
+	mainState                  *state.MainState
+	driversHub                 ws.HubInterface
+	passengersHub              ws.HubInterface
+	logger                     *slog.Logger
+	dispatcher                 *util.Dispatcher
+	nominatimAddressWorkerPool *nominatim.AddressWorkerPool
 }
 
 func NewDriversMessageHandler(
@@ -31,16 +30,14 @@ func NewDriversMessageHandler(
 	passengersHub ws.HubInterface,
 	dispatcher *util.Dispatcher,
 	nominatimAddressWorkerPool *nominatim.AddressWorkerPool,
-	nominatimCoordinatesWorkerPool *nominatim.CoordinatesWorkerPool,
 ) *DriversMessageHandler {
 	return &DriversMessageHandler{
-		mainState:                      mainState,
-		driversHub:                     driversHub,
-		passengersHub:                  passengersHub,
-		logger:                         slog.Default().With("handler", "DriversMessageHandler"),
-		dispatcher:                     dispatcher,
-		nominatimAddressWorkerPool:     nominatimAddressWorkerPool,
-		nominatimCoordinatesWorkerPool: nominatimCoordinatesWorkerPool,
+		mainState:                  mainState,
+		driversHub:                 driversHub,
+		passengersHub:              passengersHub,
+		logger:                     slog.Default().With("handler", "DriversMessageHandler"),
+		dispatcher:                 dispatcher,
+		nominatimAddressWorkerPool: nominatimAddressWorkerPool,
 	}
 }
 
@@ -151,7 +148,7 @@ func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string,
 				d.driversHub.SendMessage(ws.ClientMessage{
 					ClientId: clientId,
 					Message: messages.ServerSendsClientAddress{
-						Address: address,
+						Address: util.TruncateAddress(address, 3),
 					},
 				})
 			},

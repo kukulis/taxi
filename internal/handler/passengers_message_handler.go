@@ -2,29 +2,38 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"strconv"
 
 	"darbelis.eu/taxi/internal/messages"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/pkg/message_common"
+	"darbelis.eu/taxi/pkg/nominatim"
 	"darbelis.eu/taxi/pkg/util"
 	ws2 "darbelis.eu/taxi/pkg/ws"
 )
 
 type PassengersMessageHandler struct {
-	mainState     *state.MainState
-	driversHub    ws2.HubInterface
-	passengersHub ws2.HubInterface
-	logger        *slog.Logger
+	mainState                  *state.MainState
+	driversHub                 ws2.HubInterface
+	passengersHub              ws2.HubInterface
+	logger                     *slog.Logger
+	nominatimAddressWorkerPool *nominatim.AddressWorkerPool
 }
 
-func NewPassengersMessageHandler(mainState *state.MainState, driversHub ws2.HubInterface, passengersHub ws2.HubInterface) *PassengersMessageHandler {
+func NewPassengersMessageHandler(
+	mainState *state.MainState,
+	driversHub ws2.HubInterface,
+	passengersHub ws2.HubInterface,
+	nominatimAddressWorkerPool *nominatim.AddressWorkerPool,
+) *PassengersMessageHandler {
 	return &PassengersMessageHandler{
-		mainState:     mainState,
-		driversHub:    driversHub,
-		passengersHub: passengersHub,
-		logger:        slog.Default().With("handler", "PassengersMessageHandler"),
+		mainState:                  mainState,
+		driversHub:                 driversHub,
+		passengersHub:              passengersHub,
+		logger:                     slog.Default().With("handler", "PassengersMessageHandler"),
+		nominatimAddressWorkerPool: nominatimAddressWorkerPool,
 	}
 }
 
@@ -106,6 +115,26 @@ func (p *PassengersMessageHandler) handleClientRespondsCoordinates(clientId stri
 	})
 	if !found {
 		p.logger.Warn("ClientRespondsCoordinates from unknown passenger", "client_id", clientId)
+		return
+	}
+
+	// ====================== send passenger's address =======================
+
+	if p.nominatimAddressWorkerPool != nil {
+		p.nominatimAddressWorkerPool.AddRequest(nominatim.NewAddressRequestToWorker(
+			msg.Lat, msg.Lon, func(address string, err error) {
+				if err != nil {
+					log.Println("Failed to get address from nominatim", err.Error())
+					return
+				}
+				p.passengersHub.SendMessage(ws2.ClientMessage{
+					ClientId: clientId,
+					Message: messages.ServerSendsClientAddress{
+						Address: util.TruncateAddress(address, 3),
+					},
+				})
+			},
+		))
 	}
 }
 

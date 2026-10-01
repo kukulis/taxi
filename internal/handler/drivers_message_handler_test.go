@@ -51,7 +51,7 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 
 	passengersHub := ws2.NewHubMock()
 
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil, nil)
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil)
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
 	driversHub.SendMessage(ws2.ClientMessage{
@@ -102,7 +102,7 @@ func driverErrorThenCoordinatesTest(t *testing.T, errorReply message_common.Mess
 
 	passengersHub := ws2.NewHubMock()
 
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil, nil)
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil)
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
 	driversHub.SendMessage(ws2.ClientMessage{ClientId: driverId, Message: messages.ServerRequestsCoordinates{}})
@@ -146,7 +146,7 @@ func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 	driversHub := ws2.NewHubMock()
 	passengersHub := ws2.NewHubMock()
 
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil, nil)
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil)
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
 	raw, err := messages.Encode("id-1", messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28})
@@ -190,7 +190,7 @@ func TestDriversMessageHandler_ChangesStatusThroughListener(t *testing.T) {
 	dispatcher.AddListener(events.DriverStatusChangedEventName, NewDriverStatusChangeForDriverListener(mainState).Handle)
 
 	driversHub := ws2.NewHubMock()
-	go NewDriversMessageHandler(mainState, driversHub, ws2.NewHubMock(), dispatcher, nil, nil).Handle(driversHub.GetIncomingMessagesChannel())
+	go NewDriversMessageHandler(mainState, driversHub, ws2.NewHubMock(), dispatcher, nil).Handle(driversHub.GetIncomingMessagesChannel())
 
 	driversHub.FeedIncomingMessage(ws2.ClientMessage{
 		ClientId: driverId,
@@ -225,7 +225,7 @@ func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 
 	passengersHub := ws2.NewHubMock()
 
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil, nil)
+	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil)
 	go driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
 
 	driversHub.SendMessage(ws2.ClientMessage{
