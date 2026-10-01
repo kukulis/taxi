@@ -1,11 +1,13 @@
 package nominatim
 
 type AddressWorkerPool struct {
+	client          *Client
 	requestsChannel chan AddressRequestToWorker
 }
 
-func NewAddressWorkerPool() *AddressWorkerPool {
+func NewAddressWorkerPool(client *Client) *AddressWorkerPool {
 	return &AddressWorkerPool{
+		client:          client,
 		requestsChannel: make(chan AddressRequestToWorker, 256),
 	}
 }
@@ -13,9 +15,9 @@ func NewAddressWorkerPool() *AddressWorkerPool {
 // CreateWorker creates an AddressWorker that pulls requests from the pool's
 // shared channel. Multiple workers can be created to process the same queue
 // concurrently.
-func (p *AddressWorkerPool) CreateWorker(client *Client) *AddressWorker {
+func (p *AddressWorkerPool) CreateWorker() *AddressWorker {
 	return &AddressWorker{
-		client:          client,
+		client:          p.client,
 		requestsChannel: p.requestsChannel,
 		done:            make(chan struct{}),
 	}

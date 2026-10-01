@@ -45,6 +45,12 @@ func main() {
 	di.RegisterWsRoutes(router)
 	di.RegisterWebRoutes(router)
 
+	go di.GetCoordinatesWorkerPool().CreateWorker().Handle()
+	go di.GetCoordinatesWorkerPool().CreateWorker().Handle()
+
+	go di.GetAddressWorkerPool().CreateWorker().Handle()
+	go di.GetAddressWorkerPool().CreateWorker().Handle()
+
 	useTslString := os.Getenv("USE_TSL")
 
 	useTls := useTslString == "true"

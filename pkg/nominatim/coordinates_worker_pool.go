@@ -1,11 +1,13 @@
 package nominatim
 
 type CoordinatesWorkerPool struct {
+	client          *Client
 	requestsChannel chan CoordinatesRequestToWorker
 }
 
-func NewCoordinatesWorkerPool() *CoordinatesWorkerPool {
+func NewCoordinatesWorkerPool(client *Client) *CoordinatesWorkerPool {
 	return &CoordinatesWorkerPool{
+		client:          client,
 		requestsChannel: make(chan CoordinatesRequestToWorker, 256),
 	}
 }
@@ -13,9 +15,9 @@ func NewCoordinatesWorkerPool() *CoordinatesWorkerPool {
 // CreateWorker creates a CoordinatesWorker that pulls requests from the
 // pool's shared channel. Multiple workers can be created to process the
 // same queue concurrently.
-func (p *CoordinatesWorkerPool) CreateWorker(client *Client) *CoordinatesWorker {
+func (p *CoordinatesWorkerPool) CreateWorker() *CoordinatesWorker {
 	return &CoordinatesWorker{
-		client:          client,
+		client:          p.client,
 		requestsChannel: p.requestsChannel,
 		done:            make(chan struct{}),
 	}

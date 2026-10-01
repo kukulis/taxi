@@ -16,7 +16,7 @@ func main() {
 		fmt.Println("Warning: .env file not found, using default values")
 	}
 
-	nominatimClient := di.NewNominatimClient()
+	nominatimClient := di.GetNominatimClient()
 
 	lat := flag.String("lat", "55.0", "lat Coordinate in Earth")
 	lon := flag.String("lon", "24.0", "lon Coordinate in Earth")

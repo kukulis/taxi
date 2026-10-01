@@ -15,7 +15,7 @@ func main() {
 		fmt.Println("Warning: .env file not found, using default values")
 	}
 
-	nominatimClient := di.NewNominatimClient()
+	nominatimClient := di.GetNominatimClient()
 
 	address := flag.String("address", "Gedimino 1, Kaunas", "Real address in earth")
 	help := flag.Bool("help", false, "Print help")

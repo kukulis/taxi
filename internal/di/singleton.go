@@ -35,6 +35,10 @@ var driverStatusChangeForClientListener *handler.DriverStatusChangeForClientList
 
 var nominatimClient *nominatim.Client = nil
 
+var nominatimAddressWorkerPool *nominatim.AddressWorkerPool = nil
+
+var nominatimCoordinatesWorkerPool *nominatim.CoordinatesWorkerPool = nil
+
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
 		wsControllerInstance = web.NewWsController(GetDriversHub(), GetPassengersHub())
@@ -140,7 +144,7 @@ func GetDriverStatusChangeForClientListener() *handler.DriverStatusChangeForClie
 	return driverStatusChangeForClientListener
 }
 
-func NewNominatimClient() *nominatim.Client {
+func GetNominatimClient() *nominatim.Client {
 	if nominatimClient == nil {
 		server := os.Getenv("NOMINATIM_SERVER")
 		user := os.Getenv("NOMINATIM_USER")
@@ -150,4 +154,20 @@ func NewNominatimClient() *nominatim.Client {
 	}
 
 	return nominatimClient
+}
+
+func GetCoordinatesWorkerPool() *nominatim.CoordinatesWorkerPool {
+	if nominatimCoordinatesWorkerPool == nil {
+		nominatimCoordinatesWorkerPool = nominatim.NewCoordinatesWorkerPool(GetNominatimClient())
+	}
+
+	return nominatimCoordinatesWorkerPool
+}
+
+func GetAddressWorkerPool() *nominatim.AddressWorkerPool {
+	if nominatimAddressWorkerPool == nil {
+		nominatimAddressWorkerPool = nominatim.NewAddressWorkerPool(GetNominatimClient())
+	}
+
+	return nominatimAddressWorkerPool
 }
