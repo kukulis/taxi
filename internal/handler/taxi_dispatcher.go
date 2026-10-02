@@ -39,37 +39,37 @@ func NewTaxiDispatcher(mainState *state.MainState, driversHub ws2.HubInterface, 
 }
 
 // TickForDriversUpdates dedicated to goroutine
-func (t *TaxiDispatcher) TickForDriversUpdates() {
+func (tDispatcher *TaxiDispatcher) TickForDriversUpdates() {
 	ticker := time.NewTicker(DriversTickFrequency)
 	defer ticker.Stop()
 
 	for range ticker.C {
 		//t.RequestForDriversInfos()
-		t.RequestForDriversCoordinates()
+		tDispatcher.RequestForDriversCoordinates()
 	}
 }
 
 // TickForPassengersUpdates dedicated to goroutine
-func (t *TaxiDispatcher) TickForPassengersUpdates() {
+func (tDispatcher *TaxiDispatcher) TickForPassengersUpdates() {
 	ticker := time.NewTicker(PassengersTickFrequency)
 	defer ticker.Stop()
 
 	for range ticker.C {
 		//t.RequestForPassengersInfos()
-		t.RequestForPassengersCoordinates()
+		tDispatcher.RequestForPassengersCoordinates()
 	}
 }
 
 // RequestForDriversInfos sends ServerRequestsClientInfo to every active driver whose
 // info was never received, or was received longer than DriversInfoTimeout ago.
-func (t *TaxiDispatcher) RequestForDriversInfos() {
-	now := t.clock.Now()
-	for _, driver := range t.driversSnapshot() {
+func (tDispatcher *TaxiDispatcher) RequestForDriversInfos() {
+	now := tDispatcher.clock.Now()
+	for _, driver := range tDispatcher.driversSnapshot() {
 		if !driver.Active {
 			continue
 		}
 		if driver.InfoReceivedAt.IsZero() || now.Sub(driver.InfoReceivedAt) > DriversInfoTimeout {
-			t.driversHub.SendMessage(ws2.ClientMessage{
+			tDispatcher.driversHub.SendMessage(ws2.ClientMessage{
 				ClientId: driver.Id,
 				Message:  messages.ServerRequestsClientInfo{},
 			})
@@ -79,14 +79,14 @@ func (t *TaxiDispatcher) RequestForDriversInfos() {
 
 // RequestForDriversCoordinates sends ServerRequestsCoordinates to every active driver whose
 // coordinates were never received, or were received longer than DriversCoordinatesTimeout ago.
-func (t *TaxiDispatcher) RequestForDriversCoordinates() {
-	now := t.clock.Now()
-	for _, driver := range t.driversSnapshot() {
+func (tDispatcher *TaxiDispatcher) RequestForDriversCoordinates() {
+	now := tDispatcher.clock.Now()
+	for _, driver := range tDispatcher.driversSnapshot() {
 		if !driver.Active {
 			continue
 		}
 		if driver.CoordinatesReceivedAt.IsZero() || now.Sub(driver.CoordinatesReceivedAt) > DriversCoordinatesTimeout {
-			t.driversHub.SendMessage(ws2.ClientMessage{
+			tDispatcher.driversHub.SendMessage(ws2.ClientMessage{
 				ClientId: driver.Id,
 				Message:  messages.ServerRequestsCoordinates{},
 			})
@@ -96,14 +96,14 @@ func (t *TaxiDispatcher) RequestForDriversCoordinates() {
 
 // RequestForPassengersInfos sends ServerRequestsClientInfo to every active passenger whose
 // info was never received, or was received longer than PassengersInfoTimeout ago.
-func (t *TaxiDispatcher) RequestForPassengersInfos() {
-	now := t.clock.Now()
-	for _, passenger := range t.passengersSnapshot() {
+func (tDispatcher *TaxiDispatcher) RequestForPassengersInfos() {
+	now := tDispatcher.clock.Now()
+	for _, passenger := range tDispatcher.passengersSnapshot() {
 		if !passenger.Active {
 			continue
 		}
 		if passenger.InfoReceivedAt.IsZero() || now.Sub(passenger.InfoReceivedAt) > PassengersInfoTimeout {
-			t.passengersHub.SendMessage(ws2.ClientMessage{
+			tDispatcher.passengersHub.SendMessage(ws2.ClientMessage{
 				ClientId: passenger.Id,
 				Message:  messages.ServerRequestsClientInfo{},
 			})
@@ -113,14 +113,14 @@ func (t *TaxiDispatcher) RequestForPassengersInfos() {
 
 // RequestForPassengersCoordinates sends ServerRequestsCoordinates to every active passenger whose
 // coordinates were never received, or were received longer than PassengersCoordinatesTimeout ago.
-func (t *TaxiDispatcher) RequestForPassengersCoordinates() {
-	now := t.clock.Now()
-	for _, passenger := range t.passengersSnapshot() {
+func (tDispatcher *TaxiDispatcher) RequestForPassengersCoordinates() {
+	now := tDispatcher.clock.Now()
+	for _, passenger := range tDispatcher.passengersSnapshot() {
 		if !passenger.Active {
 			continue
 		}
 		if passenger.CoordinatesReceivedAt.IsZero() || now.Sub(passenger.CoordinatesReceivedAt) > PassengersCoordinatesTimeout {
-			t.passengersHub.SendMessage(ws2.ClientMessage{
+			tDispatcher.passengersHub.SendMessage(ws2.ClientMessage{
 				ClientId: passenger.Id,
 				Message:  messages.ServerRequestsCoordinates{},
 			})
@@ -128,16 +128,18 @@ func (t *TaxiDispatcher) RequestForPassengersCoordinates() {
 	}
 }
 
-func (t *TaxiDispatcher) driversSnapshot() []*state.Driver {
+func (tDispatcher *TaxiDispatcher) driversSnapshot() []*state.Driver {
 	filter := state.NewEmptyFilter()
 	filter.Type = string(state.ClientTypeDriver)
-	clients := t.mainState.SearchClients(filter)
+	filter.DriverStatuses = []state.DriverStatus{state.DriverStatusIdle, state.DriverStatusWorking}
+	//filter.Online = 1
+	clients := tDispatcher.mainState.SearchClients(filter)
 	return util.ArrayMap(clients, func(c state.Client) *state.Driver { return c.(*state.Driver) })
 }
 
-func (t *TaxiDispatcher) passengersSnapshot() []*state.Passenger {
+func (tDispatcher *TaxiDispatcher) passengersSnapshot() []*state.Passenger {
 	filter := state.NewEmptyFilter()
 	filter.Type = string(state.ClientTypePassenger)
-	clients := t.mainState.SearchClients(filter)
+	clients := tDispatcher.mainState.SearchClients(filter)
 	return util.ArrayMap(clients, func(c state.Client) *state.Passenger { return c.(*state.Passenger) })
 }
