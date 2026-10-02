@@ -70,7 +70,7 @@ func (s *MainState) GetDriverById(id string) *Driver {
 // GetDriversByIds returns the drivers found for the given ids. Ids with no
 // matching driver are simply absent from the result.
 //
-// Deprecated: use SearchClients with a Driver-typed ClientFilter instead.
+// Deprecated: use SearchClientsByIds with ClientTypeDriver instead.
 func (s *MainState) GetDriversByIds(ids []string) []*Driver {
 	s.driversLock.Lock()
 	defer s.driversLock.Unlock()
@@ -108,7 +108,9 @@ func (s *MainState) UpdateDriver(id string, mutate func(*Driver)) bool {
 // CreateDriver adds a new driver with the given id, or reactivates the existing
 // record if one is already present, and returns it.
 //
-// Deprecated: use AddClient instead.
+// Deprecated: use AddClient instead, constructing the Driver with CreatedAt
+// and Status set by the caller — AddClient discards those fields when the
+// client already exists, so they only take effect on first insert.
 func (s *MainState) CreateDriver(id string) *Driver {
 
 	logger.Info("MainState.CreateDriver called")
@@ -237,7 +239,7 @@ func (s *MainState) GetPassengerById(id string) *Passenger {
 // GetPassengersByIds returns the passengers found for the given ids. Ids with
 // no matching passenger are simply absent from the result.
 //
-// Deprecated: use SearchClients with a Passenger-typed ClientFilter instead.
+// Deprecated: use SearchClientsByIds with ClientTypePassenger instead.
 func (s *MainState) GetPassengersByIds(ids []string) []*Passenger {
 	s.passengersLock.Lock()
 	defer s.passengersLock.Unlock()
@@ -275,7 +277,9 @@ func (s *MainState) UpdatePassenger(id string, mutate func(*Passenger)) bool {
 // CreatePassenger adds a new passenger with the given id, or reactivates the existing
 // record if one is already present, and returns it.
 //
-// Deprecated: use AddClient instead.
+// Deprecated: use AddClient instead, constructing the Passenger with
+// CreatedAt set by the caller — AddClient discards it when the client
+// already exists, so it only takes effect on first insert.
 func (s *MainState) CreatePassenger(id string) *Passenger {
 	logger.Info("MainState.CreatePassenger called")
 
@@ -378,6 +382,22 @@ func (s *MainState) SearchClients(f *ClientFilter) []Client {
 
 	for _, client := range s.clients {
 		if f.Match(client) {
+			result = append(result, client.copyMe())
+		}
+	}
+
+	return result
+}
+
+// SearchClientsByIds returns the clients of type t found for the given ids.
+// Ids with no matching client are simply absent from the result.
+func (s *MainState) SearchClientsByIds(ids []string, t ClientType) []Client {
+	s.clientsLock.Lock()
+	defer s.clientsLock.Unlock()
+
+	result := make([]Client, 0, len(ids))
+	for _, id := range ids {
+		if client, ok := s.clients[t.GetKey(id)]; ok {
 			result = append(result, client.copyMe())
 		}
 	}

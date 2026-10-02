@@ -64,7 +64,7 @@ func (t *TaxiDispatcher) TickForPassengersUpdates() {
 // info was never received, or was received longer than DriversInfoTimeout ago.
 func (t *TaxiDispatcher) RequestForDriversInfos() {
 	now := t.clock.Now()
-	for _, driver := range t.mainState.GetDriversSnapshot() {
+	for _, driver := range t.driversSnapshot() {
 		if !driver.Active {
 			continue
 		}
@@ -81,7 +81,7 @@ func (t *TaxiDispatcher) RequestForDriversInfos() {
 // coordinates were never received, or were received longer than DriversCoordinatesTimeout ago.
 func (t *TaxiDispatcher) RequestForDriversCoordinates() {
 	now := t.clock.Now()
-	for _, driver := range t.mainState.GetDriversSnapshot() {
+	for _, driver := range t.driversSnapshot() {
 		if !driver.Active {
 			continue
 		}
@@ -98,7 +98,7 @@ func (t *TaxiDispatcher) RequestForDriversCoordinates() {
 // info was never received, or was received longer than PassengersInfoTimeout ago.
 func (t *TaxiDispatcher) RequestForPassengersInfos() {
 	now := t.clock.Now()
-	for _, passenger := range t.mainState.GetPassengersSnapshot() {
+	for _, passenger := range t.passengersSnapshot() {
 		if !passenger.Active {
 			continue
 		}
@@ -115,7 +115,7 @@ func (t *TaxiDispatcher) RequestForPassengersInfos() {
 // coordinates were never received, or were received longer than PassengersCoordinatesTimeout ago.
 func (t *TaxiDispatcher) RequestForPassengersCoordinates() {
 	now := t.clock.Now()
-	for _, passenger := range t.mainState.GetPassengersSnapshot() {
+	for _, passenger := range t.passengersSnapshot() {
 		if !passenger.Active {
 			continue
 		}
@@ -126,4 +126,18 @@ func (t *TaxiDispatcher) RequestForPassengersCoordinates() {
 			})
 		}
 	}
+}
+
+func (t *TaxiDispatcher) driversSnapshot() []*state.Driver {
+	filter := state.NewEmptyFilter()
+	filter.Type = string(state.ClientTypeDriver)
+	clients := t.mainState.SearchClients(filter)
+	return util.ArrayMap(clients, func(c state.Client) *state.Driver { return c.(*state.Driver) })
+}
+
+func (t *TaxiDispatcher) passengersSnapshot() []*state.Passenger {
+	filter := state.NewEmptyFilter()
+	filter.Type = string(state.ClientTypePassenger)
+	clients := t.mainState.SearchClients(filter)
+	return util.ArrayMap(clients, func(c state.Client) *state.Passenger { return c.(*state.Passenger) })
 }

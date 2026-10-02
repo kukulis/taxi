@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"darbelis.eu/taxi/internal/state"
+	"darbelis.eu/taxi/pkg/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,12 +34,18 @@ func (controller *WebController) Passenger(c *gin.Context) {
 }
 func (controller *WebController) Observer(c *gin.Context) {
 	RollCookie(c)
-	drivers := controller.mainState.GetDriversSnapshot()
+	driverFilter := state.NewEmptyFilter()
+	driverFilter.Type = string(state.ClientTypeDriver)
+	driverClients := controller.mainState.SearchClients(driverFilter)
+	drivers := util.ArrayMap(driverClients, func(c state.Client) *state.Driver { return c.(*state.Driver) })
 	if len(drivers) > observerTableLimit {
 		drivers = drivers[:observerTableLimit]
 	}
 
-	passengers := controller.mainState.GetPassengersSnapshot()
+	passengerFilter := state.NewEmptyFilter()
+	passengerFilter.Type = string(state.ClientTypePassenger)
+	passengerClients := controller.mainState.SearchClients(passengerFilter)
+	passengers := util.ArrayMap(passengerClients, func(c state.Client) *state.Passenger { return c.(*state.Passenger) })
 	if len(passengers) > observerTableLimit {
 		passengers = passengers[:observerTableLimit]
 	}

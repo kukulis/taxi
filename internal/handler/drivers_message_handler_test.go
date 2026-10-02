@@ -30,11 +30,23 @@ func waitFor(t *testing.T, timeout time.Duration, condition func() bool, msg fun
 	t.Fatal(msg())
 }
 
+// findDriver returns the driver with the given id, or nil.
+func findDriver(mainState *state.MainState, id string) *state.Driver {
+	filter := state.NewEmptyFilter()
+	filter.Id = id
+	filter.Type = string(state.ClientTypeDriver)
+	found := mainState.SearchClients(filter)
+	if len(found) == 0 {
+		return nil
+	}
+	return found[0].(*state.Driver)
+}
+
 func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) {
 	const driverId = "driver-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
 	// same drivers hub mock initialization as in hub_mock_test.go: answering
 	// ServerRequestsCoordinates with ClientRespondsCoordinates on the incoming channel.
@@ -61,11 +73,11 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 
 	waitFor(t, 200*time.Millisecond,
 		func() bool {
-			driver := mainState.GetDriverById(driverId)
+			driver := findDriver(mainState, driverId)
 			return driver != nil && driver.Lat == 54.68 && driver.Lon == 25.28
 		},
 		func() string {
-			driver := mainState.GetDriverById(driverId)
+			driver := findDriver(mainState, driverId)
 			if driver == nil {
 				return fmt.Sprintf("GetDriverById(%q) = nil, want driver with Lat=54.68 Lon=25.28", driverId)
 			}
@@ -83,7 +95,7 @@ func driverErrorThenCoordinatesTest(t *testing.T, errorReply message_common.Mess
 	const driverId = "driver-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
 	requestCount := 0
 	driversHub := ws2.NewHubMock()
@@ -110,11 +122,11 @@ func driverErrorThenCoordinatesTest(t *testing.T, errorReply message_common.Mess
 
 	waitFor(t, 200*time.Millisecond,
 		func() bool {
-			driver := mainState.GetDriverById(driverId)
+			driver := findDriver(mainState, driverId)
 			return driver != nil && driver.Lat == 54.68 && driver.Lon == 25.28
 		},
 		func() string {
-			driver := mainState.GetDriverById(driverId)
+			driver := findDriver(mainState, driverId)
 			if driver == nil {
 				return fmt.Sprintf("GetDriverById(%q) = nil, want driver with Lat=54.68 Lon=25.28 after %T then a valid response", driverId, errorReply)
 			}
@@ -141,7 +153,7 @@ func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 	const driverId = "driver-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
 	driversHub := ws2.NewHubMock()
 	passengersHub := ws2.NewHubMock()
@@ -165,11 +177,11 @@ func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 
 	waitFor(t, 200*time.Millisecond,
 		func() bool {
-			driver := mainState.GetDriverById(driverId)
+			driver := findDriver(mainState, driverId)
 			return driver != nil && driver.Lat == 54.68 && driver.Lon == 25.28
 		},
 		func() string {
-			driver := mainState.GetDriverById(driverId)
+			driver := findDriver(mainState, driverId)
 			if driver == nil {
 				return fmt.Sprintf("GetDriverById(%q) = nil, want driver with Lat=54.68 Lon=25.28", driverId)
 			}
@@ -184,7 +196,7 @@ func TestDriversMessageHandler_ChangesStatusThroughListener(t *testing.T) {
 	const driverId = "driver-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
 	dispatcher := util.NewDispatcher()
 	dispatcher.AddListener(events.DriverStatusChangedEventName, NewDriverStatusChangeForDriverListener(mainState).Handle)
@@ -198,9 +210,9 @@ func TestDriversMessageHandler_ChangesStatusThroughListener(t *testing.T) {
 	})
 
 	waitFor(t, 200*time.Millisecond,
-		func() bool { return mainState.GetDriverById(driverId).Status == state.DriverStatusIdle },
+		func() bool { return findDriver(mainState, driverId).Status == state.DriverStatusIdle },
 		func() string {
-			return fmt.Sprintf("driver.Status = %q, want %q", mainState.GetDriverById(driverId).Status, state.DriverStatusIdle)
+			return fmt.Sprintf("driver.Status = %q, want %q", findDriver(mainState, driverId).Status, state.DriverStatusIdle)
 		},
 	)
 }
@@ -209,7 +221,7 @@ func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 	const driverId = "driver-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
 	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
 	driversHub := ws2.NewHubMock()
@@ -235,11 +247,11 @@ func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 
 	waitFor(t, 200*time.Millisecond,
 		func() bool {
-			driver := mainState.GetDriverById(driverId)
+			driver := findDriver(mainState, driverId)
 			return driver != nil && driver.Phone == "+37060012345" && driver.VehicleInfo == "Toyota Prius"
 		},
 		func() string {
-			driver := mainState.GetDriverById(driverId)
+			driver := findDriver(mainState, driverId)
 			if driver == nil {
 				return fmt.Sprintf("GetDriverById(%q) = nil, want driver with Phone=+37060012345 VehicleInfo=Toyota Prius", driverId)
 			}

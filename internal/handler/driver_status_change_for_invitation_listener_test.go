@@ -16,8 +16,8 @@ func TestDriverStatusChangeForInvitationListener_StartsVoyageOnIdleToWorking(t *
 	const passengerId = "passenger-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
-	mainState.CreatePassenger(passengerId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
+	mainState.AddClient(&state.Passenger{Id: passengerId, CreatedAt: mainState.Clock.Now()})
 
 	invitation := state.NewInvitation("inv-1")
 	invitation.DriverId = driverId
@@ -69,8 +69,8 @@ func TestDriverStatusChangeForInvitationListener_FinishesVoyageOnWorkingToIdle(t
 	const passengerId = "passenger-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
-	mainState.CreatePassenger(passengerId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
+	mainState.AddClient(&state.Passenger{Id: passengerId, CreatedAt: mainState.Clock.Now()})
 
 	invitation := state.NewInvitation("inv-1")
 	invitation.DriverId = driverId
@@ -125,11 +125,11 @@ func TestDriverStatusChangeForInvitationListener_CancelsPendingInvitationsOnRest
 	const otherPassengerId = "passenger-3"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
-	mainState.CreateDriver(otherDriverId)
-	mainState.CreatePassenger(passenger1Id)
-	mainState.CreatePassenger(passenger2Id)
-	mainState.CreatePassenger(otherPassengerId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
+	mainState.AddClient(&state.Driver{Id: otherDriverId, CreatedAt: mainState.Clock.Now()})
+	mainState.AddClient(&state.Passenger{Id: passenger1Id, CreatedAt: mainState.Clock.Now()})
+	mainState.AddClient(&state.Passenger{Id: passenger2Id, CreatedAt: mainState.Clock.Now()})
+	mainState.AddClient(&state.Passenger{Id: otherPassengerId, CreatedAt: mainState.Clock.Now()})
 
 	invitation1 := state.NewInvitation("inv-1")
 	invitation1.DriverId = driverId

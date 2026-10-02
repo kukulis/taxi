@@ -13,7 +13,7 @@ func TestDriverStatusChangeForDriverListener_UpdatesDriverStatus(t *testing.T) {
 	const driverId = "driver-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreateDriver(driverId)
+	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
 	dispatcher := util.NewDispatcher()
 	listener := NewDriverStatusChangeForDriverListener(mainState)
@@ -25,9 +25,9 @@ func TestDriverStatusChangeForDriverListener_UpdatesDriverStatus(t *testing.T) {
 		DriverStatusNew: string(state.DriverStatusWorking),
 	})
 
-	driver := mainState.GetDriverById(driverId)
+	driver := findDriver(mainState, driverId)
 	if driver == nil {
-		t.Fatalf("GetDriverById(%q) = nil, want a driver", driverId)
+		t.Fatalf("findDriver(%q) = nil, want a driver", driverId)
 	}
 	if driver.Status != state.DriverStatusWorking {
 		t.Errorf("driver.Status = %q, want %q", driver.Status, state.DriverStatusWorking)
@@ -45,7 +45,7 @@ func TestDriverStatusChangeForDriverListener_UnknownDriverDoesNotPanic(t *testin
 		DriverStatusNew: string(state.DriverStatusWorking),
 	})
 
-	if driver := mainState.GetDriverById("unknown-driver"); driver != nil {
-		t.Errorf("GetDriverById(%q) = %+v, want nil (no driver should have been created)", "unknown-driver", driver)
+	if driver := findDriver(mainState, "unknown-driver"); driver != nil {
+		t.Errorf("findDriver(%q) = %+v, want nil (no driver should have been created)", "unknown-driver", driver)
 	}
 }

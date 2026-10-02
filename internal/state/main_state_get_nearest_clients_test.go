@@ -72,6 +72,7 @@ func provideInactiveClientExcluded() nearestClientTestCase {
 
 	inactiveDriver := &Driver{Id: "inactive-driver", Lat: 54.6895, Lon: 25.2800} // ~0.26km from Vilnius center
 	s.AddClient(inactiveDriver)
+	// TODO Letting modify the driver object inside the MainState may be the source of future bugs
 	inactiveDriver.Active = false // AddClient forces Active=true; set back to false after
 
 	return nearestClientTestCase{

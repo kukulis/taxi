@@ -21,8 +21,8 @@ func (l *DriverStatusChangeForDriverListener) Handle(e util.Event) {
 	//oldStatus := state.DriverStatus(statusChangeEvent.DriverStatusOld)
 	newStatus := state.DriverStatus(statusChangeEvent.DriverStatusNew)
 
-	l.MainState.UpdateDriver(statusChangeEvent.DriverId, func(driver *state.Driver) {
-		driver.Status = newStatus
+	l.MainState.UpdateClient(&state.Driver{Id: statusChangeEvent.DriverId}, func(c state.Client) {
+		c.(*state.Driver).Status = newStatus
 	})
 
 	// TODO send request for coordinates

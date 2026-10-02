@@ -11,21 +11,23 @@ import (
 	ws2 "darbelis.eu/taxi/pkg/ws"
 )
 
-// findPassenger returns the passenger with the given id from mainState's snapshot, or nil.
+// findPassenger returns the passenger with the given id, or nil.
 func findPassenger(mainState *state.MainState, id string) *state.Passenger {
-	for _, passenger := range mainState.GetPassengersSnapshot() {
-		if passenger.Id == id {
-			return passenger
-		}
+	filter := state.NewEmptyFilter()
+	filter.Id = id
+	filter.Type = string(state.ClientTypePassenger)
+	found := mainState.SearchClients(filter)
+	if len(found) == 0 {
+		return nil
 	}
-	return nil
+	return found[0].(*state.Passenger)
 }
 
 func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testing.T) {
 	const passengerId = "passenger-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreatePassenger(passengerId)
+	mainState.AddClient(&state.Passenger{Id: passengerId, CreatedAt: mainState.Clock.Now()})
 
 	// same hub mock initialization as in hub_mock_test.go: answering
 	// ServerRequestsCoordinates with ClientRespondsCoordinates on the incoming channel.
@@ -69,7 +71,7 @@ func TestPassengersMessageHandler_UpdatesPassengerInfoOnResponse(t *testing.T) {
 	const passengerId = "passenger-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-	mainState.CreatePassenger(passengerId)
+	mainState.AddClient(&state.Passenger{Id: passengerId, CreatedAt: mainState.Clock.Now()})
 
 	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
 	passengersHub := ws2.NewHubMock()

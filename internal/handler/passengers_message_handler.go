@@ -61,7 +61,11 @@ func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws2.ClientMessag
 			p.handleClientRegistered(message.ClientId, msg)
 
 		case *message_common.ClientUnregisteredMessage:
-			p.mainState.RemovePassenger(message.ClientId)
+			p.mainState.UpdateClient(&state.Passenger{Id: message.ClientId}, func(c state.Client) {
+				passenger := c.(*state.Passenger)
+				passenger.Online = false
+				passenger.Active = false
+			})
 
 		default:
 			p.logger.Warn("unexpected message type",
@@ -73,7 +77,10 @@ func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws2.ClientMessag
 }
 
 func (p *PassengersMessageHandler) handleClientRegistered(clientId string, msg *message_common.ClientRegisteredMessage) {
-	p.mainState.CreatePassenger(clientId)
+	p.mainState.AddClient(&state.Passenger{
+		Id:        clientId,
+		CreatedAt: p.mainState.Clock.Now(),
+	})
 
 	// only the invitations still relevant to the passenger; rejected/cancelled/completed ones are done with
 	invitations := p.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
@@ -85,7 +92,8 @@ func (p *PassengersMessageHandler) handleClientRegistered(clientId string, msg *
 		},
 	})
 
-	drivers := p.mainState.GetDriversByIds(util.ArrayMap(invitations, state.GetInvitationDriverId))
+	driverClients := p.mainState.SearchClientsByIds(util.ArrayMap(invitations, state.GetInvitationDriverId), state.ClientTypeDriver)
+	drivers := util.ArrayMap(driverClients, func(c state.Client) *state.Driver { return c.(*state.Driver) })
 
 	state.AssignDriversToInvitations(invitations, drivers)
 
@@ -108,7 +116,8 @@ func (p *PassengersMessageHandler) handleClientRegistered(clientId string, msg *
 }
 
 func (p *PassengersMessageHandler) handleClientRespondsCoordinates(clientId string, msg *messages.ClientRespondsCoordinates) {
-	found := p.mainState.UpdatePassenger(clientId, func(passenger *state.Passenger) {
+	found := p.mainState.UpdateClient(&state.Passenger{Id: clientId}, func(c state.Client) {
+		passenger := c.(*state.Passenger)
 		passenger.Lat = msg.Lat
 		passenger.Lon = msg.Lon
 		passenger.CoordinatesReceivedAt = p.mainState.Clock.Now()
@@ -143,7 +152,8 @@ func (p *PassengersMessageHandler) handleClientRespondsCoordinates(clientId stri
 }
 
 func (p *PassengersMessageHandler) handleClientRespondsInfo(clientId string, msg *messages.ClientRespondsInfo) {
-	found := p.mainState.UpdatePassenger(clientId, func(passenger *state.Passenger) {
+	found := p.mainState.UpdateClient(&state.Passenger{Id: clientId}, func(c state.Client) {
+		passenger := c.(*state.Passenger)
 		passenger.Phone = msg.Phone
 		if msg.Ip != "" {
 			passenger.Ip = msg.Ip

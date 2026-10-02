@@ -65,7 +65,11 @@ func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 		case *message_common.ClientRegisteredMessage:
 			d.handleClientRegistered(message.ClientId, msg)
 		case *message_common.ClientUnregisteredMessage:
-			d.mainState.RemoveDriver(message.ClientId)
+			d.mainState.UpdateClient(&state.Driver{Id: message.ClientId}, func(c state.Client) {
+				driver := c.(*state.Driver)
+				driver.Online = false
+				driver.Active = false
+			})
 		default:
 			d.logger.Warn("unexpected message type",
 				"client_id", message.ClientId,
@@ -77,7 +81,16 @@ func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 
 // handleClientRegistered handling virtual message about a driver registration
 func (d *DriversMessageHandler) handleClientRegistered(clientId string, msg *message_common.ClientRegisteredMessage) {
-	driver := d.mainState.CreateDriver(clientId)
+	d.mainState.AddClient(&state.Driver{
+		Id:        clientId,
+		CreatedAt: d.mainState.Clock.Now(),
+		Status:    state.DriverStatusResting,
+	})
+
+	driverFilter := state.NewEmptyFilter()
+	driverFilter.Id = clientId
+	driverFilter.Type = string(state.ClientTypeDriver)
+	driver := d.mainState.SearchClients(driverFilter)[0].(*state.Driver)
 
 	// ============  Refresh driver status ===================================
 
@@ -100,7 +113,8 @@ func (d *DriversMessageHandler) handleClientRegistered(clientId string, msg *mes
 		},
 	})
 
-	passengers := d.mainState.GetPassengersByIds(util.ArrayMap(invitations, state.GetInvitationPassengerId))
+	passengerClients := d.mainState.SearchClientsByIds(util.ArrayMap(invitations, state.GetInvitationPassengerId), state.ClientTypePassenger)
+	passengers := util.ArrayMap(passengerClients, func(c state.Client) *state.Passenger { return c.(*state.Passenger) })
 
 	state.AssignPassengersToInvitations(invitations, passengers)
 
@@ -126,7 +140,8 @@ func (d *DriversMessageHandler) handleClientRegistered(clientId string, msg *mes
 
 // handleClientRespondsCoordinates write received coordinates to a main state
 func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string, msg *messages.ClientRespondsCoordinates) {
-	found := d.mainState.UpdateDriver(clientId, func(driver *state.Driver) {
+	found := d.mainState.UpdateClient(&state.Driver{Id: clientId}, func(c state.Client) {
+		driver := c.(*state.Driver)
 		driver.Lat = msg.Lat
 		driver.Lon = msg.Lon
 		driver.CoordinatesReceivedAt = d.mainState.Clock.Now()
@@ -160,7 +175,8 @@ func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string,
 }
 
 func (d *DriversMessageHandler) handleClientRespondsInfo(clientId string, msg *messages.ClientRespondsInfo) {
-	found := d.mainState.UpdateDriver(clientId, func(driver *state.Driver) {
+	found := d.mainState.UpdateClient(&state.Driver{Id: clientId}, func(c state.Client) {
+		driver := c.(*state.Driver)
 		driver.Phone = msg.Phone
 		driver.VehicleInfo = msg.VehicleInfo
 		if msg.Ip != "" {
@@ -283,12 +299,16 @@ func (d *DriversMessageHandler) handleDriverRejectsOffer(clientId string, msg *m
 func (d *DriversMessageHandler) handleDriverChangesStatus(clientId string, msg *messages.DriverChangesStatus) {
 	d.logger.Info("driver changes status", "client_id", clientId, "status", msg.Status)
 
-	driver := d.mainState.GetDriverById(clientId)
+	filter := state.NewEmptyFilter()
+	filter.Id = clientId
+	filter.Type = string(state.ClientTypeDriver)
+	found := d.mainState.SearchClients(filter)
 
-	if driver == nil {
+	if len(found) == 0 {
 		d.logger.Warn("DriverChangesStatus for unknown driver", "client_id", clientId)
 		return
 	}
+	driver := found[0].(*state.Driver)
 
 	event := events.DriverStatusChangedEvent{
 		DriverId:        clientId,
