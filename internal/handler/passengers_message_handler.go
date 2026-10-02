@@ -127,10 +127,14 @@ func (p *PassengersMessageHandler) handleClientRespondsCoordinates(clientId stri
 					log.Println("Failed to get address from nominatim", err.Error())
 					return
 				}
+
+				truncatedAddress := util.TruncateAddress(address, 3)
+				log.Println("received address: ", address, ". Truncated address: ", truncatedAddress)
+
 				p.passengersHub.SendMessage(ws2.ClientMessage{
 					ClientId: clientId,
 					Message: messages.ServerSendsClientAddress{
-						Address: util.TruncateAddress(address, 3),
+						Address: truncatedAddress,
 					},
 				})
 			},
