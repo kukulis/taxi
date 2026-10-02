@@ -38,6 +38,7 @@ func NewMainState(clock util.Clock) *MainState {
 	}
 }
 
+// Deprecated: use SearchClients with a Driver-typed ClientFilter instead.
 func (s *MainState) GetDriversSnapshot() []*Driver {
 	s.driversLock.Lock()
 	defer s.driversLock.Unlock()
@@ -51,6 +52,7 @@ func (s *MainState) GetDriversSnapshot() []*Driver {
 	return driversList
 }
 
+// Deprecated: use SearchClients with a Driver-typed ClientFilter instead.
 func (s *MainState) GetDriverById(id string) *Driver {
 	s.driversLock.Lock()
 	defer s.driversLock.Unlock()
@@ -66,6 +68,8 @@ func (s *MainState) GetDriverById(id string) *Driver {
 
 // GetDriversByIds returns the drivers found for the given ids. Ids with no
 // matching driver are simply absent from the result.
+//
+// Deprecated: use SearchClients with a Driver-typed ClientFilter instead.
 func (s *MainState) GetDriversByIds(ids []string) []*Driver {
 	s.driversLock.Lock()
 	defer s.driversLock.Unlock()
@@ -85,6 +89,8 @@ func (s *MainState) GetDriversByIds(ids []string) []*Driver {
 
 // UpdateDriver locks the drivers map, looks up the driver by id and, if found,
 // calls mutate on it in place. It reports whether the driver was found.
+//
+// Deprecated: use UpdateClient instead.
 func (s *MainState) UpdateDriver(id string, mutate func(*Driver)) bool {
 	s.driversLock.Lock()
 	defer s.driversLock.Unlock()
@@ -100,6 +106,8 @@ func (s *MainState) UpdateDriver(id string, mutate func(*Driver)) bool {
 
 // CreateDriver adds a new driver with the given id, or reactivates the existing
 // record if one is already present, and returns it.
+//
+// Deprecated: use AddClient instead.
 func (s *MainState) CreateDriver(id string) *Driver {
 
 	logger.Info("MainState.CreateDriver called")
@@ -152,6 +160,8 @@ func (s *MainState) GetNearestDrivers(lat, lon float64) []DriverDistance {
 
 // RemoveDriver marks the driver with the given id inactive. The record is kept,
 // not deleted, so it stays visible in GetDriversSnapshot/GetDriverById.
+//
+// Deprecated: use UpdateClient instead, setting Online=false and Active=false.
 func (s *MainState) RemoveDriver(id string) {
 	s.driversLock.Lock()
 	defer s.driversLock.Unlock()
@@ -161,6 +171,7 @@ func (s *MainState) RemoveDriver(id string) {
 	}
 }
 
+// Deprecated: use SearchClients with a Passenger-typed ClientFilter instead.
 func (s *MainState) GetPassengersSnapshot() []*Passenger {
 	s.passengersLock.Lock()
 	defer s.passengersLock.Unlock()
@@ -174,6 +185,7 @@ func (s *MainState) GetPassengersSnapshot() []*Passenger {
 	return passengersList
 }
 
+// Deprecated: use SearchClients with a Passenger-typed ClientFilter instead.
 func (s *MainState) GetPassengerById(id string) *Passenger {
 	s.passengersLock.Lock()
 	defer s.passengersLock.Unlock()
@@ -189,6 +201,8 @@ func (s *MainState) GetPassengerById(id string) *Passenger {
 
 // GetPassengersByIds returns the passengers found for the given ids. Ids with
 // no matching passenger are simply absent from the result.
+//
+// Deprecated: use SearchClients with a Passenger-typed ClientFilter instead.
 func (s *MainState) GetPassengersByIds(ids []string) []*Passenger {
 	s.passengersLock.Lock()
 	defer s.passengersLock.Unlock()
@@ -208,6 +222,8 @@ func (s *MainState) GetPassengersByIds(ids []string) []*Passenger {
 
 // UpdatePassenger locks the passengers map, looks up the passenger by id and, if found,
 // calls mutate on it in place. It reports whether the passenger was found.
+//
+// Deprecated: use UpdateClient instead.
 func (s *MainState) UpdatePassenger(id string, mutate func(*Passenger)) bool {
 	s.passengersLock.Lock()
 	defer s.passengersLock.Unlock()
@@ -223,6 +239,8 @@ func (s *MainState) UpdatePassenger(id string, mutate func(*Passenger)) bool {
 
 // CreatePassenger adds a new passenger with the given id, or reactivates the existing
 // record if one is already present, and returns it.
+//
+// Deprecated: use AddClient instead.
 func (s *MainState) CreatePassenger(id string) *Passenger {
 	logger.Info("MainState.CreatePassenger called")
 
@@ -243,6 +261,8 @@ func (s *MainState) CreatePassenger(id string) *Passenger {
 
 // RemovePassenger marks the passenger with the given id inactive. The record is kept,
 // not deleted, so it stays visible in GetPassengersSnapshot.
+//
+// Deprecated: use UpdateClient instead, setting Online=false and Active=false.
 func (s *MainState) RemovePassenger(id string) {
 	s.passengersLock.Lock()
 	defer s.passengersLock.Unlock()
