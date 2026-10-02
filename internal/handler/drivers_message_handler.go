@@ -145,10 +145,13 @@ func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string,
 					log.Println("Failed to get address from nominatim", err.Error())
 					return
 				}
+				truncatedAddress := util.TruncateAddress(address, 3)
+				log.Println("received address: ", address, ". Truncated address: ", truncatedAddress)
+
 				d.driversHub.SendMessage(ws.ClientMessage{
 					ClientId: clientId,
 					Message: messages.ServerSendsClientAddress{
-						Address: util.TruncateAddress(address, 3),
+						Address: truncatedAddress,
 					},
 				})
 			},
