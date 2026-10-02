@@ -18,7 +18,7 @@ func NewDriverApiController(mainState *state.MainState) *DriverApiController {
 }
 
 // Search handles GET /api/driver?searchLat=..&searchLon=..&distance=..
-// distance is in kilometers, matching MainState.GetNearestDrivers' unit.
+// distance is in kilometers, matching MainState.GetNearestClients' unit.
 // Only idle drivers are returned.
 func (c *DriverApiController) Search(ctx *gin.Context) {
 	searchLat, err := strconv.ParseFloat(ctx.Query("searchLat"), 64)
@@ -39,22 +39,25 @@ func (c *DriverApiController) Search(ctx *gin.Context) {
 		return
 	}
 
-	nearest := c.mainState.GetNearestDrivers(searchLat, searchLon)
+	// only idle drivers can take a passenger, so only they are offered to be invited
+	filter := state.NewEmptyFilter()
+	filter.Type = string(state.ClientTypeDriver)
+	filter.Active = 1
+	filter.DriverStatuses = []state.DriverStatus{state.DriverStatusIdle}
+
+	nearest := c.mainState.GetNearestClients(filter, searchLat, searchLon, maxDistanceKm)
 
 	results := make([]dto.DriverSearchResult, 0, len(nearest))
-	for _, driverDistance := range nearest {
-		if driverDistance.Distance > maxDistanceKm {
-			break // GetNearestDrivers is sorted ascending, so nothing further will match either
+	for _, clientDistance := range nearest {
+		if clientDistance.Distance > maxDistanceKm {
+			break // GetNearestClients' box prefilter is square, not circular, and is sorted ascending - so once a result exceeds the max, nothing further will match either
 		}
-		// only idle drivers can take a passenger, so only they are offered to be invited
-		if driverDistance.Driver.Status != state.DriverStatusIdle {
-			continue
-		}
+		driver := clientDistance.Client.(*state.Driver)
 		results = append(results, dto.DriverSearchResult{
-			DriverId:   driverDistance.Driver.Id,
-			Lat:        driverDistance.Driver.Lat,
-			Lon:        driverDistance.Driver.Lon,
-			DistanceKm: driverDistance.Distance,
+			DriverId:   driver.Id,
+			Lat:        driver.Lat,
+			Lon:        driver.Lon,
+			DistanceKm: clientDistance.Distance,
 		})
 	}
 

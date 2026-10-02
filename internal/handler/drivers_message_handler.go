@@ -163,6 +163,10 @@ func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string,
 				truncatedAddress := util.TruncateAddress(address, 3)
 				log.Println("received address: ", address, ". Truncated address: ", truncatedAddress)
 
+				d.mainState.UpdateClient(&state.Driver{Id: clientId}, func(c state.Client) {
+					c.(*state.Driver).Address = truncatedAddress
+				})
+
 				d.driversHub.SendMessage(ws.ClientMessage{
 					ClientId: clientId,
 					Message: messages.ServerSendsClientAddress{

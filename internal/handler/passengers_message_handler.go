@@ -140,6 +140,10 @@ func (p *PassengersMessageHandler) handleClientRespondsCoordinates(clientId stri
 				truncatedAddress := util.TruncateAddress(address, 3)
 				log.Println("received address: ", address, ". Truncated address: ", truncatedAddress)
 
+				p.mainState.UpdateClient(&state.Passenger{Id: clientId}, func(c state.Client) {
+					c.(*state.Passenger).Address = truncatedAddress
+				})
+
 				p.passengersHub.SendMessage(ws2.ClientMessage{
 					ClientId: clientId,
 					Message: messages.ServerSendsClientAddress{
