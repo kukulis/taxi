@@ -14,7 +14,7 @@ var fixedTestTime = time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
 func TestTaxiDispatcher_RequestForDriversInfos_SendsToDriversHub(t *testing.T) {
 	clock := util.NewFixedClock(fixedTestTime)
 	mainState := state.NewMainState(clock)
-	mainState.AddClient(&state.Driver{Id: "driver-1", CreatedAt: clock.Now()})
+	mainState.AddClient(&state.Driver{Id: "driver-1", CreatedAt: clock.Now(), Online: true, Status: state.DriverStatusIdle})
 
 	var driversSent []ws2.ClientMessage
 	driversHub := ws2.NewHubMock()
@@ -45,7 +45,7 @@ func TestTaxiDispatcher_RequestForDriversInfos_SendsToDriversHub(t *testing.T) {
 func TestTaxiDispatcher_RequestForDriversCoordinates_SendsToDriversHub(t *testing.T) {
 	clock := util.NewFixedClock(fixedTestTime)
 	mainState := state.NewMainState(clock)
-	mainState.AddClient(&state.Driver{Id: "driver-1", CreatedAt: clock.Now()})
+	mainState.AddClient(&state.Driver{Id: "driver-1", CreatedAt: clock.Now(), Status: state.DriverStatusIdle})
 
 	var driversSent []ws2.ClientMessage
 	driversHub := ws2.NewHubMock()

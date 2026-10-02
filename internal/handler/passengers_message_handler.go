@@ -38,8 +38,7 @@ func NewPassengersMessageHandler(
 }
 
 func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws2.ClientMessage) {
-	for {
-		message := <-messageChannel
+	for message := range messageChannel {
 
 		switch msg := message.Message.(type) {
 		case *messages.ClientRespondsCoordinates:

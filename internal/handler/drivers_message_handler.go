@@ -42,8 +42,8 @@ func NewDriversMessageHandler(
 }
 
 func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
-	for {
-		message := <-messageChannel
+
+	for message := range messageChannel {
 
 		switch msg := message.Message.(type) {
 		case *messages.ClientRespondsCoordinates:
@@ -205,6 +205,7 @@ func (d *DriversMessageHandler) handleClientResponseError(clientId string, msg *
 // just logged for now.
 func (d *DriversMessageHandler) handleClientError(clientId string, msg *messages.ClientError) {
 	d.logger.Error("client reported a functionality error", "client_id", clientId, "error", msg.Error)
+	// TODO set client Active=false
 }
 
 func (d *DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg *messages.DriverCancelsOffer) {

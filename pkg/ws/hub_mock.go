@@ -37,4 +37,12 @@ func (m *HubMock) FeedIncomingMessage(message ClientMessage) {
 	m.IncomingMessagesChannel <- message
 }
 
+// Close closes IncomingMessagesChannel. A handler's Handle ranges over the
+// channel, so once every fed message has been consumed, a closed channel
+// makes Handle return instead of blocking — letting a test call Handle
+// directly (no goroutine, no waitFor) and assert MainState right after.
+func (m *HubMock) Close() {
+	close(m.IncomingMessagesChannel)
+}
+
 var _ HubInterface = (*HubMock)(nil)

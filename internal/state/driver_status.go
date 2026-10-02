@@ -9,9 +9,3 @@ const (
 	DriverStatusResting   DriverStatus = "resting"
 	DriverStatusUndefined DriverStatus = "undefined"
 )
-
-// ResolveDriverStatus deprecated as unused
-func ResolveDriverStatus(status string) DriverStatus {
-	// TODO validate status
-	return DriverStatus(status)
-}

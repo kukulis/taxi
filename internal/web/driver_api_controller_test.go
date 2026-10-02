@@ -14,18 +14,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type driverFixture struct {
-	id       string
-	lat, lon float64
-	status   state.DriverStatus
-}
-
 func TestDriverApiController_Search(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	cases := []struct {
 		name        string
-		fixtures    []driverFixture
+		drivers     []*state.Driver
 		query       string
 		wantStatus  int
 		wantError   string
@@ -51,8 +45,8 @@ func TestDriverApiController_Search(t *testing.T) {
 		},
 		{
 			name: "idle driver within distance is returned",
-			fixtures: []driverFixture{
-				{id: "near-driver", lat: 54.6892, lon: 25.2799, status: state.DriverStatusIdle}, // ~0.22km from Vilnius center
+			drivers: []*state.Driver{
+				{Id: "near-driver", Lat: 54.6892, Lon: 25.2799, Status: state.DriverStatusIdle}, // ~0.22km from Vilnius center
 			},
 			query:      "?searchLat=54.6872&searchLon=25.2797&distance=5",
 			wantStatus: http.StatusOK,
@@ -62,8 +56,8 @@ func TestDriverApiController_Search(t *testing.T) {
 		},
 		{
 			name: "non-idle driver is excluded even if nearby",
-			fixtures: []driverFixture{
-				{id: "working-driver", lat: 54.6892, lon: 25.2799, status: state.DriverStatusWorking}, // ~0.22km from Vilnius center
+			drivers: []*state.Driver{
+				{Id: "working-driver", Lat: 54.6892, Lon: 25.2799, Status: state.DriverStatusWorking}, // ~0.22km from Vilnius center
 			},
 			query:       "?searchLat=54.6872&searchLon=25.2797&distance=5",
 			wantStatus:  http.StatusOK,
@@ -71,8 +65,8 @@ func TestDriverApiController_Search(t *testing.T) {
 		},
 		{
 			name: "driver beyond max distance is excluded",
-			fixtures: []driverFixture{
-				{id: "far-driver", lat: 54.8985, lon: 23.9036, status: state.DriverStatusIdle}, // ~91.29km from Vilnius center (Kaunas)
+			drivers: []*state.Driver{
+				{Id: "far-driver", Lat: 54.8985, Lon: 23.9036, Status: state.DriverStatusIdle}, // ~91.29km from Vilnius center (Kaunas)
 			},
 			query:       "?searchLat=54.6872&searchLon=25.2797&distance=5",
 			wantStatus:  http.StatusOK,
@@ -80,9 +74,9 @@ func TestDriverApiController_Search(t *testing.T) {
 		},
 		{
 			name: "two idle drivers sorted ascending by distance",
-			fixtures: []driverFixture{
-				{id: "middle-driver", lat: 54.7500, lon: 25.0000, status: state.DriverStatusIdle}, // ~19.27km from Vilnius center
-				{id: "near-driver", lat: 54.6892, lon: 25.2799, status: state.DriverStatusIdle},   // ~0.22km from Vilnius center
+			drivers: []*state.Driver{
+				{Id: "middle-driver", Lat: 54.7500, Lon: 25.0000, Status: state.DriverStatusIdle}, // ~19.27km from Vilnius center
+				{Id: "near-driver", Lat: 54.6892, Lon: 25.2799, Status: state.DriverStatusIdle},   // ~0.22km from Vilnius center
 			},
 			query:      "?searchLat=54.6872&searchLon=25.2797&distance=50",
 			wantStatus: http.StatusOK,
@@ -96,12 +90,8 @@ func TestDriverApiController_Search(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			mainState := state.NewMainState(util.NewFixedClock(time.Now()))
-			for _, fixture := range c.fixtures {
-				driver := &state.Driver{Id: fixture.id, Lat: fixture.lat, Lon: fixture.lon}
+			for _, driver := range c.drivers {
 				mainState.AddClient(driver)
-				mainState.UpdateClient(driver, func(cl state.Client) {
-					cl.(*state.Driver).Status = fixture.status
-				})
 			}
 
 			controller := NewDriverApiController(mainState)
