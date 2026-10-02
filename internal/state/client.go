@@ -1,6 +1,9 @@
 package state
 
-import "time"
+import (
+	"math"
+	"time"
+)
 
 type Client interface {
 	getId() string
@@ -78,12 +81,8 @@ func ResolveClientType(t string) ClientType {
 // ClientFilter used to filter clients
 // empty string means ignore
 type ClientFilter struct {
-	Id   string
-	Type string
-	// 0 ignore
-	Lat float64
-	// 0 ignore
-	Lon     float64
+	Id      string
+	Type    string
 	Address string
 	// ignore if empty slice
 	DriverStatuses []DriverStatus
@@ -94,13 +93,20 @@ type ClientFilter struct {
 	Active int8
 	// Online -1 ignore, 0 false, 1 true
 	Online int8
+
+	LatFrom float64
+	LatTo   float64
+	LonFrom float64
+	LonTo   float64
 }
 
 func (f *ClientFilter) KeyFieldsOnly() bool {
 	return f.Id != "" &&
 		(f.Type == string(ClientTypePassenger) || f.Type == string(ClientTypeDriver)) &&
-		f.Lat == 0 &&
-		f.Lon == 0 &&
+		f.LatFrom == 0 &&
+		f.LatTo == 0 &&
+		f.LonFrom == 0 &&
+		f.LonTo == 0 &&
 		f.Address == "" &&
 		len(f.DriverStatuses) == 0 &&
 		f.VehicleInfo == "" &&
@@ -130,14 +136,16 @@ func (f *ClientFilter) Match(c Client) bool {
 		}
 	}
 
-	if f.Lat != 0 {
-		if f.Lat != c.getLat() {
+	if f.LatFrom != 0 || f.LatTo != 0 {
+		lat := c.getLat()
+		if lat < f.LatFrom || lat > f.LatTo {
 			return false
 		}
 	}
 
-	if f.Lon != 0 {
-		if f.Lon != c.getLon() {
+	if f.LonFrom != 0 || f.LonTo != 0 {
+		lon := c.getLon()
+		if lon < f.LonFrom || lon > f.LonTo {
 			return false
 		}
 	}
@@ -186,4 +194,22 @@ func (f *ClientFilter) Match(c Client) bool {
 	}
 
 	return true
+}
+
+// CalculateSquare sets LatFrom/LatTo/LonFrom/LonTo to a square centered on
+// (lat, lon) whose edges are each distanceKm away from the center, along the
+// great-circle approximation also used by util.HaversineDistanceKm (sphere of
+// radius 6371km). Longitude degrees are scaled by cos(lat) since a degree of
+// longitude covers less ground distance away from the equator.
+func (f *ClientFilter) CalculateSquare(lat, lon float64, distanceKm float64) {
+	const earthRadiusKm = 6371.0
+
+	kmPerDegreeLat := earthRadiusKm * math.Pi / 180
+	latDelta := distanceKm / kmPerDegreeLat
+	lonDelta := distanceKm / (kmPerDegreeLat * math.Cos(lat*math.Pi/180))
+
+	f.LatFrom = lat - latDelta
+	f.LatTo = lat + latDelta
+	f.LonFrom = lon - lonDelta
+	f.LonTo = lon + lonDelta
 }

@@ -1,6 +1,7 @@
 package state
 
 import (
+	"math"
 	"sort"
 	"sync"
 
@@ -128,6 +129,7 @@ func (s *MainState) CreateDriver(id string) *Driver {
 }
 
 // DriverDistance pairs a Driver with its distance in kilometers from a query point.
+// Deprecated: we will use ClientDistance instead
 type DriverDistance struct {
 	Driver   *Driver
 	Distance float64
@@ -137,6 +139,7 @@ type DriverDistance struct {
 // (CoordinatesReceivedAt set), sorted by ascending distance in kilometers from
 // (lat, lon). Brute force: computes the distance to every active driver, no
 // spatial index. Callers decide how many results to actually use.
+// Deprecated: use GetNearestClients instead
 func (s *MainState) GetNearestDrivers(lat, lon float64) []DriverDistance {
 	drivers := s.GetDriversSnapshot()
 
@@ -150,6 +153,38 @@ func (s *MainState) GetNearestDrivers(lat, lon float64) []DriverDistance {
 			Distance: util.HaversineDistanceKm(lat, lon, driver.Lat, driver.Lon),
 		})
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Distance < result[j].Distance
+	})
+
+	return result
+}
+
+type ClientDistance struct {
+	Client   Client
+	Distance float64
+}
+
+// RoundDistance returns a copy of cd with Distance rounded to 2 decimal
+// places, so callers (e.g. test assertions) aren't exposed to float noise.
+func (cd ClientDistance) RoundDistance() ClientDistance {
+	cd.Distance = math.Round(cd.Distance*100) / 100
+	return cd
+}
+
+// GetNearestClients searches clients in a square then calculates exact distance; returns a sorted array.
+func (s *MainState) GetNearestClients(filter *ClientFilter, lat, lon, distanceKm float64) []ClientDistance {
+	filter.CalculateSquare(lat, lon, distanceKm)
+
+	clients := s.SearchClients(filter)
+
+	result := util.ArrayMap(clients, func(c Client) ClientDistance {
+		return ClientDistance{
+			Client:   c,
+			Distance: util.HaversineDistanceKm(lat, lon, c.getLat(), c.getLon()),
+		}
+	})
 
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Distance < result[j].Distance
