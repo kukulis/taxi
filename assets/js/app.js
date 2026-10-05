@@ -6,7 +6,7 @@ import {PassengerComponent} from "./passenger_component.js";
 import {CommonComponent} from "./common_component.js";
 import {State} from "./state.js";
 import {GetE, NewEC, NewECT} from "./util.js";
-import {ApplicationEvent, ClientType} from "./constants.js";
+import {ApplicationEvent, ClientType, InvitationStatus, MessageType, WsEvent} from "./constants.js";
 
 // Holds page-wide services; each one is created on first use.
 export class App {
@@ -119,6 +119,62 @@ export class App {
         }
 
         return this.commonComponent;
+    }
+
+    /**
+     * @param {string} clientType
+     * @returns {CommonComponent}
+     */
+    wireCommonComponent(clientType) {
+        const commonComponent = this.getCommonComponent(clientType);
+        const dispatcher = this.getDispatcher();
+        const wsService = clientType === ClientType.DRIVER ? this.getDriverWs() : this.getPassengerWs();
+
+        dispatcher.addListener(WsEvent.ON_OPEN_WS, () => commonComponent.handleServerRequestsCoordinates({}));
+        dispatcher.addListener(WsEvent.ON_CLOSE_WS, () => dispatcher.dispatch(ApplicationEvent.ERROR, {message: 'The WS connection closed'}));
+        dispatcher.addListener(ApplicationEvent.SEND_WS_MESSAGE, ([ct, type, data]) => this.sendWsMessage(ct, type, data));
+
+        wsService.addHandle(MessageType.SERVER_SENDS_CLIENT_ADDRESS, (data) => commonComponent.handleServerSendsClientAddress(data));
+        wsService.addHandle(MessageType.SERVER_REQUESTS_COORDINATES, (data) => commonComponent.handleServerRequestsCoordinates(data));
+        wsService.addHandle(MessageType.SERVER_REQUESTS_CLIENT_INFO, (data) => commonComponent.handleServerRequestsClientInfo(data));
+
+        return commonComponent;
+    }
+
+    /**
+     * @param {string} driverId
+     * @returns {DriverComponent}
+     */
+    wireDriverComponent(driverId) {
+        const driverComponent = this.getDriverComponent(driverId);
+        const wsService = this.getDriverWs();
+
+        wsService.addHandle(MessageType.SERVER_OFFERS_PASSENGER, (data) => driverComponent.handleServerOffersPassenger(data));
+        wsService.addHandle(MessageType.SERVER_CANCELS_OFFER, (data) => driverComponent.handleServerCancelsOffer(data));
+        wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_STARTED, (data) => driverComponent.handleServerNotifiesVoyageStarted(data));
+        wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED, (data) => driverComponent.handleServerNotifiesVoyageFinished(data));
+        wsService.addHandle(MessageType.SERVER_REFRESH_DRIVER_STATUS, (data) => driverComponent.handleServerRefreshStatus(data));
+        wsService.addHandle(MessageType.SERVER_REFRESH_DRIVER_OFFERS, (data) => driverComponent.handleServerRefreshOffers(data));
+
+        return driverComponent;
+    }
+
+    /**
+     * @param {string} passengerId
+     * @returns {PassengerComponent}
+     */
+    wirePassengerComponent(passengerId) {
+        const passengerComponent = this.getPassengerComponent(passengerId);
+        const wsService = this.getPassengerWs();
+
+        wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_ACCEPTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.ACCEPTED));
+        wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_REJECTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.REJECTED));
+        wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_CANCELED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.CANCELED));
+        wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_STARTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.DRIVING));
+        wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.COMPLETED));
+        wsService.addHandle(MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS, (data) => passengerComponent.handleServerRefreshInvitations(data));
+
+        return passengerComponent;
     }
 
     /**

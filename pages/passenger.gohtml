@@ -10,37 +10,14 @@
 <script type="module">
     import {GetCookie, GetE} from "/assets/js/util.js";
     import {App} from "/assets/js/app.js";
-    import {MessageType, WsEvent, ApplicationEvent, InvitationStatus, ClientType} from "/assets/js/constants.js";
+    import {ClientType} from "/assets/js/constants.js";
 
     const app = new App();
 
     const passengerId = GetCookie("gt_taxi_id");
 
-    const commonComponent = app.getCommonComponent(ClientType.PASSENGER);
-    const passengerComponent = app.getPassengerComponent(passengerId);
-
-    const dispatcher = app.getDispatcher();
-    const wsService = app.getPassengerWs();
-
-    // --- initialization, temporal location
-    dispatcher.addListener(WsEvent.ON_OPEN_WS, () => commonComponent.handleServerRequestsCoordinates({}))
-    dispatcher.addListener(WsEvent.ON_CLOSE_WS, () => dispatcher.dispatch(ApplicationEvent.ERROR, {message: 'The WS connection closed'}))
-    dispatcher.addListener(ApplicationEvent.SEND_WS_MESSAGE, ([clientType, type, data]) => app.sendWsMessage(clientType, type, data))
-
-    wsService.addHandle(MessageType.SERVER_REQUESTS_COORDINATES, (data) => commonComponent.handleServerRequestsCoordinates(data))
-    wsService.addHandle(MessageType.SERVER_REQUESTS_CLIENT_INFO, (data) => commonComponent.handleServerRequestsClientInfo(data))
-    wsService.addHandle(MessageType.SERVER_SENDS_CLIENT_ADDRESS, (data) => commonComponent.handleServerSendsClientAddress(data))
-
-
-    wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_ACCEPTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.ACCEPTED))
-    wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_REJECTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.REJECTED))
-    wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_CANCELED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.CANCELED))
-    wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_STARTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.DRIVING))
-    wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.COMPLETED))
-    wsService.addHandle(MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS, (data) => passengerComponent.handleServerRefreshInvitations(data))
-
-
-    // ---------
+    const commonComponent = app.wireCommonComponent(ClientType.PASSENGER);
+    const passengerComponent = app.wirePassengerComponent(passengerId);
 
     const passengerBlock = GetE("passenger-block");
     passengerBlock.appendChild(commonComponent.render());
@@ -48,7 +25,7 @@
 
     console.log("Passenger page loaded");
 
-    wsService.startWsHandling();
+    app.getPassengerWs().startWsHandling();
 
 </script>
 </body>
