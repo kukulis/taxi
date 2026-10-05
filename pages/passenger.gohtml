@@ -8,21 +8,43 @@
 <div id="errors"></div>
 <div id="passenger-block"></div>
 <script type="module">
-    import {PassengerComponent} from "/assets/js/passenger_component.js";
     import {GetCookie, GetE} from "/assets/js/util.js";
     import {App} from "/assets/js/app.js";
+    import {MessageType, WsEvent, ApplicationEvent, InvitationStatus} from "/assets/js/constants.js";
 
     const app = new App();
 
     const passengerId = GetCookie("gt_taxi_id");
-    const passengerComponent = new PassengerComponent(passengerId, app.getApiClient());
+
+    const passengerComponent = app.getPassengerComponent(passengerId);
+
+    const dispatcher = app.getDispatcher();
+    const wsService = app.getPassengerWs();
+
+    // --- initialization, temporal location
+    dispatcher.addListener(WsEvent.ON_OPEN_WS, () => passengerComponent.handleServerRequestsCoordinates({}))
+    dispatcher.addListener(WsEvent.ON_CLOSE_WS, () => dispatcher.dispatch(ApplicationEvent.ERROR, {message: 'The WS connection closed'}))
+
+    wsService.addHandle(MessageType.SERVER_REQUESTS_COORDINATES, (data) => passengerComponent.handleServerRequestsCoordinates(data))
+    wsService.addHandle(MessageType.SERVER_REQUESTS_CLIENT_INFO, (data) => passengerComponent.handleServerRequestsClientInfo(data))
+    wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_ACCEPTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.ACCEPTED))
+    wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_REJECTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.REJECTED))
+    wsService.addHandle(MessageType.SERVER_NOTIFIES_INVITE_CANCELED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.CANCELED))
+    wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_STARTED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.DRIVING))
+    wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED, (data) => passengerComponent.updateInvitationStatus(data.driver_id, InvitationStatus.COMPLETED))
+    wsService.addHandle(MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS, (data) => passengerComponent.handleServerRefreshInvitations(data))
+    wsService.addHandle(MessageType.SERVER_SENDS_CLIENT_ADDRESS, (data) => passengerComponent.handleServerSendsClientAddress(data))
+
+    dispatcher.addListener(ApplicationEvent.SEND_WS_MESSAGE, ([clientType, type, data]) => app.sendWsMessage(clientType, type, data))
+
+    // ---------
+
     const passengerBlock = GetE("passenger-block");
     passengerBlock.appendChild( await passengerComponent.render());
 
     console.log("Passenger page loaded");
 
-    let isTls = window.location.protocol === "https:";
-    passengerComponent.initWs(isTls);
+    wsService.startWsHandling();
 
 </script>
 </body>

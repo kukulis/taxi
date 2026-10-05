@@ -2,6 +2,7 @@ import {Dispatcher} from "./dispatcher.js";
 import {ApiClient} from "./api.js";
 import {WsService} from "./ws_service.js";
 import {DriverComponent} from "./driver_component.js";
+import {PassengerComponent} from "./passenger_component.js";
 import {GetE, NewEC, NewECT} from "./util.js";
 import {ApplicationEvent, ClientType} from "./constants.js";
 
@@ -17,6 +18,8 @@ export class App {
     passengerWs = null;
     /** @type {DriverComponent|null} */
     driverComponent = null;
+    /** @type {PassengerComponent|null} */
+    passengerComponent = null;
 
     /**
      * @returns {Dispatcher}
@@ -75,6 +78,18 @@ export class App {
         }
 
         return this.driverComponent;
+    }
+
+    /**
+     * @param {string} passengerId
+     * @returns {PassengerComponent}
+     */
+    getPassengerComponent(passengerId) {
+        if (this.passengerComponent === null) {
+            this.passengerComponent = new PassengerComponent(passengerId, this.getApiClient(), this.getDispatcher());
+        }
+
+        return this.passengerComponent;
     }
 
     /**

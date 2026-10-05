@@ -1,5 +1,5 @@
 import {AppChildren, ClearE, NewEC, NewECT, NewT} from "./util.js";
-import {InvitationStatus, MessageType} from "./constants.js";
+import {ApplicationEvent, ClientType, InvitationStatus, MessageType} from "./constants.js";
 import {DriverSearchResult} from "./entities/driver_search_result.js";
 import {Invitation} from "./entities/invitation.js";
 import {ServerRefreshPassengerInvitations, ServerSendsClientAddress} from "./entities/messages.js";
@@ -16,7 +16,7 @@ export class PassengerComponent {
     driversView = null;
     driversListView = null;
     // websocket connection
-    conn = null;
+    // conn = null;
 
     lat = null;
     lon = null;
@@ -26,6 +26,11 @@ export class PassengerComponent {
      * @type {ApiClient}
      */
     apiClient = null;
+
+    /**
+     * @type {Dispatcher}
+     */
+    dispatcher = null;
 
     /**
      * @type {DriverSearchResult[]}
@@ -43,9 +48,10 @@ export class PassengerComponent {
         //     .setLon(50)
     ];
 
-    constructor(passengerId, apiClient) {
+    constructor(passengerId, apiClient, dispatcher) {
         this.passengerId = passengerId;
         this.apiClient = apiClient;
+        this.dispatcher = dispatcher;
     }
 
     async render() {
@@ -265,69 +271,69 @@ export class PassengerComponent {
         this.infoView.appendChild(NewECT('div', 'passenger-address', this.address));
     }
 
-    initWs(isTls) {
-        let protocol = 'ws://';
+    // initWs(isTls) {
+    //     let protocol = 'ws://';
+    //
+    //     if (isTls) {
+    //         protocol = 'wss://';
+    //     }
+    //
+    //     if (!window["WebSocket"]) {
+    //         this.passengerView.appendChild(NewT('Your browser does not support WebSockets.'));
+    //         return;
+    //     }
+    //     this.conn = new WebSocket(protocol + document.location.host + "/ws-passenger");
+    //     // send our coordinates right away instead of waiting for the server to ask;
+    //     // only once open, since send() throws while the socket is still connecting
+    //     this.conn.onopen = () => {
+    //         this.handleServerRequestsCoordinates({});
+    //     };
+    //     this.conn.onclose = (evt) => {
+    //         this.passengerView.appendChild(NewT('Websocket connection closed.'));
+    //     };
+    //     this.conn.onmessage = (evt) => {
+    //         var messages = evt.data.split('\n');
+    //         for (var i = 0; i < messages.length; i++) {
+    //             this.handleWsMessage(messages[i]);
+    //         }
+    //     };
+    // }
 
-        if (isTls) {
-            protocol = 'wss://';
-        }
-
-        if (!window["WebSocket"]) {
-            this.passengerView.appendChild(NewT('Your browser does not support WebSockets.'));
-            return;
-        }
-        this.conn = new WebSocket(protocol + document.location.host + "/ws-passenger");
-        // send our coordinates right away instead of waiting for the server to ask;
-        // only once open, since send() throws while the socket is still connecting
-        this.conn.onopen = () => {
-            this.handleServerRequestsCoordinates({});
-        };
-        this.conn.onclose = (evt) => {
-            this.passengerView.appendChild(NewT('Websocket connection closed.'));
-        };
-        this.conn.onmessage = (evt) => {
-            var messages = evt.data.split('\n');
-            for (var i = 0; i < messages.length; i++) {
-                this.handleWsMessage(messages[i]);
-            }
-        };
-    }
-
-    handleWsMessage(message) {
-        const envelope = JSON.parse(message);
-
-        switch (envelope.type) {
-            case MessageType.SERVER_REQUESTS_COORDINATES:
-                this.handleServerRequestsCoordinates(envelope.data);
-                break;
-            case MessageType.SERVER_REQUESTS_CLIENT_INFO:
-                this.handleServerRequestsClientInfo(envelope.data);
-                break;
-            case MessageType.SERVER_NOTIFIES_INVITE_ACCEPTED:
-                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.ACCEPTED);
-                break;
-            case MessageType.SERVER_NOTIFIES_INVITE_REJECTED:
-                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.REJECTED);
-                break;
-            case MessageType.SERVER_NOTIFIES_INVITE_CANCELED:
-                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.CANCELED);
-                break;
-            case MessageType.SERVER_NOTIFIES_VOYAGE_STARTED:
-                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.DRIVING);
-                break;
-            case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
-                this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.COMPLETED);
-                break;
-            case MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS:
-                this.handleServerRefreshInvitations(envelope.data);
-                break;
-            case MessageType.SERVER_SENDS_CLIENT_ADDRESS:
-                this.handleServerSendsClientAddress(envelope.data);
-                break;
-            default:
-                console.log('unhandled message type', envelope.type, envelope);
-        }
-    }
+    // handleWsMessage(message) {
+    //     const envelope = JSON.parse(message);
+    //
+    //     switch (envelope.type) {
+    //         case MessageType.SERVER_REQUESTS_COORDINATES:
+    //             this.handleServerRequestsCoordinates(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_REQUESTS_CLIENT_INFO:
+    //             this.handleServerRequestsClientInfo(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_NOTIFIES_INVITE_ACCEPTED:
+    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.ACCEPTED);
+    //             break;
+    //         case MessageType.SERVER_NOTIFIES_INVITE_REJECTED:
+    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.REJECTED);
+    //             break;
+    //         case MessageType.SERVER_NOTIFIES_INVITE_CANCELED:
+    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.CANCELED);
+    //             break;
+    //         case MessageType.SERVER_NOTIFIES_VOYAGE_STARTED:
+    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.DRIVING);
+    //             break;
+    //         case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
+    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.COMPLETED);
+    //             break;
+    //         case MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS:
+    //             this.handleServerRefreshInvitations(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_SENDS_CLIENT_ADDRESS:
+    //             this.handleServerSendsClientAddress(envelope.data);
+    //             break;
+    //         default:
+    //             console.log('unhandled message type', envelope.type, envelope);
+    //     }
+    // }
 
     handleServerRequestsCoordinates(data) {
         console.log('server requested coordinates');
@@ -374,11 +380,7 @@ export class PassengerComponent {
     }
 
     sendMessage(type, data) {
-        console.log('sending message', type, data);
-        this.conn.send(JSON.stringify({
-            id: crypto.randomUUID(),
-            type: type,
-            data: data,
-        }));
+        console.log('passenger component dispatches send ws message', type, data);
+        this.dispatcher.dispatch(ApplicationEvent.SEND_WS_MESSAGE, [ClientType.PASSENGER, type, data]);
     }
 }
