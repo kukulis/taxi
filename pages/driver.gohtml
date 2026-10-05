@@ -11,7 +11,6 @@
     import {GetCookie, GetE} from "/assets/js/util.js";
     import {App} from "/assets/js/app.js";
     import {MessageType, WsEvent, ApplicationEvent} from "/assets/js/constants.js";
-    // import {ApplicationEvent, ClientType} from "/assets/js/constants.js";
 
     const app = new App();
 
@@ -24,7 +23,7 @@
 
     // --- initialization, temporal location
     dispatcher.addListener(WsEvent.ON_OPEN_WS, () => driverComponent.handleServerRequestsCoordinates({}))
-    dispatcher.addListener(WsEvent.ON_CLOSE_WS, () => dispatcher.dispatch('error', {message: 'The WS  connection closed'}))
+    dispatcher.addListener(WsEvent.ON_CLOSE_WS, () => dispatcher.dispatch(ApplicationEvent.ERROR, {message: 'The WS connection closed'}))
 
     wsService.addHandle(MessageType.SERVER_REQUESTS_COORDINATES, (data) => driverComponent.handleServerRequestsCoordinates(data))
     wsService.addHandle(MessageType.SERVER_REQUESTS_CLIENT_INFO, (data) => driverComponent.handleServerRequestsClientInfo(data))

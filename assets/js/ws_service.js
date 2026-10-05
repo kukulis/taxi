@@ -1,4 +1,4 @@
-import {WsEvent} from "./constants.js";
+import {ApplicationEvent, WsEvent} from "./constants.js";
 
 export class WsService {
 
@@ -55,12 +55,12 @@ export class WsService {
         }
 
         if (!window["WebSocket"]) {
-            this.dispatcher.dispatch('error', {message: 'Your browser does not support WebSockets.'});
+            this.dispatcher.dispatch(ApplicationEvent.ERROR, {message: 'Your browser does not support WebSockets.'});
             // this.driverView.appendChild(NewT('Your browser does not support WebSockets.'));
             return;
         }
 
-        this.connection = new WebSocket(protocol + document.location.host + "/ws-driver");
+        this.connection = new WebSocket(protocol + document.location.host + this.uri);
         // send our coordinates right away instead of waiting for the server to ask;
         // only once open, since send() throws while the socket is still connecting
         this.connection.onopen = () => {
@@ -80,7 +80,7 @@ export class WsService {
                     this.handles.get(envelope.type)(envelope.data)
                     continue;
                 }
-                this.dispatcher.dispatch('error', {message: 'WS message type ' + envelope.type + ' unimplemented'})
+                this.dispatcher.dispatch(ApplicationEvent.ERROR, {message: 'WS message type ' + envelope.type + ' unimplemented'})
             }
         };
     }
