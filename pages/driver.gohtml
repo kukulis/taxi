@@ -5,20 +5,48 @@
     <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
+<div id="errors"></div>
 <div id="driver-block"></div>
 <script type="module">
-    import {DriverComponent} from "/assets/js/driver_component.js";
     import {GetCookie, GetE} from "/assets/js/util.js";
+    import {App} from "/assets/js/app.js";
+    import {MessageType, WsEvent, ApplicationEvent} from "/assets/js/constants.js";
+    // import {ApplicationEvent, ClientType} from "/assets/js/constants.js";
+
+    const app = new App();
 
     const driverId = GetCookie("gt_taxi_id");
-    const driverComponent = new DriverComponent(driverId);
+
+    const driverComponent = app.getDriverComponent(driverId);
+
+    const dispatcher = app.getDispatcher();
+    const wsService = app.getDriverWs();
+
+    // --- initialization, temporal location
+    dispatcher.addListener(WsEvent.ON_OPEN_WS, () => driverComponent.handleServerRequestsCoordinates({}))
+    dispatcher.addListener(WsEvent.ON_CLOSE_WS, () => dispatcher.dispatch('error', {message: 'The WS  connection closed'}))
+
+    wsService.addHandle(MessageType.SERVER_REQUESTS_COORDINATES, (data) => driverComponent.handleServerRequestsCoordinates(data))
+    wsService.addHandle(MessageType.SERVER_REQUESTS_CLIENT_INFO, (data) => driverComponent.handleServerRequestsClientInfo(data))
+    wsService.addHandle(MessageType.SERVER_OFFERS_PASSENGER, (data) => driverComponent.handleServerOffersPassenger(data))
+    wsService.addHandle(MessageType.SERVER_CANCELS_OFFER, (data) => driverComponent.handleServerCancelsOffer(data))
+    wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_STARTED, (data) => driverComponent.handleServerNotifiesVoyageStarted(data))
+    wsService.addHandle(MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED, (data) => driverComponent.handleServerNotifiesVoyageFinished(data))
+    wsService.addHandle(MessageType.SERVER_REFRESH_DRIVER_STATUS, (data) => driverComponent.handleServerRefreshStatus(data))
+    wsService.addHandle(MessageType.SERVER_REFRESH_DRIVER_OFFERS, (data) => driverComponent.handleServerRefreshOffers(data))
+    wsService.addHandle(MessageType.SERVER_SENDS_CLIENT_ADDRESS, (data) => driverComponent.handleServerSendsClientAddress(data))
+
+    dispatcher.addListener(ApplicationEvent.SEND_WS_MESSAGE, ([clientType, type, data]) => app.sendWsMessage(clientType, type, data))
+
+    // ---------
+
+
     const driverBlock = GetE("driver-block");
     driverBlock.appendChild( await driverComponent.render());
 
     console.log("Driver page loaded");
 
-    let isTls = window.location.protocol === "https:";
-    driverComponent.initWs(isTls);
+    wsService.startWsHandling();
 
 </script>
 </body>

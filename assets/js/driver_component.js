@@ -1,5 +1,5 @@
 import {AppChildren, ClearE, NewEC, NewECT, NewT} from "./util.js";
-import {DriverStatus, InvitationStatus, MessageType} from "./constants.js";
+import {ApplicationEvent, ClientType, DriverStatus, InvitationStatus, MessageType, WsEvent} from "./constants.js";
 import {Offer} from "./entities/offer.js";
 import {
     DriverAcceptsOffer,
@@ -28,7 +28,7 @@ export class DriverComponent {
     // offers table container
     offersView = null;
     // websocket connection
-    conn = null;
+    // conn = null;
 
     currentStatus = DriverStatus.RESTING;
     // status square the user clicked on, but has not confirmed with 'select' yet
@@ -45,13 +45,14 @@ export class DriverComponent {
      */
     offers = [];
 
-    constructor(driverId) {
+    /**
+     * @type {Dispatcher}
+     */
+    dispatcher = null;
+
+    constructor(driverId, dispatcher) {
         this.driverId = driverId;
-
-        // TODO load offers from REST api on a first load. This will require an API endpoint in the server too.
-
-        // TODO in case driver reconnects after a short disconnection,
-        // create an api endpoint for driver to get the current status too.
+        this.dispatcher = dispatcher;
     }
 
     async render() {
@@ -246,71 +247,71 @@ export class DriverComponent {
         this.renderOffers();
     }
 
-    initWs(isTls) {
-        let protocol = 'ws://';
+    // initWs(isTls) {
+    //     let protocol = 'ws://';
+    //
+    //     if (isTls) {
+    //         protocol = 'wss://';
+    //     }
+    //
+    //     if (!window["WebSocket"]) {
+    //         this.driverView.appendChild(NewT('Your browser does not support WebSockets.'));
+    //         return;
+    //     }
+    //     this.conn = new WebSocket(protocol + document.location.host + "/ws-driver");
+    //     // send our coordinates right away instead of waiting for the server to ask;
+    //     // only once open, since send() throws while the socket is still connecting
+    //     this.conn.onopen = () => {
+    //         this.handleServerRequestsCoordinates({});
+    //     };
+    //     this.conn.onclose = (evt) => {
+    //         this.driverView.appendChild(NewT('Websocket connection closed.'));
+    //     };
+    //     this.conn.onmessage = (evt) => {
+    //         var messages = evt.data.split('\n');
+    //         for (var i = 0; i < messages.length; i++) {
+    //             this.handleWsMessage(messages[i]);
+    //         }
+    //     };
+    // }
 
-        if (isTls) {
-            protocol = 'wss://';
-        }
-
-        if (!window["WebSocket"]) {
-            this.driverView.appendChild(NewT('Your browser does not support WebSockets.'));
-            return;
-        }
-        this.conn = new WebSocket(protocol + document.location.host + "/ws-driver");
-        // send our coordinates right away instead of waiting for the server to ask;
-        // only once open, since send() throws while the socket is still connecting
-        this.conn.onopen = () => {
-            this.handleServerRequestsCoordinates({});
-        };
-        this.conn.onclose = (evt) => {
-            this.driverView.appendChild(NewT('Websocket connection closed.'));
-        };
-        this.conn.onmessage = (evt) => {
-            var messages = evt.data.split('\n');
-            for (var i = 0; i < messages.length; i++) {
-                this.handleWsMessage(messages[i]);
-            }
-        };
-    }
-
-    handleWsMessage(message) {
-        const envelope = JSON.parse(message);
-
-        switch (envelope.type) {
-            case MessageType.SERVER_REQUESTS_COORDINATES:
-                this.handleServerRequestsCoordinates(envelope.data);
-                break;
-            case MessageType.SERVER_REQUESTS_CLIENT_INFO:
-                this.handleServerRequestsClientInfo(envelope.data);
-                break;
-            case MessageType.SERVER_OFFERS_PASSENGER:
-                this.handleServerOffersPassenger(envelope.data);
-                break;
-            case MessageType.SERVER_CANCELS_OFFER:
-                this.handleServerCancelsOffer(envelope.data);
-                break;
-            case MessageType.SERVER_NOTIFIES_VOYAGE_STARTED:
-                this.handleServerNotifiesVoyageStarted(envelope.data);
-                break;
-            case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
-                this.handleServerNotifiesVoyageFinished(envelope.data);
-                break;
-            case MessageType.SERVER_REFRESH_DRIVER_STATUS:
-                this.handleServerRefreshStatus(envelope.data)
-                break;
-            case MessageType.SERVER_REFRESH_DRIVER_OFFERS:
-                this.handleServerRefreshOffers(envelope.data)
-                break;
-
-            case MessageType.SERVER_SENDS_CLIENT_ADDRESS:
-                this.handleServerSendsClientAddress(envelope.data)
-                break;
-
-            default:
-                console.log('unhandled message type', envelope.type, envelope);
-        }
-    }
+    // handleWsMessage(message) {
+    //     const envelope = JSON.parse(message);
+    //
+    //     switch (envelope.type) {
+    //         case MessageType.SERVER_REQUESTS_COORDINATES:
+    //             this.handleServerRequestsCoordinates(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_REQUESTS_CLIENT_INFO:
+    //             this.handleServerRequestsClientInfo(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_OFFERS_PASSENGER:
+    //             this.handleServerOffersPassenger(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_CANCELS_OFFER:
+    //             this.handleServerCancelsOffer(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_NOTIFIES_VOYAGE_STARTED:
+    //             this.handleServerNotifiesVoyageStarted(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
+    //             this.handleServerNotifiesVoyageFinished(envelope.data);
+    //             break;
+    //         case MessageType.SERVER_REFRESH_DRIVER_STATUS:
+    //             this.handleServerRefreshStatus(envelope.data)
+    //             break;
+    //         case MessageType.SERVER_REFRESH_DRIVER_OFFERS:
+    //             this.handleServerRefreshOffers(envelope.data)
+    //             break;
+    //
+    //         case MessageType.SERVER_SENDS_CLIENT_ADDRESS:
+    //             this.handleServerSendsClientAddress(envelope.data)
+    //             break;
+    //
+    //         default:
+    //             console.log('unhandled message type', envelope.type, envelope);
+    //     }
+    // }
 
     handleServerRequestsCoordinates(data) {
         console.log('server requested coordinates');
@@ -338,12 +339,8 @@ export class DriverComponent {
     }
 
     sendMessage(type, data) {
-        console.log('sending message', type, data);
-        this.conn.send(JSON.stringify({
-            id: crypto.randomUUID(),
-            type: type,
-            data: data,
-        }));
+        console.log('driver component dispatches send ws message', type, data);
+        this.dispatcher.dispatch(ApplicationEvent.SEND_WS_MESSAGE, [ClientType.DRIVER, type, data])
     }
 
     handleServerRequestsClientInfo(data) {

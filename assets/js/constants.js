@@ -35,6 +35,11 @@ export const MessageType = {
     SERVER_SENDS_CLIENT_ADDRESS: 'server_sends_client_address',
 };
 
+export const WsEvent = {
+    ON_OPEN_WS: 'onOpenWs',
+    ON_CLOSE_WS: 'onCloseWs',
+}
+
 export const DriverStatus = {
     IDLE: 'idle',
     WORKING: 'working',
@@ -50,4 +55,14 @@ export const InvitationStatus = {
     CANCELED: 'cancelled',
     DRIVING: 'driving',
     COMPLETED: 'completed',
+}
+
+export const ClientType = {
+    DRIVER : 'driver',
+    PASSENGER: 'passenger',
+}
+
+export const ApplicationEvent = {
+    SEND_WS_MESSAGE : 'sendWsMessage',
+    ERROR : 'error',
 }
