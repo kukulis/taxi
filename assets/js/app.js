@@ -3,6 +3,8 @@ import {ApiClient} from "./api.js";
 import {WsService} from "./ws_service.js";
 import {DriverComponent} from "./driver_component.js";
 import {PassengerComponent} from "./passenger_component.js";
+import {CommonComponent} from "./common_component.js";
+import {State} from "./state.js";
 import {GetE, NewEC, NewECT} from "./util.js";
 import {ApplicationEvent, ClientType} from "./constants.js";
 
@@ -20,6 +22,10 @@ export class App {
     driverComponent = null;
     /** @type {PassengerComponent|null} */
     passengerComponent = null;
+    /** @type {CommonComponent|null} */
+    commonComponent = null;
+    /** @type {State|null} */
+    state = null;
 
     /**
      * @returns {Dispatcher}
@@ -31,6 +37,17 @@ export class App {
         }
 
         return this.dispatcher;
+    }
+
+    /**
+     * @returns {State}
+     */
+    getState() {
+        if (this.state === null) {
+            this.state = new State();
+        }
+
+        return this.state;
     }
 
     /**
@@ -86,10 +103,22 @@ export class App {
      */
     getPassengerComponent(passengerId) {
         if (this.passengerComponent === null) {
-            this.passengerComponent = new PassengerComponent(passengerId, this.getApiClient(), this.getDispatcher());
+            this.passengerComponent = new PassengerComponent(passengerId, this.getApiClient(), this.getDispatcher(), this.getState());
         }
 
         return this.passengerComponent;
+    }
+
+    /**
+     * @param {string} clientType
+     * @returns {CommonComponent}
+     */
+    getCommonComponent(clientType) {
+        if (this.commonComponent === null) {
+            this.commonComponent = new CommonComponent(clientType, this.getDispatcher(), this.getState());
+        }
+
+        return this.commonComponent;
     }
 
     /**

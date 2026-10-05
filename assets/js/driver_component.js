@@ -10,7 +10,7 @@ import {
     ServerNotifiesVoyageStarted,
     ServerOffersPassenger,
     ServerRefreshDriverOffers,
-    ServerRefreshDriverStatus, ServerSendsClientAddress,
+    ServerRefreshDriverStatus,
 } from "./entities/messages.js";
 
 export class DriverComponent {
@@ -33,11 +33,6 @@ export class DriverComponent {
     currentStatus = DriverStatus.RESTING;
     // status square the user clicked on, but has not confirmed with 'select' yet
     selectedStatus = null;
-
-    lat = null;
-    lon = null;
-
-    address = "";
 
     /**
      *
@@ -72,16 +67,6 @@ export class DriverComponent {
         ClearE(this.infoView);
         this.infoView.appendChild(NewECT('h3', 'driver-title', 'Driver'));
         this.infoView.appendChild(NewECT('div', 'driver-id-info', this.driverId));
-
-        console.log('lat and lon ', this.lat, this.lon);
-
-        if (this.lat && this.lon) {
-            this.infoView.appendChild(NewECT('div', 'driver-location', `(${this.lat}, ${this.lon})`));
-        } else {
-            this.infoView.appendChild(NewECT('div', 'driver-location', '...'));
-        }
-
-        this.infoView.appendChild(NewECT('div', 'driver-address', this.address))
     }
 
     renderStatuses() {
@@ -247,106 +232,9 @@ export class DriverComponent {
         this.renderOffers();
     }
 
-    // initWs(isTls) {
-    //     let protocol = 'ws://';
-    //
-    //     if (isTls) {
-    //         protocol = 'wss://';
-    //     }
-    //
-    //     if (!window["WebSocket"]) {
-    //         this.driverView.appendChild(NewT('Your browser does not support WebSockets.'));
-    //         return;
-    //     }
-    //     this.conn = new WebSocket(protocol + document.location.host + "/ws-driver");
-    //     // send our coordinates right away instead of waiting for the server to ask;
-    //     // only once open, since send() throws while the socket is still connecting
-    //     this.conn.onopen = () => {
-    //         this.handleServerRequestsCoordinates({});
-    //     };
-    //     this.conn.onclose = (evt) => {
-    //         this.driverView.appendChild(NewT('Websocket connection closed.'));
-    //     };
-    //     this.conn.onmessage = (evt) => {
-    //         var messages = evt.data.split('\n');
-    //         for (var i = 0; i < messages.length; i++) {
-    //             this.handleWsMessage(messages[i]);
-    //         }
-    //     };
-    // }
-
-    // handleWsMessage(message) {
-    //     const envelope = JSON.parse(message);
-    //
-    //     switch (envelope.type) {
-    //         case MessageType.SERVER_REQUESTS_COORDINATES:
-    //             this.handleServerRequestsCoordinates(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_REQUESTS_CLIENT_INFO:
-    //             this.handleServerRequestsClientInfo(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_OFFERS_PASSENGER:
-    //             this.handleServerOffersPassenger(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_CANCELS_OFFER:
-    //             this.handleServerCancelsOffer(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_NOTIFIES_VOYAGE_STARTED:
-    //             this.handleServerNotifiesVoyageStarted(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
-    //             this.handleServerNotifiesVoyageFinished(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_REFRESH_DRIVER_STATUS:
-    //             this.handleServerRefreshStatus(envelope.data)
-    //             break;
-    //         case MessageType.SERVER_REFRESH_DRIVER_OFFERS:
-    //             this.handleServerRefreshOffers(envelope.data)
-    //             break;
-    //
-    //         case MessageType.SERVER_SENDS_CLIENT_ADDRESS:
-    //             this.handleServerSendsClientAddress(envelope.data)
-    //             break;
-    //
-    //         default:
-    //             console.log('unhandled message type', envelope.type, envelope);
-    //     }
-    // }
-
-    handleServerRequestsCoordinates(data) {
-        console.log('server requested coordinates');
-
-        if (!navigator.geolocation) {
-            console.error('geolocation is not supported by this browser');
-            this.sendMessage(MessageType.CLIENT_ERROR, {error: 'Geolocation is not supported by this browser.'});
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                this.lat = position.coords.latitude;
-                this.lon = position.coords.longitude;
-                console.log('got coordinates', this.lat, this.lon);
-                this.sendMessage(MessageType.CLIENT_RESPONDS_COORDINATES, {lat: this.lat, lon: this.lon});
-                this.renderInfo()
-            },
-            (error) => {
-                console.error('failed to get coordinates:', error.message);
-                this.sendMessage(MessageType.CLIENT_ERROR, {error: error.message});
-            },
-            {enableHighAccuracy: true, maximumAge: 5000, timeout: 10000}
-        );
-    }
-
     sendMessage(type, data) {
         console.log('driver component dispatches send ws message', type, data);
         this.dispatcher.dispatch(ApplicationEvent.SEND_WS_MESSAGE, [ClientType.DRIVER, type, data])
-    }
-
-    handleServerRequestsClientInfo(data) {
-        // TODO: real phone/vehicle_info once there's an input for them; empty for now.
-        console.log('server requested client info, replying with empty values for now');
-        this.sendMessage(MessageType.CLIENT_RESPONDS_INFO, {});
     }
 
     handleServerOffersPassenger(data) {
@@ -419,12 +307,5 @@ export class DriverComponent {
         const message = new ServerRefreshDriverOffers().fromObject(data)
         this.offers = message.offers
         this.renderOffers()
-    }
-
-    handleServerSendsClientAddress(data) {
-        // console.log ("handling handleServerSendsClientAddress", data )
-        const message = new ServerSendsClientAddress().fromObject(data);
-        this.address = message.address;
-        this.renderInfo()
     }
 }

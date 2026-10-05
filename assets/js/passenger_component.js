@@ -2,7 +2,7 @@ import {AppChildren, ClearE, NewEC, NewECT, NewT} from "./util.js";
 import {ApplicationEvent, ClientType, InvitationStatus, MessageType} from "./constants.js";
 import {DriverSearchResult} from "./entities/driver_search_result.js";
 import {Invitation} from "./entities/invitation.js";
-import {ServerRefreshPassengerInvitations, ServerSendsClientAddress} from "./entities/messages.js";
+import {ServerRefreshPassengerInvitations} from "./entities/messages.js";
 
 export class PassengerComponent {
 
@@ -15,12 +15,6 @@ export class PassengerComponent {
     // distance buttons + drivers list
     driversView = null;
     driversListView = null;
-    // websocket connection
-    // conn = null;
-
-    lat = null;
-    lon = null;
-    address = "";
 
     /**
      * @type {ApiClient}
@@ -33,6 +27,11 @@ export class PassengerComponent {
     dispatcher = null;
 
     /**
+     * @type {State}
+     */
+    state = null;
+
+    /**
      * @type {DriverSearchResult[]}
      */
     driversSearchResults = [];
@@ -41,17 +40,13 @@ export class PassengerComponent {
      *
      * @type {[Invitation]}
      */
-    invitations = [
-        // (new Invitation()).setDriverId('1234567890')
-        //     .setStatus(InvitationStatus.PENDING)
-        //     .setLat(12)
-        //     .setLon(50)
-    ];
+    invitations = [];
 
-    constructor(passengerId, apiClient, dispatcher) {
+    constructor(passengerId, apiClient, dispatcher, state) {
         this.passengerId = passengerId;
         this.apiClient = apiClient;
         this.dispatcher = dispatcher;
+        this.state = state;
     }
 
     async render() {
@@ -191,12 +186,13 @@ export class PassengerComponent {
      * @param {number} distanceKm
      */
     async onDistanceClick(distanceKm) {
-        if (this.lat === null || this.lon === null) {
+        const {lat, lon} = this.state.getCoordinates();
+        if (lat === null || lon === null) {
             console.warn('no passenger coordinates yet, cannot search drivers');
             return;
         }
 
-        this.driversSearchResults = await this.apiClient.getDrivers(this.lat, this.lon, distanceKm);
+        this.driversSearchResults = await this.apiClient.getDrivers(lat, lon, distanceKm);
         this.renderDrivers();
     }
 
@@ -231,7 +227,8 @@ export class PassengerComponent {
      * @param {DriverSearchResult} driver
      */
     onInviteClick(driver) {
-        if (this.lat === null || this.lon === null) {
+        const {lat, lon} = this.state.getCoordinates();
+        if (lat === null || lon === null) {
             console.warn('no passenger coordinates yet, cannot invite a driver');
             return;
         }
@@ -249,8 +246,8 @@ export class PassengerComponent {
 
         this.sendMessage(MessageType.PASSENGER_INVITES_DRIVER, {
             driver_id: driver.driverId,
-            lat: this.lat,
-            lon: this.lon,
+            lat: lat,
+            lon: lon,
         });
 
         // the list goes stale quickly (drivers change status), so drop it; a distance button reloads it
@@ -262,108 +259,6 @@ export class PassengerComponent {
         ClearE(this.infoView);
         this.infoView.appendChild(NewECT('h3', 'passenger-title', 'Passenger'));
         this.infoView.appendChild(NewECT('div', 'passenger-id-info', this.passengerId));
-
-        if (this.lat !== null && this.lon !== null) {
-            this.infoView.appendChild(NewECT('div', 'passenger-location', `(${this.lat}, ${this.lon})`));
-        } else {
-            this.infoView.appendChild(NewECT('div', 'passenger-location', '...'));
-        }
-        this.infoView.appendChild(NewECT('div', 'passenger-address', this.address));
-    }
-
-    // initWs(isTls) {
-    //     let protocol = 'ws://';
-    //
-    //     if (isTls) {
-    //         protocol = 'wss://';
-    //     }
-    //
-    //     if (!window["WebSocket"]) {
-    //         this.passengerView.appendChild(NewT('Your browser does not support WebSockets.'));
-    //         return;
-    //     }
-    //     this.conn = new WebSocket(protocol + document.location.host + "/ws-passenger");
-    //     // send our coordinates right away instead of waiting for the server to ask;
-    //     // only once open, since send() throws while the socket is still connecting
-    //     this.conn.onopen = () => {
-    //         this.handleServerRequestsCoordinates({});
-    //     };
-    //     this.conn.onclose = (evt) => {
-    //         this.passengerView.appendChild(NewT('Websocket connection closed.'));
-    //     };
-    //     this.conn.onmessage = (evt) => {
-    //         var messages = evt.data.split('\n');
-    //         for (var i = 0; i < messages.length; i++) {
-    //             this.handleWsMessage(messages[i]);
-    //         }
-    //     };
-    // }
-
-    // handleWsMessage(message) {
-    //     const envelope = JSON.parse(message);
-    //
-    //     switch (envelope.type) {
-    //         case MessageType.SERVER_REQUESTS_COORDINATES:
-    //             this.handleServerRequestsCoordinates(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_REQUESTS_CLIENT_INFO:
-    //             this.handleServerRequestsClientInfo(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_NOTIFIES_INVITE_ACCEPTED:
-    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.ACCEPTED);
-    //             break;
-    //         case MessageType.SERVER_NOTIFIES_INVITE_REJECTED:
-    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.REJECTED);
-    //             break;
-    //         case MessageType.SERVER_NOTIFIES_INVITE_CANCELED:
-    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.CANCELED);
-    //             break;
-    //         case MessageType.SERVER_NOTIFIES_VOYAGE_STARTED:
-    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.DRIVING);
-    //             break;
-    //         case MessageType.SERVER_NOTIFIES_VOYAGE_FINISHED:
-    //             this.updateInvitationStatus(envelope.data.driver_id, InvitationStatus.COMPLETED);
-    //             break;
-    //         case MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS:
-    //             this.handleServerRefreshInvitations(envelope.data);
-    //             break;
-    //         case MessageType.SERVER_SENDS_CLIENT_ADDRESS:
-    //             this.handleServerSendsClientAddress(envelope.data);
-    //             break;
-    //         default:
-    //             console.log('unhandled message type', envelope.type, envelope);
-    //     }
-    // }
-
-    handleServerRequestsCoordinates(data) {
-        console.log('server requested coordinates');
-
-        if (!navigator.geolocation) {
-            console.error('geolocation is not supported by this browser');
-            this.sendMessage(MessageType.CLIENT_ERROR, {error: 'Geolocation is not supported by this browser.'});
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                this.lat = position.coords.latitude;
-                this.lon = position.coords.longitude;
-                console.log('got coordinates', this.lat, this.lon);
-                this.sendMessage(MessageType.CLIENT_RESPONDS_COORDINATES, {lat: this.lat, lon: this.lon});
-                this.renderInfo();
-            },
-            (error) => {
-                console.error('failed to get coordinates:', error.message);
-                this.sendMessage(MessageType.CLIENT_ERROR, {error: error.message});
-            },
-            {enableHighAccuracy: true, maximumAge: 5000, timeout: 10000}
-        );
-    }
-
-    handleServerRequestsClientInfo(data) {
-        // TODO: real phone once there's an input for it; empty for now.
-        console.log('server requested client info, replying with empty values for now');
-        this.sendMessage(MessageType.CLIENT_RESPONDS_INFO, {});
     }
 
     handleServerRefreshInvitations(data) {
@@ -371,12 +266,6 @@ export class PassengerComponent {
 
         this.invitations = message.getInvitations();
         this.renderInvitations();
-    }
-
-    handleServerSendsClientAddress(data) {
-        const message = new ServerSendsClientAddress().fromObject(data);
-        this.address = message.address;
-        this.renderInfo();
     }
 
     sendMessage(type, data) {
