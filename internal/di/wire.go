@@ -40,3 +40,20 @@ func WireDelegatingPassengerMessageHandler(
 
 	return delegating
 }
+
+func WireChatMessagesHandles(
+	delegating *handler.DelegatingMessageHandler,
+	c *handler.ChatMessageHandler) *handler.DelegatingMessageHandler {
+
+	delegating.SetHandler(messages.MessageTypeChatMessage, c.HandleChatMessage)
+	delegating.SetHandler(messages.MessageTypeChatLog, c.HandleChatLog)
+	delegating.SetHandler(messages.MessageTypeChatInfo, c.HandleChatInfo)
+	delegating.SetHandler(messages.MessageTypeChatInfos, c.HandleChatInfos)
+	delegating.SetHandler(messages.MessageTypeClientRequestsChatsInfos, c.HandleClientRequestsChatsInfos)
+	delegating.SetHandler(messages.MessageTypeClientRequestsChatLog, c.HandleClientRequestsChatLog)
+	delegating.SetHandler(messages.MessageTypeTalkerInfo, c.HandleTalkerInfo)
+	delegating.SetHandler(messages.MessageTypeTalkersInfos, c.HandleTalkersInfos)
+	delegating.SetHandler(messages.MessageTypeClientRequestsTalkersInfos, c.HandleClientRequestsTalkersInfos)
+
+	return delegating
+}

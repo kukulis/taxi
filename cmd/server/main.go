@@ -25,11 +25,11 @@ func main() {
 
 	router := gin.Default()
 
-	driversMessageHandler := di.GetDriversWsHandler()
-	delegatingDriversHandler := di.WireDelegatingDriverMessageHandler(di.GetDelegatingDriversMessageHandler(), driversMessageHandler)
+	delegatingDriversHandler := di.WireDelegatingDriverMessageHandler(di.GetDelegatingDriversMessageHandler(), di.GetDriversWsHandler())
+	delegatingDriversHandler = di.WireChatMessagesHandles(delegatingDriversHandler, di.GetChatMessageHandler())
 
-	passengersMessageHandler := di.GetPassengersWsHandler()
-	delegatingPassengersHandler := di.WireDelegatingPassengerMessageHandler(di.GetDelegatingPassengersMessageHandler(), passengersMessageHandler)
+	delegatingPassengersHandler := di.WireDelegatingPassengerMessageHandler(di.GetDelegatingPassengersMessageHandler(), di.GetPassengersWsHandler())
+	delegatingPassengersHandler = di.WireChatMessagesHandles(delegatingPassengersHandler, di.GetChatMessageHandler())
 	//
 	//// Swagger UI
 	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
