@@ -47,29 +47,25 @@ func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 
 		switch msg := message.Message.(type) {
 		case *messages.ClientRespondsCoordinates:
-			d.handleClientRespondsCoordinates(message.ClientId, msg)
+			d.HandleClientRespondsCoordinates(message.ClientId, msg)
 		case *messages.ClientRespondsInfo:
-			d.handleClientRespondsInfo(message.ClientId, msg)
+			d.HandleClientRespondsInfo(message.ClientId, msg)
 		case *messages.ClientResponseError:
-			d.handleClientResponseError(message.ClientId, msg)
+			d.HandleClientResponseError(message.ClientId, msg)
 		case *messages.ClientError:
-			d.handleClientError(message.ClientId, msg)
+			d.HandleClientError(message.ClientId, msg)
 		case *messages.DriverCancelsOffer:
-			d.handleDriverCancelsOffer(message.ClientId, msg)
+			d.HandleDriverCancelsOffer(message.ClientId, msg)
 		case *messages.DriverAcceptsOffer:
-			d.handleDriverAcceptsOffer(message.ClientId, msg)
+			d.HandleDriverAcceptsOffer(message.ClientId, msg)
 		case *messages.DriverRejectsOffer:
-			d.handleDriverRejectsOffer(message.ClientId, msg)
+			d.HandleDriverRejectsOffer(message.ClientId, msg)
 		case *messages.DriverChangesStatus:
-			d.handleDriverChangesStatus(message.ClientId, msg)
+			d.HandleDriverChangesStatus(message.ClientId, msg)
 		case *message_common.ClientRegisteredMessage:
-			d.handleClientRegistered(message.ClientId, msg)
+			d.HandleClientRegistered(message.ClientId, msg)
 		case *message_common.ClientUnregisteredMessage:
-			d.mainState.UpdateClient(&state.Driver{Id: message.ClientId}, func(c state.Client) {
-				driver := c.(*state.Driver)
-				driver.Online = false
-				driver.Active = false
-			})
+			d.HandleClientUnregistered(message.ClientId, msg)
 		default:
 			d.logger.Warn("unexpected message type",
 				"client_id", message.ClientId,
@@ -79,8 +75,21 @@ func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
 	}
 }
 
-// handleClientRegistered handling virtual message about a driver registration
-func (d *DriversMessageHandler) handleClientRegistered(clientId string, msg *message_common.ClientRegisteredMessage) {
+// HandleClientUnregistered marks a driver offline when its client disconnects
+func (d *DriversMessageHandler) HandleClientUnregistered(clientId string, payload message_common.MessageInterface) {
+	_ = payload.(*message_common.ClientUnregisteredMessage)
+
+	d.mainState.UpdateClient(&state.Driver{Id: clientId}, func(c state.Client) {
+		driver := c.(*state.Driver)
+		driver.Online = false
+		driver.Active = false
+	})
+}
+
+// HandleClientRegistered handling virtual message about a driver registration
+func (d *DriversMessageHandler) HandleClientRegistered(clientId string, payload message_common.MessageInterface) {
+	_ = payload.(*message_common.ClientRegisteredMessage)
+
 	d.mainState.AddClient(&state.Driver{
 		Id:        clientId,
 		CreatedAt: d.mainState.Clock.Now(),
@@ -138,8 +147,10 @@ func (d *DriversMessageHandler) handleClientRegistered(clientId string, msg *mes
 	// ====================== finito ======================================
 }
 
-// handleClientRespondsCoordinates write received coordinates to a main state
-func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string, msg *messages.ClientRespondsCoordinates) {
+// HandleClientRespondsCoordinates write received coordinates to a main state
+func (d *DriversMessageHandler) HandleClientRespondsCoordinates(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.ClientRespondsCoordinates)
+
 	found := d.mainState.UpdateClient(&state.Driver{Id: clientId}, func(c state.Client) {
 		driver := c.(*state.Driver)
 		driver.Lat = msg.Lat
@@ -178,7 +189,9 @@ func (d *DriversMessageHandler) handleClientRespondsCoordinates(clientId string,
 	}
 }
 
-func (d *DriversMessageHandler) handleClientRespondsInfo(clientId string, msg *messages.ClientRespondsInfo) {
+func (d *DriversMessageHandler) HandleClientRespondsInfo(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.ClientRespondsInfo)
+
 	found := d.mainState.UpdateClient(&state.Driver{Id: clientId}, func(c state.Client) {
 		driver := c.(*state.Driver)
 		driver.Phone = msg.Phone
@@ -193,22 +206,28 @@ func (d *DriversMessageHandler) handleClientRespondsInfo(clientId string, msg *m
 	}
 }
 
-// handleClientResponseError logs the driver client's report that it didn't
+// HandleClientResponseError logs the driver client's report that it didn't
 // understand a request the server sent it. No MainState field maps to this,
 // so it's just logged for now.
-func (d *DriversMessageHandler) handleClientResponseError(clientId string, msg *messages.ClientResponseError) {
+func (d *DriversMessageHandler) HandleClientResponseError(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.ClientResponseError)
+
 	d.logger.Warn("client didn't understand a server request", "client_id", clientId, "error", msg.Error)
 }
 
-// handleClientError logs the driver client's own functionality error (e.g. it
+// HandleClientError logs the driver client's own functionality error (e.g. it
 // can't read device coordinates). No MainState field maps to this, so it's
 // just logged for now.
-func (d *DriversMessageHandler) handleClientError(clientId string, msg *messages.ClientError) {
+func (d *DriversMessageHandler) HandleClientError(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.ClientError)
+
 	d.logger.Error("client reported a functionality error", "client_id", clientId, "error", msg.Error)
 	// TODO set client Active=false
 }
 
-func (d *DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg *messages.DriverCancelsOffer) {
+func (d *DriversMessageHandler) HandleDriverCancelsOffer(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.DriverCancelsOffer)
+
 	d.logger.Info("driver cancels offer", "client_id", clientId, "passenger_id", msg.PassengerId)
 
 	// the driver's "cancel" button is only shown on an accepted offer
@@ -234,7 +253,9 @@ func (d *DriversMessageHandler) handleDriverCancelsOffer(clientId string, msg *m
 	})
 }
 
-func (d *DriversMessageHandler) handleDriverAcceptsOffer(clientId string, msg *messages.DriverAcceptsOffer) {
+func (d *DriversMessageHandler) HandleDriverAcceptsOffer(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.DriverAcceptsOffer)
+
 	d.logger.Info("driver accepts offer", "client_id", clientId, "passenger_id", msg.PassengerId)
 
 	// only a pending invitation can be accepted; older rejected/completed ones with the same pair must be skipped
@@ -276,7 +297,9 @@ func (d *DriversMessageHandler) handleDriverAcceptsOffer(clientId string, msg *m
 	})
 }
 
-func (d *DriversMessageHandler) handleDriverRejectsOffer(clientId string, msg *messages.DriverRejectsOffer) {
+func (d *DriversMessageHandler) HandleDriverRejectsOffer(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.DriverRejectsOffer)
+
 	d.logger.Info("driver rejects offer", "client_id", clientId, "passenger_id", msg.PassengerId)
 
 	invitations := d.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
@@ -301,7 +324,9 @@ func (d *DriversMessageHandler) handleDriverRejectsOffer(clientId string, msg *m
 	})
 }
 
-func (d *DriversMessageHandler) handleDriverChangesStatus(clientId string, msg *messages.DriverChangesStatus) {
+func (d *DriversMessageHandler) HandleDriverChangesStatus(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.DriverChangesStatus)
+
 	d.logger.Info("driver changes status", "client_id", clientId, "status", msg.Status)
 
 	filter := state.NewEmptyFilter()

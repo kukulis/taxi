@@ -19,3 +19,14 @@ func (handler *SimpleMessageHandler) Handle(messageChannel <-chan ws.ClientMessa
 		fmt.Println("Simple message handler:", message)
 	}
 }
+
+/**
+
+Create a structure in the 'internal/handler' named WebSocketHubHandler, which contains  a map[MessageType]MessageHandler,
+
+  where MessageHandler is func(clientId string, payload MessageInterface)
+
+  It also has a method:
+  func (hh*WebSocketHubHandler)  Handle(messageChannel <-chan ws.ClientMessage)
+
+*/

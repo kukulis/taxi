@@ -39,6 +39,8 @@ var nominatimAddressWorkerPool *nominatim.AddressWorkerPool = nil
 
 var nominatimCoordinatesWorkerPool *nominatim.CoordinatesWorkerPool = nil
 
+var delegatingDriversMessageHandler *handler.DelegatingMessageHandler = nil
+
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
 		wsControllerInstance = web.NewWsController(GetDriversHub(), GetPassengersHub())
@@ -170,4 +172,12 @@ func GetAddressWorkerPool() *nominatim.AddressWorkerPool {
 	}
 
 	return nominatimAddressWorkerPool
+}
+
+func GetDelegatingDriversMessageHandler() *handler.DelegatingMessageHandler {
+	if delegatingDriversMessageHandler == nil {
+		delegatingDriversMessageHandler = handler.NewDelegatingMessageHandler()
+	}
+
+	return delegatingDriversMessageHandler
 }
