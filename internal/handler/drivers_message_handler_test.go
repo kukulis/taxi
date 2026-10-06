@@ -31,30 +31,9 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
-	// same drivers hub mock initialization as in hub_mock_test.go: answering
-	// ServerRequestsCoordinates with ClientRespondsCoordinates on the incoming channel.
-	driversHubMock := ws2.NewHubMock()
-	driversHubMock.SendMessageFunc = func(sent ws2.ClientMessage) {
-		if _, ok := sent.Message.(messages.ServerRequestsCoordinates); !ok {
-			return
-		}
-		driversHubMock.FeedIncomingMessage(ws2.ClientMessage{
-			ClientId: sent.ClientId,
-			Message:  &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
-		})
-	}
+	driversHandler := NewDriversMessageHandler(mainState, ws2.NewHubMock(), ws2.NewHubMock(), &util.Dispatcher{}, nil)
 
-	passengersHub := ws2.NewHubMock()
-
-	driversHandler := NewDriversMessageHandler(mainState, driversHubMock, passengersHub, &util.Dispatcher{}, nil)
-
-	driversHubMock.SendMessage(ws2.ClientMessage{
-		ClientId: driverId,
-		Message:  messages.ServerRequestsCoordinates{},
-	})
-	driversHubMock.Close()
-
-	driversHandler.Handle(driversHubMock.GetIncomingMessagesChannel())
+	driversHandler.HandleClientRespondsCoordinates(driverId, &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28})
 
 	driver := findDriver(mainState, driverId)
 	if driver == nil || driver.Lat != 54.68 || driver.Lon != 25.28 {
@@ -62,10 +41,9 @@ func TestDriversMessageHandler_UpdatesDriverCoordinatesOnResponse(t *testing.T) 
 	}
 }
 
-// TestDriversMessageHandler_SurvivesErrorOnCoordinatesRequest feeds the handler the case's
-// error reply, then a valid ClientRespondsCoordinates. It asserts the coordinates end up in
-// MainState, which only happens if the handler survives the error message and keeps consuming
-// the channel instead of getting stuck on it.
+// TestDriversMessageHandler_SurvivesErrorOnCoordinatesRequest calls the handler with the case's
+// error reply, then with a valid ClientRespondsCoordinates. It asserts the coordinates end up in
+// MainState, which only happens if handling the error reply left the handler usable for the next call.
 func TestDriversMessageHandler_SurvivesErrorOnCoordinatesRequest(t *testing.T) {
 	cases := []struct {
 		name       string
@@ -88,22 +66,20 @@ func TestDriversMessageHandler_SurvivesErrorOnCoordinatesRequest(t *testing.T) {
 			mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 			mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
-			driversHubMock := ws2.NewHubMock()
+			driversHandler := NewDriversMessageHandler(mainState, ws2.NewHubMock(), ws2.NewHubMock(), &util.Dispatcher{}, nil)
 
-			passengersHub := ws2.NewHubMock()
+			switch tc.errorReply.(type) {
+			case *messages.ClientResponseError:
+				driversHandler.HandleClientResponseError(driverId, tc.errorReply)
+			case *messages.ClientError:
+				driversHandler.HandleClientError(driverId, tc.errorReply)
+			}
 
-			driversHandler := NewDriversMessageHandler(mainState, driversHubMock, passengersHub, &util.Dispatcher{}, nil)
-
-			driversHubMock.FeedIncomingMessage(ws2.ClientMessage{ClientId: driverId, Message: tc.errorReply})
-			driversHubMock.FeedIncomingMessage(ws2.ClientMessage{ClientId: driverId, Message: &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28}})
-
-			driversHubMock.Close()
-
-			driversHandler.Handle(driversHubMock.GetIncomingMessagesChannel())
+			driversHandler.HandleClientRespondsCoordinates(driverId, &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28})
 
 			driver := findDriver(mainState, driverId)
 			if driver == nil || driver.Lat != 54.68 || driver.Lon != 25.28 {
-				t.Errorf("driver = %+v, want driver with Lat=54.68 Lon=25.28 after %T then a valid response (handler may have gotten stuck on the error message)", driver, tc.errorReply)
+				t.Errorf("driver = %+v, want driver with Lat=54.68 Lon=25.28 after %T then a valid response (handler may be left in a bad state)", driver, tc.errorReply)
 			}
 		})
 	}
@@ -111,20 +87,15 @@ func TestDriversMessageHandler_SurvivesErrorOnCoordinatesRequest(t *testing.T) {
 
 // TestDriversMessageHandler_HandlesRealDecodedMessage reproduces a real client's message as it
 // actually arrives at the server: encoded to wire bytes, then decoded via messages.Decode, which
-// always returns a pointer (see message_codec.go's Decode). The other tests in this file instead
-// feed the mock a value literal (messages.ClientRespondsCoordinates{...}), which is not what a
-// real client's message looks like once decoded, so they don't catch a switch that only matches
-// value types and never the pointer types Decode produces.
+// always returns a pointer (see message_codec.go's Decode). This catches a handler whose type
+// assertion only matches a value type and never the pointer type Decode actually produces.
 func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 	const driverId = "driver-1"
 
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
-	driversHubMock := ws2.NewHubMock()
-	passengersHubMock := ws2.NewHubMock()
-
-	driversHandler := NewDriversMessageHandler(mainState, driversHubMock, passengersHubMock, &util.Dispatcher{}, nil)
+	driversHandler := NewDriversMessageHandler(mainState, ws2.NewHubMock(), ws2.NewHubMock(), &util.Dispatcher{}, nil)
 
 	raw, err := messages.Encode("id-1", messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28})
 	if err != nil {
@@ -135,17 +106,11 @@ func TestDriversMessageHandler_HandlesRealDecodedMessage(t *testing.T) {
 		t.Fatalf("Decode: %v", err)
 	}
 
-	driversHubMock.FeedIncomingMessage(ws2.ClientMessage{
-		ClientId: driverId,
-		Message:  decoded,
-	})
-	driversHubMock.Close()
-
-	driversHandler.Handle(driversHubMock.GetIncomingMessagesChannel())
+	driversHandler.HandleClientRespondsCoordinates(driverId, decoded)
 
 	driver := findDriver(mainState, driverId)
 	if driver == nil || driver.Lat != 54.68 || driver.Lon != 25.28 {
-		t.Errorf("driver = %+v, want driver with Lat=54.68 Lon=25.28 — Handle's type switch may not match %T, the pointer type Decode actually produces", driver, decoded)
+		t.Errorf("driver = %+v, want driver with Lat=54.68 Lon=25.28 — the handler's type assertion may not match %T, the pointer type Decode actually produces", driver, decoded)
 	}
 }
 
@@ -160,16 +125,9 @@ func TestDriversMessageHandler_ChangesStatusThroughListener(t *testing.T) {
 	dispatcher := util.NewDispatcher()
 	dispatcher.AddListener(events.DriverStatusChangedEventName, NewDriverStatusChangeForDriverListener(mainState).Handle)
 
-	driversHub := ws2.NewHubMock()
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, ws2.NewHubMock(), dispatcher, nil)
+	driversHandler := NewDriversMessageHandler(mainState, ws2.NewHubMock(), ws2.NewHubMock(), dispatcher, nil)
 
-	driversHub.FeedIncomingMessage(ws2.ClientMessage{
-		ClientId: driverId,
-		Message:  &messages.DriverChangesStatus{Status: state.DriverStatusIdle},
-	})
-	driversHub.Close()
-
-	driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
+	driversHandler.HandleDriverChangesStatus(driverId, &messages.DriverChangesStatus{Status: state.DriverStatusIdle})
 
 	if got := findDriver(mainState, driverId).Status; got != state.DriverStatusIdle {
 		t.Errorf("driver.Status = %q, want %q", got, state.DriverStatusIdle)
@@ -182,29 +140,9 @@ func TestDriversMessageHandler_UpdatesDriverInfoOnResponse(t *testing.T) {
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.AddClient(&state.Driver{Id: driverId, CreatedAt: mainState.Clock.Now()})
 
-	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
-	driversHub := ws2.NewHubMock()
-	driversHub.SendMessageFunc = func(sent ws2.ClientMessage) {
-		if _, ok := sent.Message.(messages.ServerRequestsClientInfo); !ok {
-			return
-		}
-		driversHub.FeedIncomingMessage(ws2.ClientMessage{
-			ClientId: sent.ClientId,
-			Message:  &messages.ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius"},
-		})
-	}
+	driversHandler := NewDriversMessageHandler(mainState, ws2.NewHubMock(), ws2.NewHubMock(), &util.Dispatcher{}, nil)
 
-	passengersHub := ws2.NewHubMock()
-
-	driversHandler := NewDriversMessageHandler(mainState, driversHub, passengersHub, &util.Dispatcher{}, nil)
-
-	driversHub.SendMessage(ws2.ClientMessage{
-		ClientId: driverId,
-		Message:  messages.ServerRequestsClientInfo{},
-	})
-	driversHub.Close()
-
-	driversHandler.Handle(driversHub.GetIncomingMessagesChannel())
+	driversHandler.HandleClientRespondsInfo(driverId, &messages.ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius"})
 
 	driver := findDriver(mainState, driverId)
 	if driver == nil || driver.Phone != "+37060012345" || driver.VehicleInfo != "Toyota Prius" {

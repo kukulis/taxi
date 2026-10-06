@@ -19,7 +19,7 @@ var driverApiControllerInstance *web.DriverApiController = nil
 var driversHubInstance *ws.Hub = nil
 var passengersHubInstance *ws.Hub = nil
 
-var driversMessagesWsHandler handler.MessageHandler = nil
+var driversMessagesWsHandler *handler.DriversMessageHandler = nil
 var passengersMessagesWsHandler handler.MessageHandler = nil
 
 var mainState *state.MainState = nil
@@ -81,7 +81,7 @@ func GetPassengersHub() *ws.Hub {
 	return passengersHubInstance
 }
 
-func GetDriversWsHandler() handler.MessageHandler {
+func GetDriversWsHandler() *handler.DriversMessageHandler {
 	if driversMessagesWsHandler == nil {
 		driversMessagesWsHandler = handler.NewDriversMessageHandler(GetMainState(), GetDriversHub(), GetPassengersHub(), GetDispatcher(), GetAddressWorkerPool())
 	}

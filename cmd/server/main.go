@@ -6,7 +6,6 @@ import (
 
 	"darbelis.eu/taxi/internal/di"
 	"darbelis.eu/taxi/internal/events"
-	"darbelis.eu/taxi/internal/handler"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -26,8 +25,7 @@ func main() {
 
 	router := gin.Default()
 
-	// TODO that interface is useless in di, it may exist, but not required in di package now, and doubt will be required later
-	driversMessageHandler := di.GetDriversWsHandler().(*handler.DriversMessageHandler)
+	driversMessageHandler := di.GetDriversWsHandler()
 	delegatingDriversHandler := di.WireDelegatingDriverMessageHandler(di.GetDelegatingDriversMessageHandler(), driversMessageHandler)
 	//
 	//// Swagger UI

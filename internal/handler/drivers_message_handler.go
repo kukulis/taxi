@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"log"
 	"log/slog"
 	"strconv"
@@ -38,40 +37,6 @@ func NewDriversMessageHandler(
 		logger:                     slog.Default().With("handler", "DriversMessageHandler"),
 		dispatcher:                 dispatcher,
 		nominatimAddressWorkerPool: nominatimAddressWorkerPool,
-	}
-}
-
-func (d *DriversMessageHandler) Handle(messageChannel <-chan ws.ClientMessage) {
-
-	for message := range messageChannel {
-
-		switch msg := message.Message.(type) {
-		case *messages.ClientRespondsCoordinates:
-			d.HandleClientRespondsCoordinates(message.ClientId, msg)
-		case *messages.ClientRespondsInfo:
-			d.HandleClientRespondsInfo(message.ClientId, msg)
-		case *messages.ClientResponseError:
-			d.HandleClientResponseError(message.ClientId, msg)
-		case *messages.ClientError:
-			d.HandleClientError(message.ClientId, msg)
-		case *messages.DriverCancelsOffer:
-			d.HandleDriverCancelsOffer(message.ClientId, msg)
-		case *messages.DriverAcceptsOffer:
-			d.HandleDriverAcceptsOffer(message.ClientId, msg)
-		case *messages.DriverRejectsOffer:
-			d.HandleDriverRejectsOffer(message.ClientId, msg)
-		case *messages.DriverChangesStatus:
-			d.HandleDriverChangesStatus(message.ClientId, msg)
-		case *message_common.ClientRegisteredMessage:
-			d.HandleClientRegistered(message.ClientId, msg)
-		case *message_common.ClientUnregisteredMessage:
-			d.HandleClientUnregistered(message.ClientId, msg)
-		default:
-			d.logger.Warn("unexpected message type",
-				"client_id", message.ClientId,
-				"message_type", fmt.Sprintf("%T", message.Message),
-			)
-		}
 	}
 }
 
@@ -360,6 +325,3 @@ func (d *DriversMessageHandler) HandleDriverChangesStatus(clientId string, paylo
 		d.logger.Warn("driver changed to an unknown status", "client_id", clientId, "status", msg.Status)
 	}
 }
-
-// forcing to implement interface
-var _ MessageHandler = &DriversMessageHandler{}
