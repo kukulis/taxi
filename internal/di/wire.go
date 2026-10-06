@@ -23,3 +23,20 @@ func WireDelegatingDriverMessageHandler(
 
 	return delegating
 }
+
+func WireDelegatingPassengerMessageHandler(
+	delegating *handler.DelegatingMessageHandler,
+	p *handler.PassengersMessageHandler) *handler.DelegatingMessageHandler {
+
+	delegating.SetHandler(messages.MessageTypeClientRespondsCoordinates, p.HandleClientRespondsCoordinates)
+	delegating.SetHandler(messages.MessageTypeClientRespondsInfo, p.HandleClientRespondsInfo)
+	delegating.SetHandler(messages.MessageTypeClientResponseError, p.HandleClientResponseError)
+	delegating.SetHandler(messages.MessageTypeClientError, p.HandleClientError)
+	delegating.SetHandler(messages.MessageTypePassengerInvitesDriver, p.HandlePassengerInvitesDriver)
+	delegating.SetHandler(messages.MessageTypePassengerCancelsInvite, p.HandlePassengerCancelsInvite)
+	delegating.SetHandler(messages.MessageTypePassengerRequestDriverCoords, p.HandlePassengerRequestDriverCoords)
+	delegating.SetHandler(message_common.VirtualMessageTypeClientRegistered, p.HandleClientRegistered)
+	delegating.SetHandler(message_common.VirtualMessageTypeClientUnregistered, p.HandleClientUnregistered)
+
+	return delegating
+}

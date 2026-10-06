@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"log"
 	"log/slog"
 	"strconv"
@@ -37,45 +36,20 @@ func NewPassengersMessageHandler(
 	}
 }
 
-func (p *PassengersMessageHandler) Handle(messageChannel <-chan ws2.ClientMessage) {
-	for message := range messageChannel {
+// HandleClientUnregistered marks a passenger offline when its client disconnects
+func (p *PassengersMessageHandler) HandleClientUnregistered(clientId string, payload message_common.MessageInterface) {
+	_ = payload.(*message_common.ClientUnregisteredMessage)
 
-		switch msg := message.Message.(type) {
-		case *messages.ClientRespondsCoordinates:
-			p.handleClientRespondsCoordinates(message.ClientId, msg)
-		case *messages.ClientRespondsInfo:
-			p.handleClientRespondsInfo(message.ClientId, msg)
-		case *messages.ClientResponseError:
-			p.handleClientResponseError(message.ClientId, msg)
-		case *messages.ClientError:
-			p.handleClientError(message.ClientId, msg)
-		case *messages.PassengerInvitesDriver:
-			p.handlePassengerInvitesDriver(message.ClientId, msg)
-		case *messages.PassengerCancelsInvite:
-			p.handlePassengerCancelsInvite(message.ClientId, msg)
-		case *messages.PassengerRequestDriverCoords:
-			p.handlePassengerRequestDriverCoords(message.ClientId, msg)
-
-		case *message_common.ClientRegisteredMessage:
-			p.handleClientRegistered(message.ClientId, msg)
-
-		case *message_common.ClientUnregisteredMessage:
-			p.mainState.UpdateClient(&state.Passenger{Id: message.ClientId}, func(c state.Client) {
-				passenger := c.(*state.Passenger)
-				passenger.Online = false
-				passenger.Active = false
-			})
-
-		default:
-			p.logger.Warn("unexpected message type",
-				"client_id", message.ClientId,
-				"message_type", fmt.Sprintf("%T", message.Message),
-			)
-		}
-	}
+	p.mainState.UpdateClient(&state.Passenger{Id: clientId}, func(c state.Client) {
+		passenger := c.(*state.Passenger)
+		passenger.Online = false
+		passenger.Active = false
+	})
 }
 
-func (p *PassengersMessageHandler) handleClientRegistered(clientId string, msg *message_common.ClientRegisteredMessage) {
+func (p *PassengersMessageHandler) HandleClientRegistered(clientId string, payload message_common.MessageInterface) {
+	_ = payload.(*message_common.ClientRegisteredMessage)
+
 	p.mainState.AddClient(&state.Passenger{
 		Id:        clientId,
 		CreatedAt: p.mainState.Clock.Now(),
@@ -114,7 +88,9 @@ func (p *PassengersMessageHandler) handleClientRegistered(clientId string, msg *
 	})
 }
 
-func (p *PassengersMessageHandler) handleClientRespondsCoordinates(clientId string, msg *messages.ClientRespondsCoordinates) {
+func (p *PassengersMessageHandler) HandleClientRespondsCoordinates(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.ClientRespondsCoordinates)
+
 	found := p.mainState.UpdateClient(&state.Passenger{Id: clientId}, func(c state.Client) {
 		passenger := c.(*state.Passenger)
 		passenger.Lat = msg.Lat
@@ -154,7 +130,9 @@ func (p *PassengersMessageHandler) handleClientRespondsCoordinates(clientId stri
 	}
 }
 
-func (p *PassengersMessageHandler) handleClientRespondsInfo(clientId string, msg *messages.ClientRespondsInfo) {
+func (p *PassengersMessageHandler) HandleClientRespondsInfo(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.ClientRespondsInfo)
+
 	found := p.mainState.UpdateClient(&state.Passenger{Id: clientId}, func(c state.Client) {
 		passenger := c.(*state.Passenger)
 		passenger.Phone = msg.Phone
@@ -168,20 +146,26 @@ func (p *PassengersMessageHandler) handleClientRespondsInfo(clientId string, msg
 	}
 }
 
-// handleClientResponseError logs the passenger client's report that it didn't
+// HandleClientResponseError logs the passenger client's report that it didn't
 // understand a request the server sent it. No MainState field maps to this,
 // so it's just logged for now.
-func (p *PassengersMessageHandler) handleClientResponseError(clientId string, msg *messages.ClientResponseError) {
+func (p *PassengersMessageHandler) HandleClientResponseError(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.ClientResponseError)
+
 	p.logger.Warn("client didn't understand a server request", "client_id", clientId, "error", msg.Error)
 }
 
-// handleClientError logs the passenger client's own functionality error. No
+// HandleClientError logs the passenger client's own functionality error. No
 // MainState field maps to this, so it's just logged for now.
-func (p *PassengersMessageHandler) handleClientError(clientId string, msg *messages.ClientError) {
+func (p *PassengersMessageHandler) HandleClientError(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.ClientError)
+
 	p.logger.Error("client reported a functionality error", "client_id", clientId, "error", msg.Error)
 }
 
-func (p *PassengersMessageHandler) handlePassengerInvitesDriver(clientId string, msg *messages.PassengerInvitesDriver) {
+func (p *PassengersMessageHandler) HandlePassengerInvitesDriver(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.PassengerInvitesDriver)
+
 	p.logger.Info("passenger invites driver", "client_id", clientId, "driver_id", msg.DriverId, "lat", msg.Lat, "lon", msg.Lon)
 
 	invitationId, err := util.RandomHash(8)
@@ -207,7 +191,9 @@ func (p *PassengersMessageHandler) handlePassengerInvitesDriver(clientId string,
 	})
 }
 
-func (p *PassengersMessageHandler) handlePassengerCancelsInvite(clientId string, msg *messages.PassengerCancelsInvite) {
+func (p *PassengersMessageHandler) HandlePassengerCancelsInvite(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.PassengerCancelsInvite)
+
 	p.logger.Info("passenger cancels invite", "client_id", clientId, "driver_id", msg.DriverId)
 
 	invitations := p.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
@@ -239,10 +225,9 @@ func (p *PassengersMessageHandler) handlePassengerCancelsInvite(clientId string,
 	})
 }
 
-func (p *PassengersMessageHandler) handlePassengerRequestDriverCoords(clientId string, msg *messages.PassengerRequestDriverCoords) {
+func (p *PassengersMessageHandler) HandlePassengerRequestDriverCoords(clientId string, payload message_common.MessageInterface) {
+	msg := payload.(*messages.PassengerRequestDriverCoords)
+
 	p.logger.Info("passenger requests driver coordinates", "client_id", clientId, "driver_id", msg.DriverId)
 	// TODO after MVP
 }
-
-// forcing to implement interface
-var _ MessageHandler = &PassengersMessageHandler{}

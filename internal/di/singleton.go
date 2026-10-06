@@ -20,7 +20,7 @@ var driversHubInstance *ws.Hub = nil
 var passengersHubInstance *ws.Hub = nil
 
 var driversMessagesWsHandler *handler.DriversMessageHandler = nil
-var passengersMessagesWsHandler handler.MessageHandler = nil
+var passengersMessagesWsHandler *handler.PassengersMessageHandler = nil
 
 var mainState *state.MainState = nil
 
@@ -40,6 +40,7 @@ var nominatimAddressWorkerPool *nominatim.AddressWorkerPool = nil
 var nominatimCoordinatesWorkerPool *nominatim.CoordinatesWorkerPool = nil
 
 var delegatingDriversMessageHandler *handler.DelegatingMessageHandler = nil
+var delegatingPassengersMessageHandler *handler.DelegatingMessageHandler = nil
 
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
@@ -89,7 +90,7 @@ func GetDriversWsHandler() *handler.DriversMessageHandler {
 	return driversMessagesWsHandler
 }
 
-func GetPassengersWsHandler() handler.MessageHandler {
+func GetPassengersWsHandler() *handler.PassengersMessageHandler {
 	if passengersMessagesWsHandler == nil {
 		passengersMessagesWsHandler = handler.NewPassengersMessageHandler(GetMainState(), GetDriversHub(), GetPassengersHub(), GetAddressWorkerPool())
 	}
@@ -180,4 +181,12 @@ func GetDelegatingDriversMessageHandler() *handler.DelegatingMessageHandler {
 	}
 
 	return delegatingDriversMessageHandler
+}
+
+func GetDelegatingPassengersMessageHandler() *handler.DelegatingMessageHandler {
+	if delegatingPassengersMessageHandler == nil {
+		delegatingPassengersMessageHandler = handler.NewDelegatingMessageHandler()
+	}
+
+	return delegatingPassengersMessageHandler
 }

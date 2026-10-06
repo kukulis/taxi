@@ -28,30 +28,9 @@ func TestPassengersMessageHandler_UpdatesPassengerCoordinatesOnResponse(t *testi
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.AddClient(&state.Passenger{Id: passengerId, CreatedAt: mainState.Clock.Now()})
 
-	// same hub mock initialization as in hub_mock_test.go: answering
-	// ServerRequestsCoordinates with ClientRespondsCoordinates on the incoming channel.
-	passengersHub := ws2.NewHubMock()
-	passengersHub.SendMessageFunc = func(sent ws2.ClientMessage) {
-		if _, ok := sent.Message.(messages.ServerRequestsCoordinates); !ok {
-			return
-		}
-		passengersHub.FeedIncomingMessage(ws2.ClientMessage{
-			ClientId: sent.ClientId,
-			Message:  &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
-		})
-	}
+	passengersHandler := NewPassengersMessageHandler(mainState, ws2.NewHubMock(), ws2.NewHubMock(), nil)
 
-	driversHub := ws2.NewHubMock()
-
-	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub, nil)
-
-	passengersHub.SendMessage(ws2.ClientMessage{
-		ClientId: passengerId,
-		Message:  messages.ServerRequestsCoordinates{},
-	})
-	passengersHub.Close()
-
-	passengersHandler.Handle(passengersHub.GetIncomingMessagesChannel())
+	passengersHandler.HandleClientRespondsCoordinates(passengerId, &messages.ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28})
 
 	passenger := findPassenger(mainState, passengerId)
 	if passenger == nil || passenger.Lat != 54.68 || passenger.Lon != 25.28 {
@@ -65,29 +44,9 @@ func TestPassengersMessageHandler_UpdatesPassengerInfoOnResponse(t *testing.T) {
 	mainState := state.NewMainState(util.NewFixedClock(time.Now()))
 	mainState.AddClient(&state.Passenger{Id: passengerId, CreatedAt: mainState.Clock.Now()})
 
-	// answers ServerRequestsClientInfo with ClientRespondsInfo on the incoming channel.
-	passengersHub := ws2.NewHubMock()
-	passengersHub.SendMessageFunc = func(sent ws2.ClientMessage) {
-		if _, ok := sent.Message.(messages.ServerRequestsClientInfo); !ok {
-			return
-		}
-		passengersHub.FeedIncomingMessage(ws2.ClientMessage{
-			ClientId: sent.ClientId,
-			Message:  &messages.ClientRespondsInfo{Phone: "+37060054321"},
-		})
-	}
+	passengersHandler := NewPassengersMessageHandler(mainState, ws2.NewHubMock(), ws2.NewHubMock(), nil)
 
-	driversHub := ws2.NewHubMock()
-
-	passengersHandler := NewPassengersMessageHandler(mainState, driversHub, passengersHub, nil)
-
-	passengersHub.SendMessage(ws2.ClientMessage{
-		ClientId: passengerId,
-		Message:  messages.ServerRequestsClientInfo{},
-	})
-	passengersHub.Close()
-
-	passengersHandler.Handle(passengersHub.GetIncomingMessagesChannel())
+	passengersHandler.HandleClientRespondsInfo(passengerId, &messages.ClientRespondsInfo{Phone: "+37060054321"})
 
 	passenger := findPassenger(mainState, passengerId)
 	if passenger == nil || passenger.Phone != "+37060054321" {

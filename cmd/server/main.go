@@ -27,6 +27,9 @@ func main() {
 
 	driversMessageHandler := di.GetDriversWsHandler()
 	delegatingDriversHandler := di.WireDelegatingDriverMessageHandler(di.GetDelegatingDriversMessageHandler(), driversMessageHandler)
+
+	passengersMessageHandler := di.GetPassengersWsHandler()
+	delegatingPassengersHandler := di.WireDelegatingPassengerMessageHandler(di.GetDelegatingPassengersMessageHandler(), passengersMessageHandler)
 	//
 	//// Swagger UI
 	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -36,11 +39,10 @@ func main() {
 	di.RegisterApiRoutes(apiRoute)
 
 	go di.GetDriversHub().Run()
-	//go di.GetDriversWsHandler().Handle(di.GetDriversHub().GetIncomingMessagesChannel())
 	go delegatingDriversHandler.Handle(di.GetDriversHub().GetIncomingMessagesChannel())
 
 	go di.GetPassengersHub().Run()
-	go di.GetPassengersWsHandler().Handle(di.GetPassengersHub().GetIncomingMessagesChannel())
+	go delegatingPassengersHandler.Handle(di.GetPassengersHub().GetIncomingMessagesChannel())
 
 	go di.GetTaxiDispatcher().TickForDriversUpdates()
 	go di.GetTaxiDispatcher().TickForPassengersUpdates()
