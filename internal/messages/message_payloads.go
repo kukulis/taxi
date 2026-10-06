@@ -37,10 +37,23 @@ type ClientRespondsInfo struct {
 	Phone       string `json:"phone"`
 	VehicleInfo string `json:"vehicle_info,omitempty"`
 	Ip          string `json:"ip,omitempty"`
+	Name        string `json:"name,omitempty"`
 }
 
 func (ClientRespondsInfo) GetMessageType() message_common.MessageType {
 	return MessageTypeClientRespondsInfo
+}
+
+// ClientInfoFull is sent by the server to a client with its own info on record.
+type ClientInfoFull struct {
+	Phone       string `json:"phone"`
+	VehicleInfo string `json:"vehicle_info,omitempty"`
+	Ip          string `json:"ip,omitempty"`
+	Name        string `json:"name,omitempty"`
+}
+
+func (ClientInfoFull) GetMessageType() message_common.MessageType {
+	return MessageTypeClientInfoFull
 }
 
 // ClientResponseError is sent by the client when it didn't understand a

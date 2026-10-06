@@ -36,6 +36,8 @@ func Decode(raw []byte) (string, message_common.MessageInterface, error) {
 		msg = &ServerRequestsCoordinates{}
 	case MessageTypeServerRequestsClientInfo:
 		msg = &ServerRequestsClientInfo{}
+	case MessageTypeClientInfoFull:
+		msg = &ClientInfoFull{}
 	case MessageTypeClientRespondsCoordinates:
 		msg = &ClientRespondsCoordinates{}
 	case MessageTypeClientRespondsInfo:
@@ -84,6 +86,25 @@ func Decode(raw []byte) (string, message_common.MessageInterface, error) {
 		msg = &ServerRefreshPassengerInvitations{}
 	case MessageTypeServerSendsClientAddress:
 		msg = &ServerSendsClientAddress{}
+
+	case MessageTypeChatMessage:
+		msg = &ChatMessage{}
+	case MessageTypeChatLog:
+		msg = &ChatLog{}
+	case MessageTypeChatInfo:
+		msg = &ChatInfo{}
+	case MessageTypeChatInfos:
+		msg = &ChatInfos{}
+	case MessageTypeClientRequestsChatsInfos:
+		msg = &ClientRequestsChatsInfos{}
+	case MessageTypeClientRequestsChatLog:
+		msg = &ClientRequestsChatLog{}
+	case MessageTypeTalkerInfo:
+		msg = &TalkerInfo{}
+	case MessageTypeTalkersInfos:
+		msg = &TalkersInfos{}
+	case MessageTypeClientRequestsTalkersInfos:
+		msg = &ClientRequestsTalkersInfos{}
 
 	default:
 		return env.Id, nil, fmt.Errorf("unknown message type %q", env.Type)

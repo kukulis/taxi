@@ -19,6 +19,7 @@ const (
 
 	MessageTypeServerRequestsCoordinates message_common.MessageType = "server_requests_coordinates"
 	MessageTypeServerRequestsClientInfo  message_common.MessageType = "server_requests_client_info"
+	MessageTypeClientInfoFull            message_common.MessageType = "client_info_full"
 
 	// === driver or passenger
 
@@ -58,4 +59,16 @@ const (
 	MessageTypeServerRefreshPassengerInvitations message_common.MessageType = "server_refresh_passenger_invitations"
 
 	MessageTypeServerSendsClientAddress message_common.MessageType = "server_sends_client_address"
+
+	MessageTypeChatMessage message_common.MessageType = "chat_message"
+	MessageTypeChatLog     message_common.MessageType = "chat_log"
+	MessageTypeChatInfo    message_common.MessageType = "chat_info"
+	MessageTypeChatInfos   message_common.MessageType = "chat_infos"
+
+	MessageTypeClientRequestsChatsInfos message_common.MessageType = "client_requests_chats_infos"
+	MessageTypeClientRequestsChatLog    message_common.MessageType = "client_requests_chat_log"
+
+	MessageTypeTalkerInfo                 message_common.MessageType = "talker_info"
+	MessageTypeTalkersInfos               message_common.MessageType = "talkers_infos"
+	MessageTypeClientRequestsTalkersInfos message_common.MessageType = "client_requests_talkers_infos"
 )

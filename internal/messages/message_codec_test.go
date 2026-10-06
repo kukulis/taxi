@@ -3,17 +3,22 @@ package messages
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/pkg/message_common"
 )
 
+var testSentTime = time.Date(2024, 1, 15, 10, 30, 0, 0, time.UTC)
+var testReceivedTime = testSentTime.Add(time.Minute)
+
 // one value for every message type, with non-zero fields
 var roundTripMessages = []message_common.MessageInterface{
 	ServerRequestsCoordinates{},
 	ServerRequestsClientInfo{},
+	ClientInfoFull{Phone: "+37060012345", VehicleInfo: "Toyota Prius", Ip: "203.0.113.5", Name: "Jonas"},
 	ClientRespondsCoordinates{Lat: 54.68, Lon: 25.28},
-	ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius", Ip: "203.0.113.5"},
+	ClientRespondsInfo{Phone: "+37060012345", VehicleInfo: "Toyota Prius", Ip: "203.0.113.5", Name: "Jonas"},
 	ClientResponseError{Error: "unrecognized message type"},
 	ClientError{Error: "can't retrieve coordinates from the device"},
 
@@ -37,6 +42,23 @@ var roundTripMessages = []message_common.MessageInterface{
 	ServerRefreshDriverStatus{Status: string(state.DriverStatusWorking)},
 	ServerRefreshDriverOffers{Offers: []OfferDto{{InvitationId: "i1", Status: "pending", PassengerId: "p1", Lat: "54.68", Lon: "25.28"}}},
 	ServerRefreshPassengerInvitations{Invitations: []InvitationDto{{InvitationId: "i1", Status: "pending", DriverId: "d1", Lat: "54.68", Lon: "25.28"}}},
+
+	ServerSendsClientAddress{Address: "Gedimino pr. 1, Vilnius"},
+
+	ChatMessage{Id: "m1", SenderId: "p1", ReceiverId: "d1", Text: "hello", SentTime: testSentTime, ReceivedTime: testReceivedTime},
+	ChatLog{
+		Id: "c1", SenderId: "p1", ReceiverId: "d1",
+		Log:       []ChatMessage{{Id: "m1", SenderId: "p1", ReceiverId: "d1", Text: "hello", SentTime: testSentTime, ReceivedTime: testReceivedTime}},
+		StartedAt: testSentTime,
+	},
+	ChatInfo{Id: "c1", SenderId: "p1", ReceiverId: "d1", StartedAt: testSentTime},
+	ChatInfos{List: []ChatInfo{{Id: "c1", SenderId: "p1", ReceiverId: "d1", StartedAt: testSentTime}}},
+	ClientRequestsChatsInfos{},
+	ClientRequestsChatLog{SenderId: "p1", ReceiverId: "d1"},
+
+	TalkerInfo{ClientId: "p1", ClientType: "passenger", Name: "Jonas"},
+	TalkersInfos{List: []TalkerInfo{{ClientId: "p1", ClientType: "passenger", Name: "Jonas"}}},
+	ClientRequestsTalkersInfos{},
 }
 
 func TestEncodeDecodeRoundTrip(t *testing.T) {
@@ -75,6 +97,7 @@ func TestDecodeHandlesAllMessageTypes(t *testing.T) {
 	allTypes := []message_common.MessageType{
 		MessageTypeServerRequestsCoordinates,
 		MessageTypeServerRequestsClientInfo,
+		MessageTypeClientInfoFull,
 		MessageTypeClientRespondsCoordinates,
 		MessageTypeClientRespondsInfo,
 		MessageTypeClientResponseError,
@@ -97,6 +120,16 @@ func TestDecodeHandlesAllMessageTypes(t *testing.T) {
 		MessageTypeServerRefreshDriverStatus,
 		MessageTypeServerRefreshDriverOffers,
 		MessageTypeServerRefreshPassengerInvitations,
+		MessageTypeServerSendsClientAddress,
+		MessageTypeChatMessage,
+		MessageTypeChatLog,
+		MessageTypeChatInfo,
+		MessageTypeChatInfos,
+		MessageTypeClientRequestsChatsInfos,
+		MessageTypeClientRequestsChatLog,
+		MessageTypeTalkerInfo,
+		MessageTypeTalkersInfos,
+		MessageTypeClientRequestsTalkersInfos,
 	}
 
 	covered := map[message_common.MessageType]bool{}

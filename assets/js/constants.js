@@ -3,6 +3,7 @@ export const MessageType = {
     // === to driver or to passenger
     SERVER_REQUESTS_COORDINATES: 'server_requests_coordinates',
     SERVER_REQUESTS_CLIENT_INFO: 'server_requests_client_info',
+    CLIENT_INFO_FULL: 'client_info_full',
 
     // === driver or passenger
     CLIENT_RESPONDS_COORDINATES: 'client_responds_coordinates',
@@ -33,6 +34,19 @@ export const MessageType = {
     SERVER_REFRESH_DRIVER_OFFERS: 'server_refresh_driver_offers',
     SERVER_REFRESH_PASSENGER_INVITATIONS: 'server_refresh_passenger_invitations',
     SERVER_SENDS_CLIENT_ADDRESS: 'server_sends_client_address',
+
+    // --- chat-related messages
+    CHAT_MESSAGE: 'chat_message',
+    CHAT_LOG: 'chat_log',
+    CHAT_INFO: 'chat_info',
+    CHAT_INFOS: 'chat_infos',
+
+    CLIENT_REQUESTS_CHATS_INFOS: 'client_requests_chats_infos',
+    CLIENT_REQUESTS_CHAT_LOG: 'client_requests_chat_log',
+
+    TALKER_INFO: 'talker_info',
+    TALKERS_INFOS: 'talkers_infos',
+    CLIENT_REQUESTS_TALKERS_INFOS: 'client_requests_talkers_infos',
 };
 
 export const WsEvent = {

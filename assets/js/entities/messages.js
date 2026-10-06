@@ -48,16 +48,18 @@ export class ClientRespondsCoordinates {
 
 // vehicle_info is only meaningful for a driver; ip is optional (server keeps the one on record when empty).
 export class ClientRespondsInfo {
-    constructor(phone = '', vehicleInfo = '', ip = '') {
+    constructor(phone = '', vehicleInfo = '', ip = '', name = '') {
         this.phone = phone;
         this.vehicle_info = vehicleInfo;
         this.ip = ip;
+        this.name = name;
     }
 
     fromObject(obj) {
         this.phone = obj.phone;
         this.vehicle_info = obj.vehicle_info;
         this.ip = obj.ip;
+        this.name = obj.name;
         return this;
     }
 
