@@ -12,6 +12,7 @@ type ChatMessageRepositoryContract interface {
 	Get(messageId string) *dto.ChatMessage
 	GetConversation(participant1, participant2 string) []*dto.ChatMessage
 	GetChatPartners(participantId string) []string
+	CutConversation(participant1, participant2 string, size int)
 }
 
 type ChatMessageRepositoryMemory struct {
@@ -116,4 +117,18 @@ func (r *ChatMessageRepositoryMemory) GetChatPartners(participantId string) []st
 	snapShot := append([]string{}, r.chatPartners[participantId]...)
 
 	return snapShot
+}
+
+// CutConversation leaves 'size' amount of last messages in the conversation
+func (r *ChatMessageRepositoryMemory) CutConversation(participant1, participant2 string, size int) {
+	r.messagesLock.Lock()
+	defer r.messagesLock.Unlock()
+
+	pairKey := dto.GetChatMessagePairKey(participant1, participant2)
+
+	conversation := r.conversations[pairKey]
+	l := len(conversation)
+	if l > size {
+		r.conversations[pairKey] = conversation[l-size : size]
+	}
 }
