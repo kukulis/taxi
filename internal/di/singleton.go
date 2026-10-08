@@ -85,7 +85,13 @@ func GetPassengersHub() *ws.Hub {
 
 func GetDriversWsHandler() *handler.DriversMessageHandler {
 	if driversMessagesWsHandler == nil {
-		driversMessagesWsHandler = handler.NewDriversMessageHandler(GetMainState(), GetDriversHub(), GetPassengersHub(), GetDispatcher(), GetAddressWorkerPool())
+		driversMessagesWsHandler = handler.NewDriversMessageHandler(
+			GetMainState(),
+			GetDriversHub(),
+			GetPassengersHub(),
+			GetDispatcher(),
+			GetAddressWorkerPool(),
+		)
 	}
 
 	return driversMessagesWsHandler
@@ -93,7 +99,12 @@ func GetDriversWsHandler() *handler.DriversMessageHandler {
 
 func GetPassengersWsHandler() *handler.PassengersMessageHandler {
 	if passengersMessagesWsHandler == nil {
-		passengersMessagesWsHandler = handler.NewPassengersMessageHandler(GetMainState(), GetDriversHub(), GetPassengersHub(), GetAddressWorkerPool())
+		passengersMessagesWsHandler = handler.NewPassengersMessageHandler(
+			GetMainState(),
+			GetDriversHub(),
+			GetPassengersHub(),
+			GetAddressWorkerPool(),
+		)
 	}
 
 	return passengersMessagesWsHandler
@@ -101,7 +112,13 @@ func GetPassengersWsHandler() *handler.PassengersMessageHandler {
 
 func GetChatMessageHandler() *handler.ChatMessageHandler {
 	if chatMessageHandler == nil {
-		chatMessageHandler = handler.NewChatMessageHandler()
+		chatMessageHandler = handler.NewChatMessageHandler(
+			GetMainState(),
+			GetDriversHub(),
+			GetPassengersHub(),
+			GetDispatcher(),
+			GetAddressWorkerPool(),
+		)
 	}
 
 	return chatMessageHandler
