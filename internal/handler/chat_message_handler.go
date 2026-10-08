@@ -3,7 +3,9 @@ package handler
 import (
 	"log/slog"
 
+	"darbelis.eu/taxi/internal/dto"
 	"darbelis.eu/taxi/internal/messages"
+	"darbelis.eu/taxi/internal/repository"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/pkg/message_common"
 	"darbelis.eu/taxi/pkg/nominatim"
@@ -11,13 +13,16 @@ import (
 	"darbelis.eu/taxi/pkg/ws"
 )
 
+const MessagesScreenSize = 10
+
 type ChatMessageHandler struct {
-	mainState         *state.MainState
-	driversHub        ws.HubInterface
-	passengersHub     ws.HubInterface
-	logger            *slog.Logger
-	dispatcher        *util.Dispatcher
-	addressWorkerPool *nominatim.AddressWorkerPool
+	mainState             *state.MainState
+	driversHub            ws.HubInterface
+	passengersHub         ws.HubInterface
+	logger                *slog.Logger
+	dispatcher            *util.Dispatcher
+	addressWorkerPool     *nominatim.AddressWorkerPool
+	chatMessageRepository repository.ChatMessageRepositoryContract
 }
 
 func NewChatMessageHandler(
@@ -26,19 +31,82 @@ func NewChatMessageHandler(
 	passengersHub ws.HubInterface,
 	dispatcher *util.Dispatcher,
 	addressWorkerPool *nominatim.AddressWorkerPool,
+	chatMessageRepository repository.ChatMessageRepositoryContract,
 ) *ChatMessageHandler {
 	return &ChatMessageHandler{
-		mainState:         mainState,
-		driversHub:        driversHub,
-		passengersHub:     passengersHub,
-		logger:            slog.Default().With("handler", "ChatMessageHandler"),
-		dispatcher:        dispatcher,
-		addressWorkerPool: addressWorkerPool,
+		mainState:             mainState,
+		driversHub:            driversHub,
+		passengersHub:         passengersHub,
+		logger:                slog.Default().With("handler", "ChatMessageHandler"),
+		dispatcher:            dispatcher,
+		addressWorkerPool:     addressWorkerPool,
+		chatMessageRepository: chatMessageRepository,
 	}
 }
 
+func (cmh *ChatMessageHandler) searchClient(clientId string) state.Client {
+	senders := cmh.mainState.SearchClients(&state.ClientFilter{Id: clientId})
+
+	// we will decide later what to do if we have two clients with same id : driver and passenger
+
+	if len(senders) > 0 {
+		return senders[0]
+	}
+
+	return nil
+}
+
+func (cmh *ChatMessageHandler) getHubByType(clientType state.ClientType) ws.HubInterface {
+	if clientType == state.ClientTypeDriver {
+		return cmh.driversHub
+	}
+
+	if clientType == state.ClientTypePassenger {
+		return cmh.passengersHub
+	}
+
+	return nil
+}
+
 func (cmh *ChatMessageHandler) HandleChatMessage(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ChatMessage)
+	chatMessage := payload.(messages.ChatMessage)
+
+	if clientId != chatMessage.SenderId {
+		cmh.logger.Warn("The received message sender " + chatMessage.SenderId + " does not match clientId " + clientId)
+		return
+	}
+
+	sender := cmh.searchClient(chatMessage.SenderId)
+	if sender == nil {
+		cmh.logger.Warn("Sender not found " + chatMessage.SenderId)
+		return
+	}
+
+	receiver := cmh.searchClient(chatMessage.ReceiverId)
+	if receiver == nil {
+		cmh.logger.Warn("Receiver not found " + chatMessage.ReceiverId)
+		return
+	}
+
+	dtoMessage := transformChatMessageToDto(chatMessage)
+	successfulAdd := cmh.chatMessageRepository.Add(dtoMessage)
+	if !successfulAdd {
+		cmh.logger.Warn("The message with id " + dtoMessage.Id + " already in the repository")
+		return
+	}
+
+	cmh.chatMessageRepository.CutConversation(dtoMessage.SenderId, dtoMessage.ReceiverId, MessagesScreenSize)
+
+	hub := cmh.getHubByType(receiver.GetType())
+	if hub == nil {
+		cmh.logger.Warn("Weird, the receiver hub is nil; receiver type: " + string(receiver.GetType()))
+		return
+	}
+
+	hub.SendMessage(ws.ClientMessage{
+		ClientId: chatMessage.ReceiverId,
+		Message:  chatMessage,
+	})
 }
 
 func (cmh *ChatMessageHandler) HandleChatLog(clientId string, payload message_common.MessageInterface) {
@@ -71,4 +139,25 @@ func (cmh *ChatMessageHandler) HandleTalkersInfos(clientId string, payload messa
 
 func (cmh *ChatMessageHandler) HandleClientRequestsTalkersInfos(clientId string, payload message_common.MessageInterface) {
 	_ = payload.(messages.ClientRequestsTalkersInfos)
+}
+
+func transformChatMessageToDto(message messages.ChatMessage) *dto.ChatMessage {
+	return &dto.ChatMessage{
+		Id:           message.Id,
+		SenderId:     message.SenderId,
+		ReceiverId:   message.ReceiverId,
+		Text:         message.Text,
+		SentTime:     message.SentTime,
+		ReceivedTime: message.ReceivedTime,
+	}
+}
+func transformChatDtoToMessage(dto *dto.ChatMessage) messages.ChatMessage {
+	return messages.ChatMessage{
+		Id:           dto.Id,
+		SenderId:     dto.SenderId,
+		ReceiverId:   dto.ReceiverId,
+		Text:         dto.Text,
+		SentTime:     dto.SentTime,
+		ReceivedTime: dto.ReceivedTime,
+	}
 }

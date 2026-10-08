@@ -50,7 +50,7 @@ func (s *MainState) GetNearestClients(filter *ClientFilter, lat, lon, distanceKm
 	result := util.ArrayMap(clients, func(c Client) ClientDistance {
 		return ClientDistance{
 			Client:   c,
-			Distance: util.HaversineDistanceKm(lat, lon, c.getLat(), c.getLon()),
+			Distance: util.HaversineDistanceKm(lat, lon, c.GetLat(), c.GetLon()),
 		}
 	})
 
@@ -72,16 +72,16 @@ func (s *MainState) AddClient(c Client) Client {
 	s.clientsLock.Lock()
 	defer s.clientsLock.Unlock()
 
-	existing, ok := s.clients[c.getKey()]
+	existing, ok := s.clients[c.GetKey()]
 
 	if !ok {
-		s.clients[c.getKey()] = c
+		s.clients[c.GetKey()] = c
 		existing = c
 	}
 
 	// we will differentiate these flags later
-	existing.setOnline(true)
-	existing.setActive(true)
+	existing.SetOnline(true)
+	existing.SetActive(true)
 
 	return c
 }
@@ -90,7 +90,7 @@ func (s *MainState) UpdateClient(c Client, mutate func(Client)) bool {
 	s.clientsLock.Lock()
 	defer s.clientsLock.Unlock()
 
-	existing, ok := s.clients[c.getKey()]
+	existing, ok := s.clients[c.GetKey()]
 
 	if !ok {
 		return false
@@ -125,14 +125,14 @@ func (s *MainState) SearchClients(f *ClientFilter) []Client {
 			return result
 		}
 
-		result = append(result, existing.copyMe())
+		result = append(result, existing.CopyMe())
 
 		return result
 	}
 
 	for _, client := range s.clients {
 		if f.Match(client) {
-			result = append(result, client.copyMe())
+			result = append(result, client.CopyMe())
 		}
 	}
 
@@ -148,7 +148,7 @@ func (s *MainState) SearchClientsByIds(ids []string, t ClientType) []Client {
 	result := make([]Client, 0, len(ids))
 	for _, id := range ids {
 		if client, ok := s.clients[t.GetKey(id)]; ok {
-			result = append(result, client.copyMe())
+			result = append(result, client.CopyMe())
 		}
 	}
 

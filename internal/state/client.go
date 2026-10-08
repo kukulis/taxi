@@ -6,43 +6,43 @@ import (
 )
 
 type Client interface {
-	getId() string
-	setId(id string)
+	GetId() string
+	SetId(id string)
 
-	copyMe() Client
+	CopyMe() Client
 
-	getLat() float64
-	setLat(lat float64)
-	getLon() float64
-	setLon(lon float64)
+	GetLat() float64
+	SetLat(lat float64)
+	GetLon() float64
+	SetLon(lon float64)
 
-	getAddress() string
-	setAddress(address string)
+	GetAddress() string
+	SetAddress(address string)
 
-	getIp() string
-	setIp(ip string)
+	GetIp() string
+	SetIp(ip string)
 
-	getActive() bool
-	setActive(a bool)
+	GetActive() bool
+	SetActive(a bool)
 
-	getOnline() bool
-	setOnline(online bool)
+	GetOnline() bool
+	SetOnline(online bool)
 
-	getPhone() string
-	setPhone(phone string)
+	GetPhone() string
+	SetPhone(phone string)
 
-	getDriverStatus() DriverStatus
-	setDriverStatus(status DriverStatus)
+	GetDriverStatus() DriverStatus
+	SetDriverStatus(status DriverStatus)
 
-	getCreatedAt() time.Time
-	setCreatedAt(t time.Time)
+	GetCreatedAt() time.Time
+	SetCreatedAt(t time.Time)
 
-	getCoordinatesReceivedAt() time.Time
-	setCoordinatesReceivedAt(t time.Time)
+	GetCoordinatesReceivedAt() time.Time
+	SetCoordinatesReceivedAt(t time.Time)
 
-	getType() ClientType
+	GetType() ClientType
 
-	getKey() string
+	GetKey() string
 }
 
 type ClientType string
@@ -125,45 +125,45 @@ func NewEmptyFilter() *ClientFilter {
 
 func (f *ClientFilter) Match(c Client) bool {
 	if f.Id != "" {
-		if f.Id != c.getId() {
+		if f.Id != c.GetId() {
 			return false
 		}
 	}
 
 	if f.Type != "" {
-		if f.Type != string(c.getType()) {
+		if f.Type != string(c.GetType()) {
 			return false
 		}
 	}
 
 	if f.LatFrom != 0 || f.LatTo != 0 {
-		lat := c.getLat()
+		lat := c.GetLat()
 		if lat < f.LatFrom || lat > f.LatTo {
 			return false
 		}
 	}
 
 	if f.LonFrom != 0 || f.LonTo != 0 {
-		lon := c.getLon()
+		lon := c.GetLon()
 		if lon < f.LonFrom || lon > f.LonTo {
 			return false
 		}
 	}
 
 	if f.Address != "" {
-		if f.Address != c.getAddress() {
+		if f.Address != c.GetAddress() {
 			return false
 		}
 	}
 
 	if f.Ip != "" {
-		if f.Ip != c.getIp() {
+		if f.Ip != c.GetIp() {
 			return false
 		}
 	}
 
 	if f.Phone != "" {
-		if f.Phone != c.getPhone() {
+		if f.Phone != c.GetPhone() {
 			return false
 		}
 	}
@@ -171,7 +171,7 @@ func (f *ClientFilter) Match(c Client) bool {
 	if len(f.DriverStatuses) > 0 {
 		matched := false
 		for _, status := range f.DriverStatuses {
-			if status == c.getDriverStatus() {
+			if status == c.GetDriverStatus() {
 				matched = true
 				break
 			}
@@ -182,13 +182,13 @@ func (f *ClientFilter) Match(c Client) bool {
 	}
 
 	if f.Active != -1 {
-		if (f.Active == 1) != c.getActive() {
+		if (f.Active == 1) != c.GetActive() {
 			return false
 		}
 	}
 
 	if f.Online != -1 {
-		if (f.Online == 1) != c.getOnline() {
+		if (f.Online == 1) != c.GetOnline() {
 			return false
 		}
 	}

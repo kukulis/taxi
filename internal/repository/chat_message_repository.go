@@ -7,7 +7,7 @@ import (
 )
 
 type ChatMessageRepositoryContract interface {
-	Add(chatMessage *dto.ChatMessage)
+	Add(chatMessage *dto.ChatMessage) bool
 	Remove(messageId string) bool
 	Get(messageId string) *dto.ChatMessage
 	GetConversation(participant1, participant2 string) []*dto.ChatMessage
@@ -31,9 +31,16 @@ func NewChatMessageRepositoryMemory() *ChatMessageRepositoryMemory {
 	}
 }
 
-func (r *ChatMessageRepositoryMemory) Add(chatMessage *dto.ChatMessage) {
+// Add return true if there was no existing message in the repository yet
+// TODO we will need additional 'error' return parameter with real database
+func (r *ChatMessageRepositoryMemory) Add(chatMessage *dto.ChatMessage) bool {
 	r.messagesLock.Lock()
 	defer r.messagesLock.Unlock()
+
+	_, exists := r.chatMessagesById[chatMessage.Id]
+	if exists {
+		return false
+	}
 
 	r.chatMessagesById[chatMessage.Id] = chatMessage
 
@@ -45,6 +52,8 @@ func (r *ChatMessageRepositoryMemory) Add(chatMessage *dto.ChatMessage) {
 		r.chatPartners[chatMessage.SenderId] = append(r.chatPartners[chatMessage.SenderId], chatMessage.ReceiverId)
 		r.chatPartners[chatMessage.ReceiverId] = append(r.chatPartners[chatMessage.ReceiverId], chatMessage.SenderId)
 	}
+
+	return true
 }
 
 func (r *ChatMessageRepositoryMemory) Remove(messageId string) bool {
@@ -129,6 +138,10 @@ func (r *ChatMessageRepositoryMemory) CutConversation(participant1, participant2
 	conversation := r.conversations[pairKey]
 	l := len(conversation)
 	if l > size {
-		r.conversations[pairKey] = conversation[l-size : size]
+		r.conversations[pairKey] = conversation[l-size:]
+		messagesToDrop := conversation[0 : l-size]
+		for _, message := range messagesToDrop {
+			delete(r.chatMessagesById, message.Id)
+		}
 	}
 }

@@ -19,7 +19,7 @@ func TestMainState_GetNearestClients(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			got := c.mainState.GetNearestClients(c.clientFilter, c.centerLat, c.centerLon, c.distanceKm)
 
-			ids := util.ArrayMap(got, func(cd ClientDistance) string { return cd.Client.getId() })
+			ids := util.ArrayMap(got, func(cd ClientDistance) string { return cd.Client.GetId() })
 			distances := util.ArrayMap(got, func(cd ClientDistance) float64 { return cd.RoundDistance().Distance })
 
 			test_utils.AssertEquals(c.expectedIds, ids, t, false, c.name+" ids")

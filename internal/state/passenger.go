@@ -17,103 +17,103 @@ type Passenger struct {
 	CoordinatesReceivedAt time.Time
 }
 
-func (p *Passenger) getId() string {
+func (p *Passenger) GetId() string {
 	return p.Id
 }
 
-func (p *Passenger) setId(id string) {
+func (p *Passenger) SetId(id string) {
 	p.Id = id
 }
 
-func (p *Passenger) copyMe() Client {
+func (p *Passenger) CopyMe() Client {
 	copied := *p
 	return &copied
 }
 
-func (p *Passenger) getLat() float64 {
+func (p *Passenger) GetLat() float64 {
 	return p.Lat
 }
 
-func (p *Passenger) setLat(lat float64) {
+func (p *Passenger) SetLat(lat float64) {
 	p.Lat = lat
 }
 
-func (p *Passenger) getLon() float64 {
+func (p *Passenger) GetLon() float64 {
 	return p.Lon
 }
 
-func (p *Passenger) setLon(lon float64) {
+func (p *Passenger) SetLon(lon float64) {
 	p.Lon = lon
 }
 
-func (p *Passenger) getAddress() string {
+func (p *Passenger) GetAddress() string {
 	return p.Address
 }
 
-func (p *Passenger) setAddress(address string) {
+func (p *Passenger) SetAddress(address string) {
 	p.Address = address
 }
 
-func (p *Passenger) getIp() string {
+func (p *Passenger) GetIp() string {
 	return p.Ip
 }
 
-func (p *Passenger) setIp(ip string) {
+func (p *Passenger) SetIp(ip string) {
 	p.Ip = ip
 }
 
-func (p *Passenger) getActive() bool {
+func (p *Passenger) GetActive() bool {
 	return p.Active
 }
 
-func (p *Passenger) setActive(a bool) {
+func (p *Passenger) SetActive(a bool) {
 	p.Active = a
 }
 
-func (p *Passenger) getOnline() bool {
+func (p *Passenger) GetOnline() bool {
 	return p.Online
 }
 
-func (p *Passenger) setOnline(online bool) {
+func (p *Passenger) SetOnline(online bool) {
 	p.Online = online
 }
 
-func (p *Passenger) getPhone() string {
+func (p *Passenger) GetPhone() string {
 	return p.Phone
 }
 
-func (p *Passenger) setPhone(phone string) {
+func (p *Passenger) SetPhone(phone string) {
 	p.Phone = phone
 }
 
-func (p *Passenger) getDriverStatus() DriverStatus {
+func (p *Passenger) GetDriverStatus() DriverStatus {
 	return DriverStatusUndefined
 }
 
-func (p *Passenger) setDriverStatus(status DriverStatus) {
+func (p *Passenger) SetDriverStatus(status DriverStatus) {
 }
 
-func (p *Passenger) getCreatedAt() time.Time {
+func (p *Passenger) GetCreatedAt() time.Time {
 	return p.CreatedAt
 }
 
-func (p *Passenger) setCreatedAt(t time.Time) {
+func (p *Passenger) SetCreatedAt(t time.Time) {
 	p.CreatedAt = t
 }
 
-func (p *Passenger) getCoordinatesReceivedAt() time.Time {
+func (p *Passenger) GetCoordinatesReceivedAt() time.Time {
 	return p.CoordinatesReceivedAt
 }
 
-func (p *Passenger) setCoordinatesReceivedAt(t time.Time) {
+func (p *Passenger) SetCoordinatesReceivedAt(t time.Time) {
 	p.CoordinatesReceivedAt = t
 }
 
-func (p *Passenger) getType() ClientType {
+func (p *Passenger) GetType() ClientType {
 	return ClientTypePassenger
 }
 
-func (p *Passenger) getKey() string {
+func (p *Passenger) GetKey() string {
 	return ClientTypePassenger.GetKey(p.Id)
 }
 

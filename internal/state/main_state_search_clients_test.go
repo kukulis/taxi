@@ -55,7 +55,7 @@ func TestMainState_SearchClients(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			got := s.SearchClients(c.filter)
 
-			ids := util.ArrayMap(got, func(c Client) string { return c.getId() })
+			ids := util.ArrayMap(got, func(c Client) string { return c.GetId() })
 			sort.Strings(ids)
 
 			test_utils.AssertEquals(c.want, ids, t, false, c.name)

@@ -5,6 +5,7 @@ import (
 
 	"darbelis.eu/taxi/internal/handler"
 	"darbelis.eu/taxi/internal/messages"
+	"darbelis.eu/taxi/internal/repository"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/internal/web"
 	"darbelis.eu/taxi/pkg/nominatim"
@@ -42,6 +43,7 @@ var nominatimCoordinatesWorkerPool *nominatim.CoordinatesWorkerPool = nil
 
 var delegatingDriversMessageHandler *handler.DelegatingMessageHandler = nil
 var delegatingPassengersMessageHandler *handler.DelegatingMessageHandler = nil
+var chatMessageRepository repository.ChatMessageRepositoryContract = nil
 
 func GetWsController() *web.WsController {
 	if wsControllerInstance == nil {
@@ -118,6 +120,7 @@ func GetChatMessageHandler() *handler.ChatMessageHandler {
 			GetPassengersHub(),
 			GetDispatcher(),
 			GetAddressWorkerPool(),
+			GetChatMessageRepository(),
 		)
 	}
 
@@ -215,4 +218,12 @@ func GetDelegatingPassengersMessageHandler() *handler.DelegatingMessageHandler {
 	}
 
 	return delegatingPassengersMessageHandler
+}
+
+func GetChatMessageRepository() repository.ChatMessageRepositoryContract {
+	if chatMessageRepository == nil {
+		chatMessageRepository = repository.NewChatMessageRepositoryMemory()
+	}
+
+	return chatMessageRepository
 }
