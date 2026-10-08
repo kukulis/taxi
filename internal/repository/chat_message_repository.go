@@ -119,7 +119,7 @@ func (r *ChatMessageRepositoryMemory) GetChatPartners(participantId string) []st
 	return snapShot
 }
 
-// CutConversation leaves 'size' amount of last messages in the conversation
+// CutConversation leaves *size* count of last messages in the conversation
 func (r *ChatMessageRepositoryMemory) CutConversation(participant1, participant2 string, size int) {
 	r.messagesLock.Lock()
 	defer r.messagesLock.Unlock()
