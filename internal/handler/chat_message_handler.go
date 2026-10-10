@@ -45,7 +45,9 @@ func NewChatMessageHandler(
 }
 
 func (cmh *ChatMessageHandler) searchClient(clientId string) state.Client {
-	senders := cmh.mainState.SearchClients(&state.ClientFilter{Id: clientId})
+	filter := state.NewEmptyFilter()
+	filter.Id = clientId
+	senders := cmh.mainState.SearchClients(filter)
 
 	// we will decide later what to do if we have two clients with same id : driver and passenger
 
@@ -70,7 +72,7 @@ func (cmh *ChatMessageHandler) getHubByType(clientType state.ClientType) ws.HubI
 
 // HandleChatMessage dedicated to be sent from client to server and from server to client
 func (cmh *ChatMessageHandler) HandleChatMessage(clientId string, payload message_common.MessageInterface) {
-	chatMessage := payload.(messages.ChatMessage)
+	chatMessage := payload.(*messages.ChatMessage)
 
 	if clientId != chatMessage.SenderId {
 		cmh.logger.Warn("The received message sender " + chatMessage.SenderId + " does not match clientId " + clientId)
@@ -89,7 +91,7 @@ func (cmh *ChatMessageHandler) HandleChatMessage(clientId string, payload messag
 		return
 	}
 
-	dtoMessage := transformChatMessageToDto(chatMessage)
+	dtoMessage := transformChatMessageToDto(*chatMessage)
 	successfulAdd := cmh.chatMessageRepository.Add(dtoMessage)
 	if !successfulAdd {
 		cmh.logger.Warn("The message with id " + dtoMessage.Id + " already in the repository")
@@ -115,7 +117,7 @@ func (cmh *ChatMessageHandler) HandleChatMessage(clientId string, payload messag
 
 // HandleClientRequestsChatsInfos dedicated to be sent from client to server
 func (cmh *ChatMessageHandler) HandleClientRequestsChatsInfos(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ClientRequestsChatsInfos)
+	_ = payload.(*messages.ClientRequestsChatsInfos)
 
 	client := cmh.searchClient(clientId)
 
@@ -152,12 +154,12 @@ func (cmh *ChatMessageHandler) HandleClientRequestsChatsInfos(clientId string, p
 
 // HandleChatInfo dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleChatInfo(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ChatInfo)
+	_ = payload.(*messages.ChatInfo)
 }
 
 // HandleChatInfos dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleChatInfos(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ChatInfos)
+	_ = payload.(*messages.ChatInfos)
 }
 
 // ============= chat log ===================================================
@@ -171,7 +173,7 @@ func (cmh *ChatMessageHandler) HandleClientRequestsChatLog(clientId string, payl
 		return
 	}
 
-	request := payload.(messages.ClientRequestsChatLog)
+	request := payload.(*messages.ClientRequestsChatLog)
 	if request.SenderId != clientId {
 		cmh.logger.Warn("unauthorized attempt to get foreign chat log " + clientId + " requested (" + request.SenderId + ", " + request.ReceiverId + ")")
 	}
@@ -202,14 +204,14 @@ func (cmh *ChatMessageHandler) HandleClientRequestsChatLog(clientId string, payl
 
 // HandleChatLog dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleChatLog(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ChatLog)
+	_ = payload.(*messages.ChatLog)
 }
 
 // ============= talker info ===================================================
 
 // HandleClientRequestsTalkersInfos dedicated to be sent from client to server
 func (cmh *ChatMessageHandler) HandleClientRequestsTalkersInfos(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ClientRequestsTalkersInfos)
+	_ = payload.(*messages.ClientRequestsTalkersInfos)
 
 	client := cmh.searchClient(clientId)
 
@@ -226,7 +228,9 @@ func (cmh *ChatMessageHandler) HandleClientRequestsTalkersInfos(clientId string,
 	}
 
 	// just return all clients, transformed in to messages.TalkerInfo
-	clients := cmh.mainState.SearchClients(&state.ClientFilter{Online: 1})
+	filter := state.NewEmptyFilter()
+	filter.Online = 1
+	clients := cmh.mainState.SearchClients(filter)
 
 	var talkerInfos []messages.TalkerInfo
 
@@ -260,12 +264,12 @@ func (cmh *ChatMessageHandler) HandleClientRequestsTalkersInfos(clientId string,
 
 // HandleTalkerInfo dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleTalkerInfo(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.TalkerInfo)
+	_ = payload.(*messages.TalkerInfo)
 }
 
 // HandleTalkersInfos dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleTalkersInfos(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.TalkersInfos)
+	_ = payload.(*messages.TalkersInfos)
 }
 
 func transformChatMessageToDto(message messages.ChatMessage) *dto.ChatMessage {

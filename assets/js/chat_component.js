@@ -3,8 +3,8 @@ import {Conversation} from "./entities/conversation.js";
 import {ChatMessageDto} from "./entities/chat_message_dto.js";
 import {Talker} from "./entities/talker.js";
 import {TalkersList} from "./entities/talkers_list.js";
-import {ApplicationEvent, MessageType} from "./constants";
-import {ChatMessage, ChatLog, ChatInfo, ChatInfos, TalkerInfo, TalkersInfos} from "./entities/chat_messages";
+import {ApplicationEvent, MessageType} from "./constants.js";
+import {ChatMessage, ChatLog, ChatInfo, ChatInfos, TalkerInfo, TalkersInfos} from "./entities/chat_messages.js";
 
 export class ChatComponent {
 
@@ -62,6 +62,16 @@ export class ChatComponent {
     clientType = null;
 
     /**
+     * @type {Map<string, int>}
+     */
+    incomingChatNotices = new Map();
+
+    /**
+     * @type {HTMLElement}
+     */
+    incomingChatNoticesBox = null;
+
+    /**
      * @param {string} clientId
      * @param {string} clientType
      * @param {Dispatcher} dispatcher
@@ -105,9 +115,15 @@ export class ChatComponent {
         this.view.appendChild(this.hideButton);
         this.messagesBox = null;
 
+        this.view.appendChild(this.renderIncomingChatNotices());
+
         if (this.talkersList != null ) {
             const box = NewEC('div', 'chat-talkers-box');
             box.appendChild(NewECT('h3', 'chat-talkers-title', 'Talkers'));
+
+            if (this.talkersList.talkers.length === 0) {
+                box.appendChild(NewECT('span', 'chat-talkers-empty', 'empty'));
+            }
 
             for (const talker of this.talkersList.talkers) {
                 const row = NewEC('div', 'chat-talker-row');
@@ -119,6 +135,10 @@ export class ChatComponent {
 
                 box.appendChild(row);
             }
+
+            const closeButton = NewECT('button', 'chat-talkers-close-button', 'Close');
+            closeButton.addEventListener('click', () => this.onTalkersCloseButtonClick());
+            box.appendChild(closeButton);
 
             this.view.appendChild(box);
         }
@@ -156,6 +176,29 @@ export class ChatComponent {
             const showTalkersButton = NewECT('button', 'chat-show-talkers-button', 'Show talkers');
             showTalkersButton.addEventListener('click', () => this.onShowTalkersButtonClick());
             this.view.appendChild(showTalkersButton);
+        }
+    }
+
+    renderIncomingChatNotices() {
+        this.incomingChatNoticesBox = NewEC('div', 'chat-incoming-notices-box');
+        this.refreshIncomingChatNotices();
+
+        return this.incomingChatNoticesBox;
+    }
+
+    refreshIncomingChatNotices() {
+        const box = this.incomingChatNoticesBox;
+        ClearE(box);
+        box.appendChild(NewECT('h3', 'chat-incoming-notices-title', 'Incoming Chat Notices'));
+
+        for (const [senderId, count] of this.incomingChatNotices) {
+            const button = NewECT('button', 'chat-incoming-notice-button', `${senderId} (${count})`);
+            button.addEventListener('click', () => {
+                // fake talker, just to reuse onTalkerChatButtonClick - we will refactor that later
+                const talker = new Talker(senderId, 'TODO');
+                this.onTalkerChatButtonClick(talker);
+            });
+            box.appendChild(button);
         }
     }
 
@@ -223,11 +266,18 @@ export class ChatComponent {
         this.renderView();
     }
 
+    onTalkersCloseButtonClick() {
+        this.talkersList = null;
+        this.renderView();
+    }
+
     async onShowTalkersButtonClick() {
         const talkerInfos = await this.apiClient.getTalkers();
 
         const talkersList = new TalkersList();
-        talkersList.talkers = talkerInfos.map((t) => new Talker(t.client_id, t.name));
+        talkersList.talkers = talkerInfos
+            .filter((t) => t.client_id !== this.clientId)
+            .map((t) => new Talker(t.client_id, t.name));
 
         this.talkersList = talkersList;
         this.renderView();
@@ -240,7 +290,24 @@ export class ChatComponent {
 
     handleChatMessage(data) {
         const message = new ChatMessage().fromObject(data);
-        // TODO append to this.conversation if it's the one currently open, render
+
+        if (this.conversation == null || this.conversation.talkerId !== message.sender_id) {
+            const count = this.incomingChatNotices.get(message.sender_id) || 0;
+            this.incomingChatNotices.set(message.sender_id, count + 1);
+            if (this.incomingChatNoticesBox != null) {
+                this.refreshIncomingChatNotices();
+            }
+            return;
+        }
+
+        const dto = new ChatMessageDto();
+        dto.time = new Date(message.sent_time);
+        dto.text = message.text;
+        this.conversation.messages.push(dto);
+
+        if (this.messagesBox != null) {
+            this.messagesBox.appendChild(this.createMessageRow(dto));
+        }
     }
 
     handleChatLog(data) {

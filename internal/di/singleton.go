@@ -56,7 +56,7 @@ func GetWsController() *web.WsController {
 
 func GetWebController() *web.WebController {
 	if webControllerInstance == nil {
-		webControllerInstance = web.NewWebController(GetMainState())
+		webControllerInstance = web.NewWebController(GetMainState(), GetChatMessageRepository())
 	}
 
 	return webControllerInstance

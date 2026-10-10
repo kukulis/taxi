@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sort"
 
+	"darbelis.eu/taxi/internal/repository"
 	"darbelis.eu/taxi/internal/state"
 	"darbelis.eu/taxi/pkg/util"
 	"github.com/gin-gonic/gin"
@@ -12,12 +13,16 @@ import (
 // observerTableLimit caps how many drivers/passengers/invitations the observer page shows.
 const observerTableLimit = 5
 
+// observerMessagesLimit caps how many chat messages the observer page shows.
+const observerMessagesLimit = 15
+
 type WebController struct {
-	mainState *state.MainState
+	mainState             *state.MainState
+	chatMessageRepository repository.ChatMessageRepositoryContract
 }
 
-func NewWebController(mainState *state.MainState) *WebController {
-	return &WebController{mainState: mainState}
+func NewWebController(mainState *state.MainState, chatMessageRepository repository.ChatMessageRepositoryContract) *WebController {
+	return &WebController{mainState: mainState, chatMessageRepository: chatMessageRepository}
 }
 
 func (controller *WebController) Index(c *gin.Context) {
@@ -59,9 +64,12 @@ func (controller *WebController) Observer(c *gin.Context) {
 		invitations = invitations[:observerTableLimit]
 	}
 
+	messages := controller.chatMessageRepository.GetLatestMessages(observerMessagesLimit)
+
 	c.HTML(http.StatusOK, "observer.gohtml", gin.H{
 		"Drivers":     drivers,
 		"Passengers":  passengers,
 		"Invitations": invitations,
+		"Messages":    messages,
 	})
 }

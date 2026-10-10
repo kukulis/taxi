@@ -11,6 +11,7 @@
     <tr>
         <th>Id</th>
         <th>Active</th>
+        <th>Online</th>
         <th>Status</th>
         <th>Lat</th>
         <th>Lon</th>
@@ -23,6 +24,7 @@
     <tr>
         <td>{{.Id}}</td>
         <td>{{.Active}}</td>
+        <td>{{.Online}}</td>
         <td>{{.Status}}</td>
         <td>{{.Lat}}</td>
         <td>{{.Lon}}</td>
@@ -43,6 +45,7 @@
     <tr>
         <th>Id</th>
         <th>Active</th>
+        <th>Online</th>
         <th>Lat</th>
         <th>Lon</th>
         <th>Address</th>
@@ -54,6 +57,7 @@
     <tr>
         <td>{{.Id}}</td>
         <td>{{.Active}}</td>
+        <td>{{.Online}}</td>
         <td>{{.Lat}}</td>
         <td>{{.Lon}}</td>
         <td>{{.Address}}</td>
@@ -96,6 +100,34 @@
     {{else}}
     <tr>
         <td colspan="8">No invitations</td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+
+<h2>Messages (latest 15)</h2>
+<table border="1" cellpadding="4">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Sender</th>
+        <th>Receiver</th>
+        <th>Text</th>
+        <th>Sent</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Messages}}
+    <tr>
+        <td>{{.Id}}</td>
+        <td>{{.SenderId}}</td>
+        <td>{{.ReceiverId}}</td>
+        <td>{{.Text}}</td>
+        <td>{{if not .SentTime.IsZero}}{{.SentTime.Format "15:04:05"}}{{end}}</td>
+    </tr>
+    {{else}}
+    <tr>
+        <td colspan="5">No messages</td>
     </tr>
     {{end}}
     </tbody>

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"sort"
 	"sync"
 
 	"darbelis.eu/taxi/internal/dto"
@@ -13,6 +14,7 @@ type ChatMessageRepositoryContract interface {
 	GetConversation(participant1, participant2 string) []*dto.ChatMessage
 	GetChatPartners(participantId string) []string
 	CutConversation(participant1, participant2 string, size int)
+	GetLatestMessages(limit int) []*dto.ChatMessage
 }
 
 type ChatMessageRepositoryMemory struct {
@@ -144,4 +146,26 @@ func (r *ChatMessageRepositoryMemory) CutConversation(participant1, participant2
 			delete(r.chatMessagesById, message.Id)
 		}
 	}
+}
+
+// GetLatestMessages returns up to limit most recently sent messages across all
+// conversations, newest first.
+func (r *ChatMessageRepositoryMemory) GetLatestMessages(limit int) []*dto.ChatMessage {
+	r.messagesLock.Lock()
+	defer r.messagesLock.Unlock()
+
+	messages := make([]*dto.ChatMessage, 0, len(r.chatMessagesById))
+	for _, message := range r.chatMessagesById {
+		messages = append(messages, message)
+	}
+
+	sort.Slice(messages, func(i, j int) bool {
+		return messages[i].SentTime.After(messages[j].SentTime)
+	})
+
+	if len(messages) > limit {
+		messages = messages[:limit]
+	}
+
+	return messages
 }

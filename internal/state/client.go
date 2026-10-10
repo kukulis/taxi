@@ -216,3 +216,5 @@ func (f *ClientFilter) CalculateSquare(lat, lon float64, distanceKm float64) {
 	f.LonFrom = lon - lonDelta
 	f.LonTo = lon + lonDelta
 }
+
+// TODO fluent setters to ClientFilter

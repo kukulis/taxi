@@ -148,6 +148,8 @@ export class App {
 
         dispatcher.addListener(WsEvent.ON_OPEN_WS, () => commonComponent.handleServerRequestsCoordinates({}));
         dispatcher.addListener(WsEvent.ON_CLOSE_WS, () => dispatcher.dispatch(ApplicationEvent.ERROR, {message: 'The WS connection closed'}));
+
+        // TODO wrong place to initialize this as it goes globally
         dispatcher.addListener(ApplicationEvent.SEND_WS_MESSAGE, ([ct, type, data]) => this.sendWsMessage(ct, type, data));
 
         wsService.addHandle(MessageType.SERVER_SENDS_CLIENT_ADDRESS, (data) => commonComponent.handleServerSendsClientAddress(data));
@@ -165,6 +167,7 @@ export class App {
     wireChatComponent(clientId, clientType) {
         const chatComponent = this.getChatComponent(clientId, clientType);
         const wsService = clientType === ClientType.DRIVER ? this.getDriverWs() : this.getPassengerWs();
+        // const dispatcher = this.getDispatcher();
 
         wsService.addHandle(MessageType.CHAT_MESSAGE, (data) => chatComponent.handleChatMessage(data));
         wsService.addHandle(MessageType.CHAT_LOG, (data) => chatComponent.handleChatLog(data));
@@ -172,6 +175,8 @@ export class App {
         wsService.addHandle(MessageType.CHAT_INFOS, (data) => chatComponent.handleChatInfos(data));
         wsService.addHandle(MessageType.TALKER_INFO, (data) => chatComponent.handleTalkerInfo(data));
         wsService.addHandle(MessageType.TALKERS_INFOS, (data) => chatComponent.handleTalkersInfos(data));
+
+        // dispatcher.addListener(ApplicationEvent.SEND_WS_MESSAGE, ([ct, type, data]) => this.sendWsMessage(ct, type, data));
 
         return chatComponent;
     }

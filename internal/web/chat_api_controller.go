@@ -1,7 +1,9 @@
 package web
 
 import (
+	"log"
 	"net/http"
+	"strconv"
 
 	"darbelis.eu/taxi/internal/dto"
 	"darbelis.eu/taxi/internal/messages"
@@ -49,7 +51,11 @@ func (c *ChatApiController) ChatLog(ctx *gin.Context) {
 // Unlike the WS handler, there is no authenticated clientId to exclude from the
 // list here, so this returns every online client.
 func (c *ChatApiController) Talkers(ctx *gin.Context) {
-	clients := c.mainState.SearchClients(&state.ClientFilter{Online: 1})
+	filter := state.NewEmptyFilter()
+	filter.Online = 1
+
+	clients := c.mainState.SearchClients(filter)
+	log.Println("ChatApiController.Talkers clients count: " + strconv.Itoa(len(clients)))
 
 	var talkerInfos []messages.TalkerInfo
 	for _, cl := range clients {
@@ -64,6 +70,7 @@ func (c *ChatApiController) Talkers(ctx *gin.Context) {
 			Name:       name,
 		})
 	}
+	log.Println("ChatApiController.Talkers talkers count: " + strconv.Itoa(len(talkerInfos)))
 
 	ctx.JSON(http.StatusOK, messages.TalkersInfos{List: talkerInfos})
 }

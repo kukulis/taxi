@@ -5,4 +5,6 @@ export class ChatMessageDto {
     time = null;
 
     text = "";
+
+    // TODO still need sender and receiver
 }
