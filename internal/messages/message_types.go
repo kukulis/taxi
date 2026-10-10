@@ -60,15 +60,18 @@ const (
 
 	MessageTypeServerSendsClientAddress message_common.MessageType = "server_sends_client_address"
 
+	// --- chat-related messages
+
 	MessageTypeChatMessage message_common.MessageType = "chat_message"
-	MessageTypeChatLog     message_common.MessageType = "chat_log"
-	MessageTypeChatInfo    message_common.MessageType = "chat_info"
-	MessageTypeChatInfos   message_common.MessageType = "chat_infos"
 
 	MessageTypeClientRequestsChatsInfos message_common.MessageType = "client_requests_chats_infos"
-	MessageTypeClientRequestsChatLog    message_common.MessageType = "client_requests_chat_log"
+	MessageTypeChatInfo                 message_common.MessageType = "chat_info"
+	MessageTypeChatInfos                message_common.MessageType = "chat_infos"
 
+	MessageTypeClientRequestsChatLog message_common.MessageType = "client_requests_chat_log"
+	MessageTypeChatLog               message_common.MessageType = "chat_log"
+
+	MessageTypeClientRequestsTalkersInfos message_common.MessageType = "client_requests_talkers_infos"
 	MessageTypeTalkerInfo                 message_common.MessageType = "talker_info"
 	MessageTypeTalkersInfos               message_common.MessageType = "talkers_infos"
-	MessageTypeClientRequestsTalkersInfos message_common.MessageType = "client_requests_talkers_infos"
 )

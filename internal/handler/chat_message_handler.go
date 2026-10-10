@@ -68,6 +68,7 @@ func (cmh *ChatMessageHandler) getHubByType(clientType state.ClientType) ws.HubI
 	return nil
 }
 
+// HandleChatMessage dedicated to be sent from client to server and from server to client
 func (cmh *ChatMessageHandler) HandleChatMessage(clientId string, payload message_common.MessageInterface) {
 	chatMessage := payload.(messages.ChatMessage)
 
@@ -109,36 +110,161 @@ func (cmh *ChatMessageHandler) HandleChatMessage(clientId string, payload messag
 	})
 }
 
-func (cmh *ChatMessageHandler) HandleChatLog(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ChatLog)
+// ============= chat info ===================================================
+// not sure if it wouldn't be better to use REST API for these cases
+
+// HandleClientRequestsChatsInfos dedicated to be sent from client to server
+func (cmh *ChatMessageHandler) HandleClientRequestsChatsInfos(clientId string, payload message_common.MessageInterface) {
+	_ = payload.(messages.ClientRequestsChatsInfos)
+
+	client := cmh.searchClient(clientId)
+
+	if client == nil {
+		cmh.logger.Warn("Client not found " + clientId)
+		return
+	}
+
+	hub := cmh.getHubByType(client.GetType())
+
+	if hub == nil {
+		cmh.logger.Error("Could not find hub by a client type " + string(client.GetType()))
+		return
+	}
+
+	chatPartners := cmh.chatMessageRepository.GetChatPartners(clientId)
+
+	var chatInfos []messages.ChatInfo
+	for _, partnerId := range chatPartners {
+		chatInfo := messages.ChatInfo{
+			ParticipantId1: clientId,
+			ParticipantId2: partnerId,
+		}
+
+		chatInfos = append(chatInfos, chatInfo)
+	}
+
+	hub.SendMessage(ws.ClientMessage{
+		ClientId: clientId,
+		Message:  messages.ChatInfos{List: chatInfos},
+	})
+
 }
 
+// HandleChatInfo dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleChatInfo(clientId string, payload message_common.MessageInterface) {
 	_ = payload.(messages.ChatInfo)
 }
 
+// HandleChatInfos dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleChatInfos(clientId string, payload message_common.MessageInterface) {
 	_ = payload.(messages.ChatInfos)
 }
 
-func (cmh *ChatMessageHandler) HandleClientRequestsChatsInfos(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ClientRequestsChatsInfos)
-}
+// ============= chat log ===================================================
 
+// HandleClientRequestsChatLog dedicated to be sent from client to server
 func (cmh *ChatMessageHandler) HandleClientRequestsChatLog(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ClientRequestsChatLog)
+	client := cmh.searchClient(clientId)
+
+	if client == nil {
+		cmh.logger.Warn("could not find client by id " + clientId)
+		return
+	}
+
+	request := payload.(messages.ClientRequestsChatLog)
+	if request.SenderId != clientId {
+		cmh.logger.Warn("unauthorized attempt to get foreign chat log " + clientId + " requested (" + request.SenderId + ", " + request.ReceiverId + ")")
+	}
+
+	hub := cmh.getHubByType(client.GetType())
+
+	if hub == nil {
+		cmh.logger.Error("Could not find hub by a client type " + string(client.GetType()))
+		return
+	}
+
+	conversation := cmh.chatMessageRepository.GetConversation(request.SenderId, request.ReceiverId)
+
+	var chatMessages []messages.ChatMessage
+	for _, msg := range conversation {
+		chatMessages = append(chatMessages, transformChatDtoToMessage(msg))
+	}
+
+	hub.SendMessage(ws.ClientMessage{
+		ClientId: clientId,
+		Message: messages.ChatLog{
+			ParticipantId1: request.SenderId,
+			ParticipantId2: request.ReceiverId,
+			Log:            chatMessages,
+		},
+	})
 }
 
+// HandleChatLog dedicated to send from server to client
+func (cmh *ChatMessageHandler) HandleChatLog(clientId string, payload message_common.MessageInterface) {
+	_ = payload.(messages.ChatLog)
+}
+
+// ============= talker info ===================================================
+
+// HandleClientRequestsTalkersInfos dedicated to be sent from client to server
+func (cmh *ChatMessageHandler) HandleClientRequestsTalkersInfos(clientId string, payload message_common.MessageInterface) {
+	_ = payload.(messages.ClientRequestsTalkersInfos)
+
+	client := cmh.searchClient(clientId)
+
+	if client == nil {
+		cmh.logger.Warn("could not find client by id " + clientId)
+		return
+	}
+
+	hub := cmh.getHubByType(client.GetType())
+
+	if hub == nil {
+		cmh.logger.Error("Could not find hub by a client type " + string(client.GetType()))
+		return
+	}
+
+	// just return all clients, transformed in to messages.TalkerInfo
+	clients := cmh.mainState.SearchClients(&state.ClientFilter{Online: 1})
+
+	var talkerInfos []messages.TalkerInfo
+
+	for _, cl := range clients {
+		if cl.GetId() == client.GetId() {
+			continue
+		}
+
+		if cl.GetName() == "" {
+			continue
+		}
+
+		talkerInfo := messages.TalkerInfo{
+			ClientId:   cl.GetId(),
+			ClientType: string(cl.GetType()),
+			// TODO
+			Name: cl.GetName(),
+		}
+
+		talkerInfos = append(talkerInfos, talkerInfo)
+	}
+
+	hub.SendMessage(ws.ClientMessage{
+		ClientId: clientId,
+		Message: messages.TalkersInfos{
+			List: talkerInfos,
+		},
+	})
+}
+
+// HandleTalkerInfo dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleTalkerInfo(clientId string, payload message_common.MessageInterface) {
 	_ = payload.(messages.TalkerInfo)
 }
 
+// HandleTalkersInfos dedicated to send from server to client
 func (cmh *ChatMessageHandler) HandleTalkersInfos(clientId string, payload message_common.MessageInterface) {
 	_ = payload.(messages.TalkersInfos)
-}
-
-func (cmh *ChatMessageHandler) HandleClientRequestsTalkersInfos(clientId string, payload message_common.MessageInterface) {
-	_ = payload.(messages.ClientRequestsTalkersInfos)
 }
 
 func transformChatMessageToDto(message messages.ChatMessage) *dto.ChatMessage {

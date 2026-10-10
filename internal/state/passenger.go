@@ -12,6 +12,8 @@ type Passenger struct {
 	Active   bool
 	Online   bool
 
+	Name string
+
 	CreatedAt             time.Time
 	InfoReceivedAt        time.Time
 	CoordinatesReceivedAt time.Time
@@ -115,6 +117,14 @@ func (p *Passenger) GetType() ClientType {
 
 func (p *Passenger) GetKey() string {
 	return ClientTypePassenger.GetKey(p.Id)
+}
+
+func (p *Passenger) GetName() string {
+	return p.Name
+}
+
+func (p *Passenger) SetName(name string) {
+	p.Name = name
 }
 
 // ensure interface is implemented

@@ -43,6 +43,9 @@ type Client interface {
 	GetType() ClientType
 
 	GetKey() string
+
+	GetName() string
+	SetName(name string)
 }
 
 type ClientType string

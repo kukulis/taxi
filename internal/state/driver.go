@@ -15,6 +15,8 @@ type Driver struct {
 	Active      bool
 	Online      bool
 
+	Name string
+
 	CreatedAt             time.Time
 	InfoReceivedAt        time.Time
 	CoordinatesReceivedAt time.Time
@@ -118,6 +120,14 @@ func (d *Driver) GetType() ClientType {
 }
 func (d *Driver) GetKey() string {
 	return ClientTypeDriver.GetKey(d.Id)
+}
+
+func (d *Driver) GetName() string {
+	return d.Name
+}
+
+func (d *Driver) SetName(name string) {
+	d.Name = name
 }
 
 // ensure interface is implemented

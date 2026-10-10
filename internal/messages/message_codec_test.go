@@ -47,12 +47,12 @@ var roundTripMessages = []message_common.MessageInterface{
 
 	ChatMessage{Id: "m1", SenderId: "p1", ReceiverId: "d1", Text: "hello", SentTime: testSentTime, ReceivedTime: testReceivedTime},
 	ChatLog{
-		Id: "c1", SenderId: "p1", ReceiverId: "d1",
+		Id: "c1", ParticipantId1: "p1", ParticipantId2: "d1",
 		Log:       []ChatMessage{{Id: "m1", SenderId: "p1", ReceiverId: "d1", Text: "hello", SentTime: testSentTime, ReceivedTime: testReceivedTime}},
 		StartedAt: testSentTime,
 	},
-	ChatInfo{Id: "c1", SenderId: "p1", ReceiverId: "d1", StartedAt: testSentTime},
-	ChatInfos{List: []ChatInfo{{Id: "c1", SenderId: "p1", ReceiverId: "d1", StartedAt: testSentTime}}},
+	ChatInfo{Id: "c1", ParticipantId1: "p1", ParticipantId2: "d1", StartedAt: testSentTime},
+	ChatInfos{List: []ChatInfo{{Id: "c1", ParticipantId1: "p1", ParticipantId2: "d1", StartedAt: testSentTime}}},
 	ClientRequestsChatsInfos{},
 	ClientRequestsChatLog{SenderId: "p1", ReceiverId: "d1"},
 
