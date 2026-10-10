@@ -235,15 +235,16 @@ func (cmh *ChatMessageHandler) HandleClientRequestsTalkersInfos(clientId string,
 			continue
 		}
 
-		if cl.GetName() == "" {
-			continue
+		name := cl.GetName()
+
+		if name == "" {
+			name = "anonymous"
 		}
 
 		talkerInfo := messages.TalkerInfo{
 			ClientId:   cl.GetId(),
 			ClientType: string(cl.GetType()),
-			// TODO
-			Name: cl.GetName(),
+			Name:       name,
 		}
 
 		talkerInfos = append(talkerInfos, talkerInfo)

@@ -29,4 +29,6 @@ func RegisterWsRoutes(router *gin.Engine) {
 
 func RegisterApiRoutes(apiRoute *gin.RouterGroup) {
 	apiRoute.GET("/driver", func(c *gin.Context) { GetDriverApiController().Search(c) })
+	apiRoute.GET("/chat/:client_id/log", func(c *gin.Context) { GetChatApiController().ChatLog(c) })
+	apiRoute.GET("/talkers", func(c *gin.Context) { GetChatApiController().Talkers(c) })
 }

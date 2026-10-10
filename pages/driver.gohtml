@@ -18,10 +18,12 @@
 
     const commonComponent = app.wireCommonComponent(ClientType.DRIVER);
     const driverComponent = app.wireDriverComponent(driverId);
+    const chatComponent = app.wireChatComponent(driverId, ClientType.DRIVER);
 
     const driverBlock = GetE("driver-block");
     driverBlock.appendChild(commonComponent.render());
     driverBlock.appendChild( await driverComponent.render());
+    driverBlock.appendChild(chatComponent.render());
 
     console.log("Driver page loaded");
 

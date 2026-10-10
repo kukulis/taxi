@@ -4,6 +4,7 @@ import {WsService} from "./ws_service.js";
 import {DriverComponent} from "./driver_component.js";
 import {PassengerComponent} from "./passenger_component.js";
 import {CommonComponent} from "./common_component.js";
+import {ChatComponent} from "./chat_component.js";
 import {State} from "./state.js";
 import {GetE, NewEC, NewECT} from "./util.js";
 import {ApplicationEvent, ClientType, InvitationStatus, MessageType, WsEvent} from "./constants.js";
@@ -24,6 +25,8 @@ export class App {
     passengerComponent = null;
     /** @type {CommonComponent|null} */
     commonComponent = null;
+    /** @type {ChatComponent|null} */
+    chatComponent = null;
     /** @type {State|null} */
     state = null;
 
@@ -122,6 +125,19 @@ export class App {
     }
 
     /**
+     * @param {string} clientId
+     * @param {string} clientType
+     * @returns {ChatComponent}
+     */
+    getChatComponent(clientId, clientType) {
+        if (this.chatComponent === null) {
+            this.chatComponent = new ChatComponent(clientId, clientType, this.getDispatcher(), this.getApiClient());
+        }
+
+        return this.chatComponent;
+    }
+
+    /**
      * @param {string} clientType
      * @returns {CommonComponent}
      */
@@ -139,6 +155,25 @@ export class App {
         wsService.addHandle(MessageType.SERVER_REQUESTS_CLIENT_INFO, (data) => commonComponent.handleServerRequestsClientInfo(data));
 
         return commonComponent;
+    }
+
+    /**
+     * @param {string} clientId
+     * @param {string} clientType
+     * @returns {ChatComponent}
+     */
+    wireChatComponent(clientId, clientType) {
+        const chatComponent = this.getChatComponent(clientId, clientType);
+        const wsService = clientType === ClientType.DRIVER ? this.getDriverWs() : this.getPassengerWs();
+
+        wsService.addHandle(MessageType.CHAT_MESSAGE, (data) => chatComponent.handleChatMessage(data));
+        wsService.addHandle(MessageType.CHAT_LOG, (data) => chatComponent.handleChatLog(data));
+        wsService.addHandle(MessageType.CHAT_INFO, (data) => chatComponent.handleChatInfo(data));
+        wsService.addHandle(MessageType.CHAT_INFOS, (data) => chatComponent.handleChatInfos(data));
+        wsService.addHandle(MessageType.TALKER_INFO, (data) => chatComponent.handleTalkerInfo(data));
+        wsService.addHandle(MessageType.TALKERS_INFOS, (data) => chatComponent.handleTalkersInfos(data));
+
+        return chatComponent;
     }
 
     /**

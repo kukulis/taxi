@@ -27,18 +27,18 @@ export class ChatMessage {
 }
 
 export class ChatLog {
-    constructor(id = '', senderId = '', receiverId = '', log = [], startedAt = '') {
+    constructor(id = '', participantId1 = '', participantId2 = '', log = [], startedAt = '') {
         this.id = id;
-        this.sender_id = senderId;
-        this.receiver_id = receiverId;
+        this.participant_id_1 = participantId1;
+        this.participant_id_2 = participantId2;
         this.log = log;
         this.started_at = startedAt;
     }
 
     fromObject(obj) {
         this.id = obj.id;
-        this.sender_id = obj.sender_id;
-        this.receiver_id = obj.receiver_id;
+        this.participant_id_1 = obj.participant_id_1;
+        this.participant_id_2 = obj.participant_id_2;
         this.log = (obj.log || []).map((m) => new ChatMessage().fromObject(m));
         this.started_at = obj.started_at;
         return this;
@@ -50,17 +50,17 @@ export class ChatLog {
 }
 
 export class ChatInfo {
-    constructor(id = '', senderId = '', receiverId = '', startedAt = '') {
+    constructor(id = '', participantId1 = '', participantId2 = '', startedAt = '') {
         this.id = id;
-        this.sender_id = senderId;
-        this.receiver_id = receiverId;
+        this.participant_id_1 = participantId1;
+        this.participant_id_2 = participantId2;
         this.started_at = startedAt;
     }
 
     fromObject(obj) {
         this.id = obj.id;
-        this.sender_id = obj.sender_id;
-        this.receiver_id = obj.receiver_id;
+        this.participant_id_1 = obj.participant_id_1;
+        this.participant_id_2 = obj.participant_id_2;
         this.started_at = obj.started_at;
         return this;
     }

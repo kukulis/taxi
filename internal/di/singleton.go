@@ -16,6 +16,7 @@ import (
 var webControllerInstance *web.WebController = nil
 var wsControllerInstance *web.WsController = nil
 var driverApiControllerInstance *web.DriverApiController = nil
+var chatApiControllerInstance *web.ChatApiController = nil
 
 var driversHubInstance *ws.Hub = nil
 var passengersHubInstance *ws.Hub = nil
@@ -67,6 +68,14 @@ func GetDriverApiController() *web.DriverApiController {
 	}
 
 	return driverApiControllerInstance
+}
+
+func GetChatApiController() *web.ChatApiController {
+	if chatApiControllerInstance == nil {
+		chatApiControllerInstance = web.NewChatApiController(GetMainState(), GetChatMessageRepository())
+	}
+
+	return chatApiControllerInstance
 }
 
 func GetDriversHub() *ws.Hub {

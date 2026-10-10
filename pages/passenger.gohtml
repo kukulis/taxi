@@ -18,10 +18,12 @@
 
     const commonComponent = app.wireCommonComponent(ClientType.PASSENGER);
     const passengerComponent = app.wirePassengerComponent(passengerId);
+    const chatComponent = app.wireChatComponent(passengerId, ClientType.PASSENGER);
 
     const passengerBlock = GetE("passenger-block");
     passengerBlock.appendChild(commonComponent.render());
     passengerBlock.appendChild( await passengerComponent.render());
+    passengerBlock.appendChild(chatComponent.render());
 
     console.log("Passenger page loaded");
 
