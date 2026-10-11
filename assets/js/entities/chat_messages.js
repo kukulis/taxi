@@ -2,14 +2,14 @@
 import {MessageType} from "../constants.js";
 
 export class ChatMessage {
-    constructor(id = '', senderId = '', receiverId = '', text = '', sentTime = '', receivedTime = '') {
-        this.id = id;
-        this.sender_id = senderId;
-        this.receiver_id = receiverId;
-        this.text = text;
-        this.sent_time = sentTime;
-        this.received_time = receivedTime;
-    }
+    id = "";
+    sender_id = "";
+    receiver_id = "";
+    text = "";
+    sent_time = "";
+    received_time = "";
+    sender_name = "";
+    receiver_name = "";
 
     fromObject(obj) {
         this.id = obj.id;
@@ -18,6 +18,10 @@ export class ChatMessage {
         this.text = obj.text;
         this.sent_time = obj.sent_time;
         this.received_time = obj.received_time;
+
+        this.sender_name = obj.sender_name;
+        this.receiver_name = obj.receiver_name;
+
         return this;
     }
 

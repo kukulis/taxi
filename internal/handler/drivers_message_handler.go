@@ -161,6 +161,7 @@ func (d *DriversMessageHandler) HandleClientRespondsInfo(clientId string, payloa
 		driver := c.(*state.Driver)
 		driver.Phone = msg.Phone
 		driver.VehicleInfo = msg.VehicleInfo
+		driver.Name = msg.Name
 		if msg.Ip != "" {
 			driver.Ip = msg.Ip
 		}

@@ -5,6 +5,8 @@ export class State {
     lat = null;
     lon = null;
     address = "";
+    phone = "";
+    name = "";
 
     setCoordinates(lat, lon) {
         this.lat = lat;

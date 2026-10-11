@@ -3,8 +3,10 @@ export class ChatMessageDto {
      * @type {Date}
      */
     time = null;
-
+    senderId = "";
+    receiverId = "";
     text = "";
 
-    // TODO still need sender and receiver
+    senderName = "";
+    receiverName = "";
 }

@@ -13,6 +13,8 @@ type ChatMessage struct {
 	Text         string    `json:"text"`
 	SentTime     time.Time `json:"sent_time"`
 	ReceivedTime time.Time `json:"received_time"`
+	SenderName   string    `json:"sender_name"`
+	ReceiverName string    `json:"receiver_name"`
 }
 
 func (ChatMessage) GetMessageType() message_common.MessageType {

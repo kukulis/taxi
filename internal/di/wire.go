@@ -14,6 +14,7 @@ func WireDelegatingDriverMessageHandler(
 	delegating.SetHandler(messages.MessageTypeClientRespondsInfo, d.HandleClientRespondsInfo)
 	delegating.SetHandler(messages.MessageTypeClientResponseError, d.HandleClientResponseError)
 	delegating.SetHandler(messages.MessageTypeClientError, d.HandleClientError)
+
 	delegating.SetHandler(messages.MessageTypeDriverCancelsOffer, d.HandleDriverCancelsOffer)
 	delegating.SetHandler(messages.MessageTypeDriverAcceptsOffer, d.HandleDriverAcceptsOffer)
 	delegating.SetHandler(messages.MessageTypeDriverRejectsOffer, d.HandleDriverRejectsOffer)
@@ -32,6 +33,7 @@ func WireDelegatingPassengerMessageHandler(
 	delegating.SetHandler(messages.MessageTypeClientRespondsInfo, p.HandleClientRespondsInfo)
 	delegating.SetHandler(messages.MessageTypeClientResponseError, p.HandleClientResponseError)
 	delegating.SetHandler(messages.MessageTypeClientError, p.HandleClientError)
+
 	delegating.SetHandler(messages.MessageTypePassengerInvitesDriver, p.HandlePassengerInvitesDriver)
 	delegating.SetHandler(messages.MessageTypePassengerCancelsInvite, p.HandlePassengerCancelsInvite)
 	delegating.SetHandler(messages.MessageTypePassengerRequestDriverCoords, p.HandlePassengerRequestDriverCoords)

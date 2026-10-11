@@ -17,6 +17,7 @@
         <th>Lon</th>
         <th>Address</th>
         <th>Phone</th>
+        <th>Name</th>
     </tr>
     </thead>
     <tbody>
@@ -30,10 +31,11 @@
         <td>{{.Lon}}</td>
         <td>{{.Address}}</td>
         <td>{{.Phone}}</td>
+        <td>{{.Name}}</td>
     </tr>
     {{else}}
     <tr>
-        <td colspan="7">No drivers</td>
+        <td colspan="9">No drivers</td>
     </tr>
     {{end}}
     </tbody>
@@ -50,6 +52,7 @@
         <th>Lon</th>
         <th>Address</th>
         <th>Phone</th>
+        <th>Name</th>
     </tr>
     </thead>
     <tbody>
@@ -62,10 +65,11 @@
         <td>{{.Lon}}</td>
         <td>{{.Address}}</td>
         <td>{{.Phone}}</td>
+        <td>{{.Name}}</td>
     </tr>
     {{else}}
     <tr>
-        <td colspan="6">No passengers</td>
+        <td colspan="8">No passengers</td>
     </tr>
     {{end}}
     </tbody>

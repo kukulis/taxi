@@ -134,7 +134,7 @@ export class App {
      */
     getChatComponent(clientId, clientType) {
         if (this.chatComponent === null) {
-            this.chatComponent = new ChatComponent(clientId, clientType, this.getDispatcher(), this.getApiClient());
+            this.chatComponent = new ChatComponent(clientId, clientType, this.getDispatcher(), this.getApiClient(), this.getState());
         }
 
         return this.chatComponent;

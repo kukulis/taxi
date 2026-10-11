@@ -1,6 +1,6 @@
 import {ClearE, NewEC, NewECT} from "./util.js";
 import {ApplicationEvent, MessageType} from "./constants.js";
-import {ServerSendsClientAddress} from "./entities/messages.js";
+import {ClientRespondsInfo, ServerSendsClientAddress} from "./entities/messages.js";
 
 // Location/address handling shared by DriverComponent and PassengerComponent.
 // Deliberately has no reference to either of them; a .gohtml page wires them
@@ -22,6 +22,9 @@ export class CommonComponent {
      */
     state = null;
 
+    /**
+     * @type {HTMLElement}
+     */
     view = null;
 
     /**
@@ -53,6 +56,26 @@ export class CommonComponent {
         }
 
         this.view.appendChild(NewECT('div', 'client-address', this.state.getAddress()));
+        this.view.appendChild(NewECT ('label', 'name-label', 'name') );
+        let nameInput = NewEC('input', 'name-input');
+        nameInput.value = this.state.name;
+        nameInput.type= 'text';
+        this.view.appendChild(nameInput);
+
+        let nameButton = NewECT ('button', 'set-name-button', 'save');
+        this.view.appendChild(nameButton)
+
+        nameButton.addEventListener('click', (e)=> {
+            console.log ('nameButton clicked')
+            this.state.name = nameInput.value
+
+            this.sendMessage( MessageType.CLIENT_RESPONDS_INFO, new ClientRespondsInfo(
+                this.state.phone,
+                "",
+                "",
+                this.state.name
+            ))
+        })
     }
 
     handleServerRequestsCoordinates(data) {

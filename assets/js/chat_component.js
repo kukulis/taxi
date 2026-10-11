@@ -72,16 +72,28 @@ export class ChatComponent {
     incomingChatNoticesBox = null;
 
     /**
+     * @type {State}
+     */
+    state = null;
+
+    /**
      * @param {string} clientId
      * @param {string} clientType
      * @param {Dispatcher} dispatcher
      * @param {ApiClient} apiClient
+     * @param {State} state
      */
-    constructor(clientId, clientType, dispatcher, apiClient) {
+    constructor(clientId,
+                clientType,
+                dispatcher,
+                apiClient ,
+                state, )
+    {
         this.clientId = clientId;
         this.clientType = clientType;
         this.dispatcher = dispatcher;
         this.apiClient = apiClient;
+        this.state = state;
     }
 
     render() {
@@ -202,8 +214,18 @@ export class ChatComponent {
         }
     }
 
+    /**
+     *
+     * @param {ChatMessageDto} message
+     * @returns {HTMLElement}
+     */
     createMessageRow(message) {
+        let senderName = this.state.name;
+        if ( this.constructor != null && message.senderId == this.conversation.talkerId ) {
+            senderName = this.conversation.talkerName
+        }
         const row = NewEC('div', 'chat-message-row');
+        row.appendChild(NewECT('span', 'chat-message-sender', senderName  ))
         row.appendChild(NewECT('span', 'chat-message-text', message.text));
         return row;
     }
@@ -228,6 +250,9 @@ export class ChatComponent {
             const dto = new ChatMessageDto();
             dto.time = new Date(message.sent_time);
             dto.text = message.text;
+            dto.senderId = message.sender_id;
+            dto.receiverId = message.receiver_id;
+
             return dto;
         });
         this.renderView();

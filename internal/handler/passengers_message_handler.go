@@ -136,6 +136,7 @@ func (p *PassengersMessageHandler) HandleClientRespondsInfo(clientId string, pay
 	found := p.mainState.UpdateClient(&state.Passenger{Id: clientId}, func(c state.Client) {
 		passenger := c.(*state.Passenger)
 		passenger.Phone = msg.Phone
+		passenger.Name = msg.Name
 		if msg.Ip != "" {
 			passenger.Ip = msg.Ip
 		}
