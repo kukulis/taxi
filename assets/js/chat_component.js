@@ -225,7 +225,7 @@ export class ChatComponent {
             senderName = this.conversation.talkerName
         }
         const row = NewEC('div', 'chat-message-row');
-        row.appendChild(NewECT('span', 'chat-message-sender', senderName  ))
+        row.appendChild(NewECT('span', 'chat-message-sender', senderName+': '  ))
         row.appendChild(NewECT('span', 'chat-message-text', message.text));
         return row;
     }
