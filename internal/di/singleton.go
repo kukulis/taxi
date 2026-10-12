@@ -24,6 +24,7 @@ var passengersHubInstance *ws.Hub = nil
 var driversMessagesWsHandler *handler.DriversMessageHandler = nil
 var passengersMessagesWsHandler *handler.PassengersMessageHandler = nil
 var chatMessageHandler *handler.ChatMessageHandler = nil
+var clientHandler *handler.ClientHandler = nil
 
 var mainState *state.MainState = nil
 
@@ -134,6 +135,21 @@ func GetChatMessageHandler() *handler.ChatMessageHandler {
 	}
 
 	return chatMessageHandler
+}
+
+func GetClientHandler() *handler.ClientHandler {
+	if clientHandler == nil {
+		clientHandler = handler.NewClientHandler(
+			GetMainState(),
+			GetDriversHub(),
+			GetPassengersHub(),
+			GetDispatcher(),
+			GetAddressWorkerPool(),
+			GetChatMessageRepository(),
+		)
+	}
+
+	return clientHandler
 }
 
 func GetMainState() *state.MainState {

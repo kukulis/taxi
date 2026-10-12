@@ -406,3 +406,19 @@ export class ServerSendsClientAddress {
         return MessageType.SERVER_REFRESH_PASSENGER_INVITATIONS;
     }
 }
+
+// sent from client to server and from server to client
+export class ClientName {
+    constructor(name = '') {
+        this.name = name;
+    }
+
+    fromObject(obj) {
+        this.name = obj.name;
+        return this;
+    }
+
+    getMessageType() {
+        return MessageType.CLIENT_NAME;
+    }
+}

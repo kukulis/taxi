@@ -23,6 +23,7 @@ func NewChatApiController(mainState *state.MainState, chatMessageRepository repo
 
 // ChatLog handles GET /api/chat/{client_id}/log?with=<otherClientId>
 // REST counterpart of handler.ChatMessageHandler.HandleClientRequestsChatLog.
+// TODO refactor uri structure
 func (c *ChatApiController) ChatLog(ctx *gin.Context) {
 	clientId := ctx.Param("client_id")
 	otherId := ctx.Query("with")
@@ -34,9 +35,29 @@ func (c *ChatApiController) ChatLog(ctx *gin.Context) {
 
 	conversation := c.chatMessageRepository.GetConversation(clientId, otherId)
 
+	sender := c.mainState.GetFirstClient(clientId)
+
+	if sender == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "sender not found"})
+		return
+	}
+	receiver := c.mainState.GetFirstClient(otherId)
+	if receiver == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "receiver not found"})
+		return
+	}
+
 	var chatMessages []messages.ChatMessage
 	for _, msg := range conversation {
-		chatMessages = append(chatMessages, transformChatDtoToMessage(msg))
+		chatMessage := transformChatDtoToMessage(msg)
+		if chatMessage.SenderId == sender.GetId() {
+			chatMessage.SenderName = sender.GetName()
+			chatMessage.ReceiverName = receiver.GetName()
+		} else {
+			chatMessage.SenderName = receiver.GetName()
+			chatMessage.ReceiverName = sender.GetName()
+		}
+		chatMessages = append(chatMessages, chatMessage)
 	}
 
 	ctx.JSON(http.StatusOK, messages.ChatLog{

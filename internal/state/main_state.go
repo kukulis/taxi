@@ -119,21 +119,49 @@ func (s *MainState) SearchClients(f *ClientFilter) []Client {
 	if f.KeyFieldsOnly() {
 		key := ResolveClientType(f.Type).GetKey(f.Id)
 
-		existing, ok := s.clients[key]
+		return s.getClientsByKeys([]string{key})
+	}
 
-		if !ok {
-			return result
-		}
+	if f.IdOnly() {
+		driverKey := ClientTypeDriver.GetKey(f.Id)
+		passengerKey := ClientTypePassenger.GetKey(f.Id)
 
-		result = append(result, existing.CopyMe())
-
-		return result
+		return s.getClientsByKeys([]string{driverKey, passengerKey})
 	}
 
 	for _, client := range s.clients {
 		if f.Match(client) {
 			result = append(result, client.CopyMe())
 		}
+	}
+
+	return result
+}
+
+func (s *MainState) GetFirstClient(id string) Client {
+	filter := NewEmptyFilter()
+	filter.Id = id
+	clients := s.SearchClients(filter)
+
+	// we will decide later what to do if we have two clients with same id : driver and passenger
+
+	if len(clients) > 0 {
+		return clients[0]
+	}
+
+	return nil
+}
+
+func (s *MainState) getClientsByKeys(keys []string) []Client {
+	var result []Client
+	for _, key := range keys {
+		existing, ok := s.clients[key]
+
+		if !ok {
+			continue
+		}
+
+		result = append(result, existing.CopyMe())
 	}
 
 	return result

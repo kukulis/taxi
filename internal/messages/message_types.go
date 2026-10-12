@@ -20,6 +20,7 @@ const (
 	MessageTypeServerRequestsCoordinates message_common.MessageType = "server_requests_coordinates"
 	MessageTypeServerRequestsClientInfo  message_common.MessageType = "server_requests_client_info"
 	MessageTypeClientInfoFull            message_common.MessageType = "client_info_full"
+	MessageTypeClientName                message_common.MessageType = "client_name"
 
 	// === driver or passenger
 

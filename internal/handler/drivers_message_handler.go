@@ -66,6 +66,14 @@ func (d *DriversMessageHandler) HandleClientRegistered(clientId string, payload 
 	driverFilter.Type = string(state.ClientTypeDriver)
 	driver := d.mainState.SearchClients(driverFilter)[0].(*state.Driver)
 
+	// ============ Refresh client name ======================================
+	d.driversHub.SendMessage(ws.ClientMessage{
+		ClientId: clientId,
+		Message: messages.ClientName{
+			Name: driver.Name,
+		},
+	})
+
 	// ============  Refresh driver status ===================================
 
 	d.driversHub.SendMessage(ws.ClientMessage{

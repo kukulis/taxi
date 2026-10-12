@@ -55,6 +55,25 @@ func (p *PassengersMessageHandler) HandleClientRegistered(clientId string, paylo
 		CreatedAt: p.mainState.Clock.Now(),
 	})
 
+	passengerFilter := state.NewEmptyFilter()
+	passengerFilter.Id = clientId
+	passengerFilter.Type = string(state.ClientTypePassenger)
+	passengers := p.mainState.SearchClients(passengerFilter)
+	if len(passengers) == 0 {
+		p.logger.Warn("Passenger not found by client id " + clientId)
+	}
+	passenger := passengers[0].(*state.Passenger)
+
+	// ============ Refresh client name ======================================
+	p.driversHub.SendMessage(ws2.ClientMessage{
+		ClientId: clientId,
+		Message: messages.ClientName{
+			Name: passenger.Name,
+		},
+	})
+
+	// ============== invitations =======================================
+
 	// only the invitations still relevant to the passenger; rejected/cancelled/completed ones are done with
 	invitations := p.mainState.GetInvitationsContainer().GetInvitationsSnapshot(&state.InvitationsFilter{
 		PassengerId: clientId,

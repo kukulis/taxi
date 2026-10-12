@@ -59,3 +59,11 @@ func WireChatMessagesHandles(
 
 	return delegating
 }
+
+func WireClientHandler(delegating *handler.DelegatingMessageHandler,
+	c *handler.ClientHandler) *handler.DelegatingMessageHandler {
+
+	delegating.SetHandler(messages.MessageTypeClientName, c.HandleNameMessage)
+
+	return delegating
+}

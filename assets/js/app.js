@@ -154,6 +154,7 @@ export class App {
         wsService.addHandle(MessageType.SERVER_SENDS_CLIENT_ADDRESS, (data) => commonComponent.handleServerSendsClientAddress(data));
         wsService.addHandle(MessageType.SERVER_REQUESTS_COORDINATES, (data) => commonComponent.handleServerRequestsCoordinates(data));
         wsService.addHandle(MessageType.SERVER_REQUESTS_CLIENT_INFO, (data) => commonComponent.handleServerRequestsClientInfo(data));
+        wsService.addHandle(MessageType.CLIENT_NAME, (data) => commonComponent.handleClientName(data));
 
         return commonComponent;
     }

@@ -4,7 +4,7 @@ import {ChatMessageDto} from "./entities/chat_message_dto.js";
 import {Talker} from "./entities/talker.js";
 import {TalkersList} from "./entities/talkers_list.js";
 import {ApplicationEvent, MessageType} from "./constants.js";
-import {ChatMessage, ChatLog, ChatInfo, ChatInfos, TalkerInfo, TalkersInfos} from "./entities/chat_messages.js";
+import {ChatInfo, ChatInfos, ChatLog, ChatMessage, TalkerInfo, TalkersInfos} from "./entities/chat_messages.js";
 
 export class ChatComponent {
 
@@ -86,9 +86,8 @@ export class ChatComponent {
     constructor(clientId,
                 clientType,
                 dispatcher,
-                apiClient ,
-                state, )
-    {
+                apiClient,
+                state,) {
         this.clientId = clientId;
         this.clientType = clientType;
         this.dispatcher = dispatcher;
@@ -129,7 +128,7 @@ export class ChatComponent {
 
         this.view.appendChild(this.renderIncomingChatNotices());
 
-        if (this.talkersList != null ) {
+        if (this.talkersList != null) {
             const box = NewEC('div', 'chat-talkers-box');
             box.appendChild(NewECT('h3', 'chat-talkers-title', 'Talkers'));
 
@@ -155,7 +154,7 @@ export class ChatComponent {
             this.view.appendChild(box);
         }
 
-        if ( this.conversation != null ) {
+        if (this.conversation != null) {
             const box = NewEC('div', 'chat-conversation-box');
             box.appendChild(NewECT('h3', 'chat-conversation-title', this.conversation.talkerName));
 
@@ -184,7 +183,7 @@ export class ChatComponent {
             this.view.appendChild(box);
         }
 
-        if ( this.talkersList == null && this.conversation == null ) {
+        if (this.talkersList == null && this.conversation == null) {
             const showTalkersButton = NewECT('button', 'chat-show-talkers-button', 'Show talkers');
             showTalkersButton.addEventListener('click', () => this.onShowTalkersButtonClick());
             this.view.appendChild(showTalkersButton);
@@ -220,12 +219,8 @@ export class ChatComponent {
      * @returns {HTMLElement}
      */
     createMessageRow(message) {
-        let senderName = this.state.name;
-        if ( this.constructor != null && message.senderId == this.conversation.talkerId ) {
-            senderName = this.conversation.talkerName
-        }
         const row = NewEC('div', 'chat-message-row');
-        row.appendChild(NewECT('span', 'chat-message-sender', senderName+': '  ))
+        row.appendChild(NewECT('span', 'chat-message-sender', message.senderName + ': '))
         row.appendChild(NewECT('span', 'chat-message-text', message.text));
         return row;
     }
@@ -241,20 +236,14 @@ export class ChatComponent {
 
         const chatLog = await this.apiClient.getChatLog(this.clientId, talker.id);
 
+        console.log ('onTalkerChatButtonClick chatLog from api', chatLog)
+
         // the user may have closed/switched the conversation while this was in flight
         if (chatLog == null || this.conversation !== conversation) {
             return;
         }
 
-        conversation.messages = chatLog.log.map((message) => {
-            const dto = new ChatMessageDto();
-            dto.time = new Date(message.sent_time);
-            dto.text = message.text;
-            dto.senderId = message.sender_id;
-            dto.receiverId = message.receiver_id;
-
-            return dto;
-        });
+        conversation.messages = chatLog.log.map((message) => (new ChatMessageDto()).fromWsMessage(message));
         this.renderView();
     }
 
@@ -266,17 +255,20 @@ export class ChatComponent {
 
         const sentTime = new Date();
 
-        this.sendMessage(MessageType.CHAT_MESSAGE, {
+        let wsMessage = {
             id: crypto.randomUUID(),
             sender_id: this.clientId,
             receiver_id: this.conversation.talkerId,
             text: text,
             sent_time: sentTime.toISOString(),
-        });
+            sender_name: this.state.name,
+        }
 
-        const message = new ChatMessageDto();
-        message.time = sentTime;
-        message.text = text;
+        this.sendMessage(MessageType.CHAT_MESSAGE, wsMessage);
+
+        // console.log('onSendButtonClick wsMessage', wsMessage)
+
+        const message = (new ChatMessageDto()).fromWsMessage(wsMessage);
         this.conversation.messages.push(message);
 
         if (this.messagesBox != null) {
@@ -325,9 +317,7 @@ export class ChatComponent {
             return;
         }
 
-        const dto = new ChatMessageDto();
-        dto.time = new Date(message.sent_time);
-        dto.text = message.text;
+        const dto = (new ChatMessageDto()).fromWsMessage(message);
         this.conversation.messages.push(dto);
 
         if (this.messagesBox != null) {

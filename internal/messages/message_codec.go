@@ -38,6 +38,8 @@ func Decode(raw []byte) (string, message_common.MessageInterface, error) {
 		msg = &ServerRequestsClientInfo{}
 	case MessageTypeClientInfoFull:
 		msg = &ClientInfoFull{}
+	case MessageTypeClientName:
+		msg = &ClientName{}
 	case MessageTypeClientRespondsCoordinates:
 		msg = &ClientRespondsCoordinates{}
 	case MessageTypeClientRespondsInfo:

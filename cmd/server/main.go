@@ -27,9 +27,11 @@ func main() {
 
 	delegatingDriversHandler := di.WireDelegatingDriverMessageHandler(di.GetDelegatingDriversMessageHandler(), di.GetDriversWsHandler())
 	delegatingDriversHandler = di.WireChatMessagesHandles(delegatingDriversHandler, di.GetChatMessageHandler())
+	delegatingDriversHandler = di.WireClientHandler(delegatingDriversHandler, di.GetClientHandler())
 
 	delegatingPassengersHandler := di.WireDelegatingPassengerMessageHandler(di.GetDelegatingPassengersMessageHandler(), di.GetPassengersWsHandler())
 	delegatingPassengersHandler = di.WireChatMessagesHandles(delegatingPassengersHandler, di.GetChatMessageHandler())
+	delegatingPassengersHandler = di.WireClientHandler(delegatingPassengersHandler, di.GetClientHandler())
 	//
 	//// Swagger UI
 	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

@@ -119,6 +119,22 @@ func (f *ClientFilter) KeyFieldsOnly() bool {
 		f.Online == -1
 }
 
+func (f *ClientFilter) IdOnly() bool {
+	return f.Id != "" &&
+		f.Type == "" &&
+		f.LatFrom == 0 &&
+		f.LatTo == 0 &&
+		f.LonFrom == 0 &&
+		f.LonTo == 0 &&
+		f.Address == "" &&
+		len(f.DriverStatuses) == 0 &&
+		f.VehicleInfo == "" &&
+		f.Phone == "" &&
+		f.Ip == "" &&
+		f.Active == -1 &&
+		f.Online == -1
+}
+
 func NewEmptyFilter() *ClientFilter {
 	return &ClientFilter{
 		Active: -1,

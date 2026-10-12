@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log/slog"
+	"time"
 
 	"darbelis.eu/taxi/internal/dto"
 	"darbelis.eu/taxi/internal/messages"
@@ -44,6 +45,8 @@ func NewChatMessageHandler(
 	}
 }
 
+// searchClient search first client by the given id
+// Deprecated: use MainState.GetFirstClient instead
 func (cmh *ChatMessageHandler) searchClient(clientId string) state.Client {
 	filter := state.NewEmptyFilter()
 	filter.Id = clientId
@@ -73,6 +76,10 @@ func (cmh *ChatMessageHandler) getHubByType(clientType state.ClientType) ws.HubI
 // HandleChatMessage dedicated to be sent from client to server and from server to client
 func (cmh *ChatMessageHandler) HandleChatMessage(clientId string, payload message_common.MessageInterface) {
 	chatMessage := payload.(*messages.ChatMessage)
+
+	if chatMessage.SentTime.IsZero() {
+		chatMessage.SentTime = time.Now()
+	}
 
 	if clientId != chatMessage.SenderId {
 		cmh.logger.Warn("The received message sender " + chatMessage.SenderId + " does not match clientId " + clientId)
@@ -105,6 +112,9 @@ func (cmh *ChatMessageHandler) HandleChatMessage(clientId string, payload messag
 		cmh.logger.Warn("Weird, the receiver hub is nil; receiver type: " + string(receiver.GetType()))
 		return
 	}
+
+	chatMessage.SenderName = sender.GetName()
+	chatMessage.ReceiverName = receiver.GetName()
 
 	hub.SendMessage(ws.ClientMessage{
 		ClientId: chatMessage.ReceiverId,
@@ -178,6 +188,13 @@ func (cmh *ChatMessageHandler) HandleClientRequestsChatLog(clientId string, payl
 		cmh.logger.Warn("unauthorized attempt to get foreign chat log " + clientId + " requested (" + request.SenderId + ", " + request.ReceiverId + ")")
 	}
 
+	receiver := cmh.searchClient(request.ReceiverId)
+
+	if receiver == nil {
+		cmh.logger.Warn("could not find receiver client  by id " + request.ReceiverId)
+		return
+	}
+
 	hub := cmh.getHubByType(client.GetType())
 
 	if hub == nil {
@@ -189,7 +206,10 @@ func (cmh *ChatMessageHandler) HandleClientRequestsChatLog(clientId string, payl
 
 	var chatMessages []messages.ChatMessage
 	for _, msg := range conversation {
-		chatMessages = append(chatMessages, transformChatDtoToMessage(msg))
+		chatMessage := transformChatDtoToMessage(msg)
+		chatMessage.SenderName = client.GetName()
+		chatMessage.ReceiverName = client.GetName()
+		chatMessages = append(chatMessages, chatMessage)
 	}
 
 	hub.SendMessage(ws.ClientMessage{

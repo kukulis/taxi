@@ -240,3 +240,11 @@ type ServerSendsClientAddress struct {
 func (ServerSendsClientAddress) GetMessageType() message_common.MessageType {
 	return MessageTypeServerSendsClientAddress
 }
+
+type ClientName struct {
+	Name string `json:"name"`
+}
+
+func (ClientName) GetMessageType() message_common.MessageType {
+	return MessageTypeClientName
+}

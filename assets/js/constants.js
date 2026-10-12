@@ -34,6 +34,7 @@ export const MessageType = {
     SERVER_REFRESH_DRIVER_OFFERS: 'server_refresh_driver_offers',
     SERVER_REFRESH_PASSENGER_INVITATIONS: 'server_refresh_passenger_invitations',
     SERVER_SENDS_CLIENT_ADDRESS: 'server_sends_client_address',
+    CLIENT_NAME: 'client_name',
 
     // --- chat-related messages
     CHAT_MESSAGE: 'chat_message',
