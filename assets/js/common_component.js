@@ -67,7 +67,10 @@ export class CommonComponent {
             let nameInput = NewEC('input', 'name-input');
             nameInput.value = this.state.name;
             nameInput.type = 'text';
+            nameInput.placeholder = 'input name';
             this.view.appendChild(nameInput);
+            nameInput.focus();
+            nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
 
             const saveName = () => {
                 this.state.name = nameInput.value;
@@ -95,7 +98,7 @@ export class CommonComponent {
             nameButton.addEventListener('click', saveName);
         } else {
             this.view.appendChild(NewECT('label', 'name-label', 'name'));
-            let nameSpan = NewECT('span', 'name-display', this.state.name);
+            let nameSpan = NewECT('span', 'name-display', this.state.name || 'input name');
             nameSpan.addEventListener('click', () => {
                 this.editingName = true;
                 this.renderView();

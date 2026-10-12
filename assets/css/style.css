@@ -134,8 +134,12 @@ body {
 .name-display {
     display: inline-block;
     min-width: 30px;
+    min-height: 20px;
     font-weight: bold;
     cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 2px 8px;
 }
 
 .driver-title,
