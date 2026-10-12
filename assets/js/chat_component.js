@@ -102,7 +102,7 @@ export class ChatComponent {
         this.showButton = NewECT('button', 'chat-show-button', 'Chat');
         this.showButton.addEventListener('click', () => this.onShowButtonClick());
 
-        this.hideButton = NewECT('button', 'chat-hide-button', 'Close chat');
+        this.hideButton = NewECT('button', 'chat-close-button', '✕');
         this.hideButton.addEventListener('click', () => this.onHideButtonClick());
 
         this.renderView();
@@ -130,6 +130,11 @@ export class ChatComponent {
 
         if (this.talkersList != null) {
             const box = NewEC('div', 'chat-talkers-box');
+
+            const talkersCloseButton = NewECT('button', 'chat-close-button', '✕');
+            talkersCloseButton.addEventListener('click', () => this.onTalkersCloseButtonClick());
+            box.appendChild(talkersCloseButton);
+
             box.appendChild(NewECT('h3', 'chat-talkers-title', 'Talkers'));
 
             if (this.talkersList.talkers.length === 0) {
@@ -147,15 +152,16 @@ export class ChatComponent {
                 box.appendChild(row);
             }
 
-            const closeButton = NewECT('button', 'chat-talkers-close-button', 'Close');
-            closeButton.addEventListener('click', () => this.onTalkersCloseButtonClick());
-            box.appendChild(closeButton);
-
             this.view.appendChild(box);
         }
 
         if (this.conversation != null) {
             const box = NewEC('div', 'chat-conversation-box');
+
+            const closeButton = NewECT('button', 'chat-close-button', '✕');
+            closeButton.addEventListener('click', () => this.onCloseButtonClick());
+            box.appendChild(closeButton);
+
             box.appendChild(NewECT('h3', 'chat-conversation-title', this.conversation.talkerName));
 
             const messagesBox = NewEC('div', 'chat-messages-box');
@@ -169,16 +175,17 @@ export class ChatComponent {
             const input = NewE('input');
             input.classList.add('chat-input');
             input.type = 'text';
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.onSendButtonClick(input);
+                }
+            });
             inputRow.appendChild(input);
 
             const sendButton = NewECT('button', 'chat-send-button', 'Send');
             sendButton.addEventListener('click', () => this.onSendButtonClick(input));
             inputRow.appendChild(sendButton);
             box.appendChild(inputRow);
-
-            const closeButton = NewECT('button', 'chat-close-button', 'Close chat');
-            closeButton.addEventListener('click', () => this.onCloseButtonClick());
-            box.appendChild(closeButton);
 
             this.view.appendChild(box);
         }
@@ -200,13 +207,20 @@ export class ChatComponent {
     refreshIncomingChatNotices() {
         const box = this.incomingChatNoticesBox;
         ClearE(box);
+
+        if (this.incomingChatNotices.size === 0) {
+            return;
+        }
+
         box.appendChild(NewECT('h3', 'chat-incoming-notices-title', 'Incoming Chat Notices'));
 
-        for (const [senderId, count] of this.incomingChatNotices) {
-            const button = NewECT('button', 'chat-incoming-notice-button', `${senderId} (${count})`);
+        for (const [senderId, {count, senderName}] of this.incomingChatNotices) {
+            const title = senderName || senderId;
+            const button = NewECT('button', 'chat-incoming-notice-button', `${title} (${count})`);
             button.addEventListener('click', () => {
+                this.incomingChatNotices.delete(senderId);
                 // fake talker, just to reuse onTalkerChatButtonClick - we will refactor that later
-                const talker = new Talker(senderId, 'TODO');
+                const talker = new Talker(senderId, senderName || 'TODO');
                 this.onTalkerChatButtonClick(talker);
             });
             box.appendChild(button);
@@ -236,7 +250,7 @@ export class ChatComponent {
 
         const chatLog = await this.apiClient.getChatLog(this.clientId, talker.id);
 
-        console.log ('onTalkerChatButtonClick chatLog from api', chatLog)
+        // console.log ('onTalkerChatButtonClick chatLog from api', chatLog)
 
         // the user may have closed/switched the conversation while this was in flight
         if (chatLog == null || this.conversation !== conversation) {
@@ -280,7 +294,7 @@ export class ChatComponent {
 
     onCloseButtonClick() {
         this.conversation = null;
-        this.renderView();
+        this.onShowTalkersButtonClick();
     }
 
     onTalkersCloseButtonClick() {
@@ -309,8 +323,9 @@ export class ChatComponent {
         const message = new ChatMessage().fromObject(data);
 
         if (this.conversation == null || this.conversation.talkerId !== message.sender_id) {
-            const count = this.incomingChatNotices.get(message.sender_id) || 0;
-            this.incomingChatNotices.set(message.sender_id, count + 1);
+            const existing = this.incomingChatNotices.get(message.sender_id);
+            const count = existing ? existing.count : 0;
+            this.incomingChatNotices.set(message.sender_id, {count: count + 1, senderName: message.sender_name});
             if (this.incomingChatNoticesBox != null) {
                 this.refreshIncomingChatNotices();
             }

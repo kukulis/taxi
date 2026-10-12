@@ -28,6 +28,11 @@ export class CommonComponent {
     view = null;
 
     /**
+     * @type {boolean}
+     */
+    editingName = false;
+
+    /**
      * @param {string} clientType
      * @param {Dispatcher} dispatcher
      * @param {State} state
@@ -56,23 +61,47 @@ export class CommonComponent {
         }
 
         this.view.appendChild(NewECT('div', 'client-address', this.state.getAddress()));
-        this.view.appendChild(NewECT ('label', 'name-label', 'name') );
-        let nameInput = NewEC('input', 'name-input');
-        nameInput.value = this.state.name;
-        nameInput.type= 'text';
-        this.view.appendChild(nameInput);
 
-        let nameButton = NewECT ('button', 'set-name-button', 'save');
-        this.view.appendChild(nameButton)
+        if (this.editingName) {
+            this.view.appendChild(NewECT('label', 'name-label', 'name'));
+            let nameInput = NewEC('input', 'name-input');
+            nameInput.value = this.state.name;
+            nameInput.type = 'text';
+            this.view.appendChild(nameInput);
 
-        nameButton.addEventListener('click', (e)=> {
-            console.log ('nameButton clicked')
-            this.state.name = nameInput.value
+            const saveName = () => {
+                this.state.name = nameInput.value;
 
-            this.sendMessage( MessageType.CLIENT_NAME, new ClientName(
-                this.state.name
-            ))
-        })
+                this.sendMessage(MessageType.CLIENT_NAME, new ClientName(
+                    this.state.name
+                ));
+
+                this.editingName = false;
+                this.renderView();
+            };
+
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    saveName();
+                } else if (e.key === 'Escape') {
+                    this.editingName = false;
+                    this.renderView();
+                }
+            });
+
+            let nameButton = NewECT('button', 'set-name-button', 'save');
+            this.view.appendChild(nameButton);
+
+            nameButton.addEventListener('click', saveName);
+        } else {
+            this.view.appendChild(NewECT('label', 'name-label', 'name'));
+            let nameSpan = NewECT('span', 'name-display', this.state.name);
+            nameSpan.addEventListener('click', () => {
+                this.editingName = true;
+                this.renderView();
+            });
+            this.view.appendChild(nameSpan);
+        }
     }
 
     handleServerRequestsCoordinates(data) {
